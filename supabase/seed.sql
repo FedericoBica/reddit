@@ -1,0 +1,2 @@
+-- Seed file intentionally empty for the foundation phase.
+-- Add deterministic local development seed data here when onboarding flows exist.
