@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listAllProjectLeads } from "@/db/queries/leads";
@@ -22,6 +23,32 @@ type TrendingTopic = {
   count: number;
   leads: { title: string; permalink: string }[];
 };
+
+export type SubredditCooldown = {
+  daysSince: number;
+  status: "safe" | "caution" | "wait";
+};
+
+function buildSubredditCooldowns(leads: LeadDTO[]): Record<string, SubredditCooldown> {
+  const latestBySubreddit = new Map<string, string>();
+  for (const lead of leads) {
+    if (!lead.replied_at) continue;
+    const existing = latestBySubreddit.get(lead.subreddit);
+    if (!existing || lead.replied_at > existing) {
+      latestBySubreddit.set(lead.subreddit, lead.replied_at);
+    }
+  }
+  const now = Date.now();
+  const result: Record<string, SubredditCooldown> = {};
+  for (const [subreddit, lastRepliedAt] of latestBySubreddit.entries()) {
+    const daysSince = Math.floor((now - new Date(lastRepliedAt).getTime()) / 86_400_000);
+    result[subreddit] = {
+      daysSince,
+      status: daysSince >= 7 ? "safe" : daysSince >= 4 ? "caution" : "wait",
+    };
+  }
+  return result;
+}
 
 function computeTrendingTopics(leads: LeadDTO[]): TrendingTopic[] {
   // Group leads by subreddit, then find common keywords across titles
@@ -91,23 +118,48 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
   const trendingTopics = computeTrendingTopics(leads);
   const subreddits = subredditSuggestions.map((s) => s.name);
   const valueProposition = currentProject.value_proposition ?? "";
+  const cooldowns = buildSubredditCooldowns(leads);
 
   return (
     <DashboardShell user={user} currentProject={currentProject} projects={projects}>
-      <div style={{ padding: "28px 28px 48px", maxWidth: 1100, margin: "0 auto" }}>
-        {/* Header */}
-        <div style={{ marginBottom: 28 }}>
-          <p style={{ fontSize: 11, fontWeight: 800, color: "#AEAEB2", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 6 }}>
-            Content Lab
-          </p>
-          <h1 style={{ fontSize: 22, fontWeight: 900, color: "#1C1C1E", margin: 0 }}>
-            Create content that converts
-          </h1>
-          <p style={{ fontSize: 13, color: "#6B6B6E", marginTop: 6 }}>
-            Spot trending questions and generate Reddit-native post drafts in seconds.
-          </p>
-        </div>
+      <div className="app-page" style={{ minHeight: "100vh" }}>
+        <header className="page-header">
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
+            <div>
+              <p className="page-kicker">Content Lab</p>
+              <h1 className="page-title">Creá contenido que convierte</h1>
+              <p className="page-copy">
+                Detectá preguntas trending y generá borradores de posts nativos de Reddit en segundos.
+              </p>
+            </div>
+            <Link
+              href={`/calendar?projectId=${currentProject.id}`}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+                padding: "8px 14px",
+                borderRadius: 8,
+                border: "1px solid #E5E5EA",
+                background: "#fff",
+                fontSize: 12,
+                fontWeight: 700,
+                color: "#6B6B6E",
+                textDecoration: "none",
+                flexShrink: 0,
+                marginTop: 4,
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.8"/>
+                <path d="M3 9h18M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+              </svg>
+              Ver calendario
+            </Link>
+          </div>
+        </header>
 
+        <div className="content-flow">
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1.35fr", gap: 20, alignItems: "start" }}>
           {/* Left: Trending topics */}
           <div style={{ display: "grid", gap: 14 }}>
@@ -120,12 +172,12 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
               }}
             >
               <p style={{ fontSize: 11, fontWeight: 800, color: "#AEAEB2", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 14 }}>
-                Trending in your subreddits
+                Tendencias en tus subreddits
               </p>
 
               {trendingTopics.length === 0 ? (
                 <p style={{ fontSize: 13, color: "#AEAEB2", textAlign: "center", padding: "20px 0" }}>
-                  Collect more leads to see trends.
+                  Acumulá más leads para ver tendencias.
                 </p>
               ) : (
                 <div style={{ display: "grid", gap: 10 }}>
@@ -200,7 +252,8 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
           </div>
 
           {/* Right: Post draft generator */}
-          <PostDraftGenerator subreddits={subreddits} valueProposition={valueProposition} />
+          <PostDraftGenerator subreddits={subreddits} valueProposition={valueProposition} cooldowns={cooldowns} />
+        </div>
         </div>
       </div>
     </DashboardShell>

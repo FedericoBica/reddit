@@ -86,37 +86,32 @@ export async function listAdminUsers(): Promise<AdminUser[]> {
 
   const userIds = users.map((u) => u.id);
 
-  const [{ data: projects }, { data: leads }] = await Promise.all([
-    supabase.from("projects").select("owner_id").in("owner_id", userIds),
-    supabase.from("leads").select("project_id, projects!inner(owner_id)").in("projects.owner_id", userIds),
-  ]);
-
-  const projectsByOwner: Record<string, number> = {};
-  for (const p of projects ?? []) {
-    projectsByOwner[p.owner_id] = (projectsByOwner[p.owner_id] ?? 0) + 1;
-  }
-
-  // count leads per user via project ownership
-  const { data: projectOwners } = await supabase
+  // Fetch all projects for these users
+  const { data: projects } = await supabase
     .from("projects")
     .select("id, owner_id")
     .in("owner_id", userIds);
 
+  const projectsByOwner: Record<string, number> = {};
   const projectOwnerMap: Record<string, string> = {};
-  for (const p of projectOwners ?? []) {
+  for (const p of projects ?? []) {
+    projectsByOwner[p.owner_id] = (projectsByOwner[p.owner_id] ?? 0) + 1;
     projectOwnerMap[p.id] = p.owner_id;
   }
 
-  const { data: leadCounts } = await supabase
-    .from("leads")
-    .select("project_id")
-    .in("project_id", Object.keys(projectOwnerMap));
-
+  // Count leads per project, then map to owner
+  const projectIds = Object.keys(projectOwnerMap);
   const leadsByOwner: Record<string, number> = {};
-  for (const l of leadCounts ?? []) {
-    const ownerId = projectOwnerMap[l.project_id];
-    if (ownerId) {
-      leadsByOwner[ownerId] = (leadsByOwner[ownerId] ?? 0) + 1;
+
+  if (projectIds.length > 0) {
+    const { data: leadCounts } = await supabase
+      .from("leads")
+      .select("project_id")
+      .in("project_id", projectIds);
+
+    for (const l of leadCounts ?? []) {
+      const ownerId = projectOwnerMap[l.project_id];
+      if (ownerId) leadsByOwner[ownerId] = (leadsByOwner[ownerId] ?? 0) + 1;
     }
   }
 

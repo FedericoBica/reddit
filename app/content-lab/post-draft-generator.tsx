@@ -3,25 +3,35 @@
 import { useRef, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { generatePostDraft, type PostDraft } from "@/modules/content-lab/actions";
+import type { SubredditCooldown } from "./page";
 
 const STYLES = [
   { value: "tutorial", label: "Tutorial" },
-  { value: "case_study", label: "Case Study" },
-  { value: "controversial", label: "Controversial Opinion" },
+  { value: "case_study", label: "Caso de estudio" },
+  { value: "controversial", label: "Opinión controversial" },
 ];
+
+const COOLDOWN_CONFIG = {
+  safe:    { color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", label: "Seguro postear" },
+  caution: { color: "#D97706", bg: "#FFFBEB", border: "#FDE68A", label: "Precaución"     },
+  wait:    { color: "#DC2626", bg: "#FEF2F2", border: "#FEE2E2", label: "Esperá"         },
+};
 
 export function PostDraftGenerator({
   subreddits,
   valueProposition,
+  cooldowns = {},
 }: {
   subreddits: string[];
   valueProposition: string;
+  cooldowns?: Record<string, SubredditCooldown>;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
   const [draft, setDraft] = useState<PostDraft | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedTitle, setSelectedTitle] = useState<number>(0);
+  const [selectedSubreddit, setSelectedSubreddit] = useState<string>("");
 
   function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,15 +72,19 @@ export function PostDraftGenerator({
           <input type="hidden" name="valueProposition" value={valueProposition} />
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-            <label className="field-group">
+            <div className="field-group">
               <span className="field-label">Subreddit</span>
               {subreddits.length > 0 ? (
-                <select className="select" name="subreddit" required>
+                <select
+                  className="select"
+                  name="subreddit"
+                  required
+                  value={selectedSubreddit}
+                  onChange={(e) => setSelectedSubreddit(e.target.value)}
+                >
                   <option value="">Elegir...</option>
                   {subreddits.map((s) => (
-                    <option key={s} value={s}>
-                      r/{s}
-                    </option>
+                    <option key={s} value={s}>r/{s}</option>
                   ))}
                 </select>
               ) : (
@@ -80,9 +94,27 @@ export function PostDraftGenerator({
                   placeholder="ej: startups"
                   required
                   style={{ height: 42, borderRadius: 8 }}
+                  onChange={(e) => setSelectedSubreddit(e.target.value)}
                 />
               )}
-            </label>
+              {selectedSubreddit && cooldowns[selectedSubreddit] && (() => {
+                const cd = cooldowns[selectedSubreddit];
+                const cfg = COOLDOWN_CONFIG[cd.status];
+                return (
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 5 }}>
+                    <span style={{
+                      fontSize: 10, fontWeight: 800, padding: "2px 8px", borderRadius: 4,
+                      background: cfg.bg, border: `1px solid ${cfg.border}`, color: cfg.color,
+                    }}>
+                      {cfg.label}
+                    </span>
+                    <span style={{ fontSize: 11, color: "#8E8E93" }}>
+                      {cd.daysSince === 0 ? "posteaste hoy" : `hace ${cd.daysSince}d`}
+                    </span>
+                  </div>
+                );
+              })()}
+            </div>
 
             <label className="field-group">
               <span className="field-label">Estilo</span>
