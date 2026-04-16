@@ -4,6 +4,20 @@ export type ProjectLimit = {
   plan: BillingPlan;
   label: string;
   maxProjects: number | null;
+  maxKeywords: number | null;
+  maxCompetitors: number | null;
+  scrapeIntervalHours: number;
+  maxAiRepliesPerMonth: number | null;
+  maxGhostwriterThreads: number | null;
+  maxTeamMembers: number | null;
+  maxRedditAccounts: number | null;
+  integrations: {
+    slack: boolean;
+    telegram: boolean;
+    webhooks: boolean;
+  };
+  accountProtection: boolean;
+  battlecards: boolean;
 };
 
 const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
@@ -11,16 +25,58 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     plan: "starter",
     label: "Starter",
     maxProjects: 1,
+    maxKeywords: 10,
+    maxCompetitors: 3,
+    scrapeIntervalHours: 12,
+    maxAiRepliesPerMonth: 100,
+    maxGhostwriterThreads: 5,
+    maxTeamMembers: 1,
+    maxRedditAccounts: 1,
+    integrations: {
+      slack: false,
+      telegram: false,
+      webhooks: false,
+    },
+    accountProtection: true,
+    battlecards: true,
   },
   growth: {
     plan: "growth",
-    label: "Growth trial",
+    label: "Growth",
     maxProjects: 3,
+    maxKeywords: 25,
+    maxCompetitors: 6,
+    scrapeIntervalHours: 4,
+    maxAiRepliesPerMonth: 400,
+    maxGhostwriterThreads: 20,
+    maxTeamMembers: 3,
+    maxRedditAccounts: 2,
+    integrations: {
+      slack: true,
+      telegram: true,
+      webhooks: true,
+    },
+    accountProtection: true,
+    battlecards: true,
   },
   enterprise: {
     plan: "enterprise",
     label: "Enterprise",
-    maxProjects: null,
+    maxProjects: 10,
+    maxKeywords: 50,
+    maxCompetitors: 10,
+    scrapeIntervalHours: 1,
+    maxAiRepliesPerMonth: 1000,
+    maxGhostwriterThreads: null,
+    maxTeamMembers: 5,
+    maxRedditAccounts: null,
+    integrations: {
+      slack: true,
+      telegram: true,
+      webhooks: true,
+    },
+    accountProtection: true,
+    battlecards: true,
   },
 };
 

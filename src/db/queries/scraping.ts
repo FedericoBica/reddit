@@ -12,6 +12,8 @@ export type ScrapeTarget = {
     region: string | null;
     primary_language: string;
     scrape_fail_count: number;
+    last_scraped_at: string | null;
+    owner_id: string;
   };
   keywords: {
     id: string;
@@ -30,7 +32,7 @@ export async function listProjectsDueForScraping(limit: number): Promise<ScrapeT
   const { data: projects, error: projectsError } = await supabase
     .from("projects")
     .select(
-      "id, name, website_url, value_proposition, tone, region, primary_language, scrape_fail_count",
+      "id, name, website_url, value_proposition, tone, region, primary_language, scrape_fail_count, last_scraped_at, owner_id",
     )
     .eq("status", "active")
     .eq("onboarding_status", "completed")

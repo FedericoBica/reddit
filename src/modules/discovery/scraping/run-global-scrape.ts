@@ -15,6 +15,7 @@ import { classifyLeadCandidate } from "@/modules/discovery/classification/lead-c
 import { findMatchedKeywords } from "@/modules/discovery/classification/keyword-match";
 import { createRedditDiscoveryProvider } from "@/modules/discovery/reddit/provider";
 import type { RedditDiscoveryProvider } from "@/modules/discovery/reddit/types";
+import { getBillingPlanForUser } from "@/modules/billing/current";
 
 type RunGlobalScrapeOptions = {
   runId?: string;
@@ -28,7 +29,23 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
   const maxSubreddits = readPositiveIntEnv("SCRAPE_MAX_SUBREDDITS_PER_PROJECT", 5);
   const maxPosts = readPositiveIntEnv("SCRAPE_MAX_POSTS_PER_SUBREDDIT", 25);
   const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 70);
-  const targets = await listProjectsDueForScraping(maxProjects);
+  const candidates = await listProjectsDueForScraping(maxProjects);
+  const now = Date.now();
+
+  // Resolve each owner's billing plan and filter by scrape interval
+  const targets = (
+    await Promise.all(
+      candidates.map(async (target) => {
+        const plan = await getBillingPlanForUser(target.project.owner_id);
+        const intervalMs = plan.scrapeIntervalHours * 60 * 60 * 1000;
+        const lastScraped = target.project.last_scraped_at
+          ? new Date(target.project.last_scraped_at).getTime()
+          : 0;
+        return now - lastScraped >= intervalMs ? target : null;
+      }),
+    )
+  ).filter((t): t is NonNullable<typeof t> => t !== null);
+
   const results = [];
 
   for (const target of targets) {
@@ -203,7 +220,8 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
 
   return {
     runId,
-    projectsConsidered: targets.length,
+    projectsConsidered: candidates.length,
+    projectsScraped: targets.length,
     results,
   };
 }
