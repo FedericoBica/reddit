@@ -2,17 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const NAV = [
-  { href: "/dashboard",     label: "Searchbox",      icon: InboxIcon       },
-  { href: "/opportunities", label: "New",             icon: FlashIcon       },
-  { href: "/threads",       label: "Threads",         icon: ThreadsIcon     },
-  { href: "/mentions",      label: "Mentions",        icon: SignalIcon      },
-  { href: "/analytics",     label: "Analytics",       icon: ChartIcon       },
-  { href: "/content-lab",   label: "Content Lab",     icon: BeakerIcon      },
-  { href: "/calendar",      label: "Calendar",        icon: CalendarIcon    },
-  { href: "/settings",      label: "Settings",        icon: GearIcon        },
-];
+import { useTranslations } from "next-intl";
 
 export function SidebarLinks({
   currentProjectId,
@@ -22,6 +12,18 @@ export function SidebarLinks({
   newLeadsCount?: number;
 }) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
+
+  const NAV = [
+    { href: "/dashboard",     label: t("searchbox"),  icon: InboxIcon    },
+    { href: "/opportunities", label: t("new"),         icon: FlashIcon    },
+    { href: "/threads",       label: t("threads"),     icon: ThreadsIcon  },
+    { href: "/mentions",      label: t("mentions"),    icon: SignalIcon   },
+    { href: "/analytics",     label: t("analytics"),   icon: ChartIcon    },
+    { href: "/content-lab",   label: t("contentLab"),  icon: BeakerIcon   },
+    { href: "/calendar",      label: t("calendar"),    icon: CalendarIcon },
+    { href: "/settings",      label: t("settings"),    icon: GearIcon     },
+  ];
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard" || pathname.startsWith("/leads/");

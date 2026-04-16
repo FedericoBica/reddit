@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { CopyButton } from "@/app/components/copy-button";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { Badge } from "@/components/ui/badge";
@@ -32,17 +33,13 @@ type LeadPageProps = {
   }>;
 };
 
-const STATUS_OPTIONS: { value: LeadDTO["status"]; label: string }[] = [
-  { value: "new", label: "Nuevo" },
-  { value: "replied", label: "Respondido" },
-  { value: "irrelevant", label: "Irrelevante" },
-];
-
 export default async function LeadPage({ params, searchParams }: LeadPageProps) {
   const user = await requireUser("/dashboard");
   const { leadId } = await params;
   const query = await searchParams;
   const projectState = await resolveCurrentProject(query?.projectId);
+  const t = await getTranslations("leads");
+  const tStatus = await getTranslations("status");
 
   if (projectState.status === "missing") {
     redirect("/bootstrap");
@@ -58,6 +55,12 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
   if (!lead) {
     notFound();
   }
+
+  const STATUS_OPTIONS: { value: LeadDTO["status"]; label: string }[] = [
+    { value: "new", label: tStatus("new") },
+    { value: "replied", label: tStatus("replied") },
+    { value: "irrelevant", label: tStatus("irrelevant") },
+  ];
 
   const newLeadsCount = recentLeads.filter((item) => item.status === "new").length;
   const returnTo = `/leads/${lead.id}?projectId=${currentProject.id}`;
@@ -83,7 +86,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                 marginBottom: 14,
               }}
             >
-              Volver al Searchbox
+              {t("backToSearchbox")}
             </Link>
             <p className="page-kicker">r/{lead.subreddit}</p>
             <h1 className="page-title">{lead.title}</h1>
@@ -117,7 +120,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                     </div>
                     <Button asChild variant="outline" className="h-9 rounded-[8px] font-extrabold">
                       <a href={`https://reddit.com${lead.permalink}`} target="_blank" rel="noreferrer">
-                        Abrir Reddit
+                        {t("viewOnReddit")}
                       </a>
                     </Button>
                   </div>
@@ -140,7 +143,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                     }}
                   >
                     <div>
-                      <p className="section-title">Respuestas con IA</p>
+                      <p className="section-title">{t("replies")}</p>
                       <p className="section-copy" style={{ marginTop: 6 }}>
                         Generá opciones, copiá la que prefieras y abrí Reddit.
                       </p>
@@ -156,8 +159,8 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                         disabled={lead.reply_generation_status === "generating"}
                       >
                         {lead.reply_generation_status === "generating"
-                          ? "Generando..."
-                          : "Generar replies"}
+                          ? t("generating")
+                          : t("generateReplies")}
                       </Button>
                     </form>
                   </div>
@@ -189,7 +192,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                               </Badge>
                               {reply.was_used && (
                                 <Badge variant="secondary" className="rounded-[7px] bg-[#D1FAE5] font-extrabold text-[#065F46]">
-                                  Usada
+                                  {t("replyUsed")}
                                 </Badge>
                               )}
                             </div>
@@ -210,7 +213,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                                 <input type="hidden" name="replyId" value={reply.id} />
                                 <input type="hidden" name="returnTo" value={returnTo} />
                                 <Button variant="outline" className="h-9 rounded-[8px] font-extrabold" type="submit">
-                                  Marcar como usada
+                                  {t("useReply")}
                                 </Button>
                               </form>
                             </div>
@@ -257,7 +260,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                 <CardContent className="p-5">
                   <p className="section-title">Señales detectadas</p>
                   <div style={{ display: "grid", gap: 14, marginTop: 16 }}>
-                    <SideFact label="Intent score" value={String(lead.intent_score ?? "Sin score")} />
+                    <SideFact label={t("intentScore")} value={String(lead.intent_score ?? "Sin score")} />
                     <SideFact label="Sentimiento" value={translateSentiment(lead.sentiment)} />
                     <SideFact label="Región" value={lead.region_score === null ? "Sin dato" : `${lead.region_score}/10`} />
                     <SideFact label="Keywords" value={lead.keywords_matched.join(", ") || "Sin keywords"} />
@@ -281,6 +284,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                 lead={lead}
                 projectId={currentProject.id}
                 returnTo={returnTo}
+                labels={{ snooze: t("snooze"), unsnooze: t("unsnooze") }}
               />
 
               {/* Battlecards */}
@@ -515,10 +519,12 @@ function SnoozeCard({
   lead,
   projectId,
   returnTo,
+  labels,
 }: {
   lead: LeadDTO;
   projectId: string;
   returnTo: string;
+  labels: { snooze: string; unsnooze: string };
 }) {
   const isSnoozed =
     lead.snoozed_until != null && new Date(lead.snoozed_until) > new Date();
@@ -542,7 +548,7 @@ function SnoozeCard({
               className="h-8 w-full rounded-[8px] border-[#6366F1] font-bold text-[#3730A3]"
               type="submit"
             >
-              Quitar snooze
+              {labels.unsnooze}
             </Button>
           </form>
         </CardContent>
@@ -560,7 +566,7 @@ function SnoozeCard({
   return (
     <Card className="gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
       <CardContent className="p-5">
-        <p className="section-title">💤 Snooze</p>
+        <p className="section-title">💤 {labels.snooze}</p>
         <p className="section-copy" style={{ marginTop: 6, marginBottom: 14 }}>
           Ocultá este lead temporalmente y vuelve a aparecer cuando estés listo.
         </p>

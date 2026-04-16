@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { AgentationDev } from "./components/agentation-dev";
 import "./globals.css";
 
@@ -12,19 +14,24 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: { default: "ReddProwl", template: "%s — ReddProwl" },
-  description: "Detectá intención de compra en Reddit y cerrá más ventas.",
+  description: "Detect buying intent on Reddit and close more sales.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="es" className={`${outfit.variable} font-sans`}>
+    <html lang={locale} className={`${outfit.variable} font-sans`}>
       <body>
-        {children}
-        <AgentationDev />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+          <AgentationDev />
+        </NextIntlClientProvider>
       </body>
     </html>
   );

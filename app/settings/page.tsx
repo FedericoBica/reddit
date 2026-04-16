@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
+import { LocaleSwitcher } from "@/app/components/locale-switcher";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listProjectKeywords, listProjectSubreddits, listRecentScrapeRuns } from "@/db/queries/settings";
 import type { KeywordDTO, SubredditDTO, ProjectScrapeRunDTO, ProjectDTO } from "@/db/schemas/domain";
@@ -36,6 +38,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     redirect(`/onboarding/project?projectId=${currentProject.id}`);
   }
 
+  const currentLocale = await getLocale();
   const [keywords, subreddits, scrapeRuns] = await Promise.all([
     listProjectKeywords(currentProject.id),
     listProjectSubreddits(currentProject.id),
@@ -208,6 +211,14 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             description="Recent scrape runs for this project."
           >
             <ScraperHealth project={currentProject} scrapeRuns={scrapeRuns} />
+          </SettingsSection>
+
+          {/* Interface Language */}
+          <SettingsSection
+            title="Interface language"
+            description="Auto-detected from your browser. Override it here."
+          >
+            <LocaleSwitcher currentLocale={currentLocale} />
           </SettingsSection>
         </main>
       </div>

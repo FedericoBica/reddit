@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listAllProjectLeads } from "@/db/queries/leads";
 import { listProjectSubredditSuggestions } from "@/db/queries/projects";
@@ -110,9 +111,10 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
     redirect(`/onboarding/project?projectId=${currentProject.id}`);
   }
 
-  const [leads, subredditSuggestions] = await Promise.all([
+  const [leads, subredditSuggestions, t] = await Promise.all([
     listAllProjectLeads(currentProject.id, 300),
     listProjectSubredditSuggestions(currentProject.id),
+    getTranslations("contentLab"),
   ]);
 
   const trendingTopics = computeTrendingTopics(leads);
@@ -126,11 +128,9 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
         <header className="page-header">
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>
             <div>
-              <p className="page-kicker">Content Lab</p>
-              <h1 className="page-title">Creá contenido que convierte</h1>
-              <p className="page-copy">
-                Detectá preguntas trending y generá borradores de posts nativos de Reddit en segundos.
-              </p>
+              <p className="page-kicker">{t("kicker")}</p>
+              <h1 className="page-title">{t("title")}</h1>
+              <p className="page-copy">{t("description")}</p>
             </div>
             <Link
               href={`/calendar?projectId=${currentProject.id}`}
@@ -154,7 +154,7 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
                 <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.8"/>
                 <path d="M3 9h18M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
-              Ver calendario
+              {t("viewCalendar")}
             </Link>
           </div>
         </header>
@@ -172,12 +172,12 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
               }}
             >
               <p style={{ fontSize: 11, fontWeight: 800, color: "#AEAEB2", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 14 }}>
-                Tendencias en tus subreddits
+                {t("trending")}
               </p>
 
               {trendingTopics.length === 0 ? (
                 <p style={{ fontSize: 13, color: "#AEAEB2", textAlign: "center", padding: "20px 0" }}>
-                  Acumulá más leads para ver tendencias.
+                  {t("emptyTrending")}
                 </p>
               ) : (
                 <div style={{ display: "grid", gap: 10 }}>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listProjectLeads, listRepliedProjectLeads } from "@/db/queries/leads";
 import type { LeadDTO } from "@/db/schemas/domain";
@@ -125,9 +126,10 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   const nextKey = `${nextDate.getFullYear()}-${String(nextDate.getMonth() + 1).padStart(2, "0")}`;
   const todayKey = toDateKey(new Date().toISOString());
 
-  const [repliedLeads, allLeads] = await Promise.all([
+  const [repliedLeads, allLeads, t] = await Promise.all([
     listRepliedProjectLeads(currentProject.id, 500),
     listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
+    getTranslations("calendar"),
   ]);
 
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
@@ -141,6 +143,12 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   ];
   const DAY_LABELS = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
 
+  const STATUS_CONFIG = {
+    safe:    { color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", label: t("safe")    },
+    caution: { color: "#D97706", bg: "#FFFBEB", border: "#FDE68A", label: t("caution") },
+    wait:    { color: "#DC2626", bg: "#FEF2F2", border: "#FEE2E2", label: t("wait")    },
+  };
+
   return (
     <DashboardShell
       user={user}
@@ -151,11 +159,9 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       <div className="app-page" style={{ minHeight: "100vh" }}>
         <header className="page-header">
           <div>
-            <p className="page-kicker">Posting Calendar</p>
-            <h1 className="page-title">Historial de respuestas por subreddit</h1>
-            <p className="page-copy">
-              Controlá cuándo respondiste en cada subreddit para no postear demasiado seguido.
-            </p>
+            <p className="page-kicker">{t("kicker")}</p>
+            <h1 className="page-title">{t("title")}</h1>
+            <p className="page-copy">{t("description")}</p>
           </div>
         </header>
 
@@ -382,17 +388,23 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
                     marginBottom: 14,
                   }}
                 >
-                  Posting cooldown
+                  {t("cooldown")}
                 </p>
 
                 {health.length === 0 ? (
                   <p style={{ fontSize: 13, color: "#AEAEB2" }}>
-                    Respondé algunos leads para ver el estado por subreddit.
+                    {t("empty")}
                   </p>
                 ) : (
                   <div style={{ display: "grid", gap: 10 }}>
                     {health.map((h) => (
-                      <SubredditHealthRow key={h.subreddit} health={h} />
+                      <SubredditHealthRow
+                        key={h.subreddit}
+                        health={h}
+                        statusConfig={STATUS_CONFIG}
+                        postedToday={t("postedToday")}
+                        daysAgo={t("daysAgo", { days: h.daysSince })}
+                      />
                     ))}
                   </div>
                 )}
@@ -417,12 +429,12 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
                     marginBottom: 12,
                   }}
                 >
-                  Estado
+                  {t("statusLabel")}
                 </p>
                 <div style={{ display: "grid", gap: 8 }}>
-                  <StatusLegendRow status="safe" label="Seguro postear" detail=">7 días" />
-                  <StatusLegendRow status="caution" label="Precaución" detail="4–7 días" />
-                  <StatusLegendRow status="wait" label="Esperá" detail="<4 días" />
+                  <StatusLegendRow status="safe"    label={t("safe")}    detail={t("safeDetail")}    statusConfig={STATUS_CONFIG} />
+                  <StatusLegendRow status="caution" label={t("caution")} detail={t("cautionDetail")} statusConfig={STATUS_CONFIG} />
+                  <StatusLegendRow status="wait"    label={t("wait")}    detail={t("waitDetail")}    statusConfig={STATUS_CONFIG} />
                 </div>
               </div>
 
@@ -445,7 +457,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                   <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
                 </svg>
-                Crear borrador de post
+                {t("createDraft")}
               </Link>
             </div>
           </div>
@@ -457,14 +469,10 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
 // ── Sub-components ─────────────────────────────────────────────
 
-const STATUS_CONFIG = {
-  safe:    { color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", label: "Seguro"    },
-  caution: { color: "#D97706", bg: "#FFFBEB", border: "#FDE68A", label: "Precaución"},
-  wait:    { color: "#DC2626", bg: "#FEF2F2", border: "#FEE2E2", label: "Esperá"   },
-};
+type StatusConfig = Record<SubredditHealth["status"], { color: string; bg: string; border: string; label: string }>;
 
-function SubredditHealthRow({ health: h }: { health: SubredditHealth }) {
-  const cfg = STATUS_CONFIG[h.status];
+function SubredditHealthRow({ health: h, statusConfig, postedToday, daysAgo }: { health: SubredditHealth; statusConfig: StatusConfig; postedToday: string; daysAgo: string }) {
+  const cfg = statusConfig[h.status];
   return (
     <div
       style={{
@@ -502,7 +510,7 @@ function SubredditHealthRow({ health: h }: { health: SubredditHealth }) {
             r/{h.subreddit}
           </p>
           <p style={{ fontSize: 10, color: "#6B6B6E", fontWeight: 600 }}>
-            hace {h.daysSince === 0 ? "hoy" : `${h.daysSince}d`}
+            {h.daysSince === 0 ? postedToday : daysAgo}
           </p>
         </div>
       </div>
@@ -540,12 +548,14 @@ function StatusLegendRow({
   status,
   label,
   detail,
+  statusConfig,
 }: {
   status: SubredditHealth["status"];
   label: string;
   detail: string;
+  statusConfig: StatusConfig;
 }) {
-  const cfg = STATUS_CONFIG[status];
+  const cfg = statusConfig[status];
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div

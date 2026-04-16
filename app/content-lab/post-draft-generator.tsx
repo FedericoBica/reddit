@@ -1,21 +1,10 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { generatePostDraft, type PostDraft } from "@/modules/content-lab/actions";
 import type { SubredditCooldown } from "./page";
-
-const STYLES = [
-  { value: "tutorial", label: "Tutorial" },
-  { value: "case_study", label: "Caso de estudio" },
-  { value: "controversial", label: "Opinión controversial" },
-];
-
-const COOLDOWN_CONFIG = {
-  safe:    { color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", label: "Seguro postear" },
-  caution: { color: "#D97706", bg: "#FFFBEB", border: "#FDE68A", label: "Precaución"     },
-  wait:    { color: "#DC2626", bg: "#FEF2F2", border: "#FEE2E2", label: "Esperá"         },
-};
 
 export function PostDraftGenerator({
   subreddits,
@@ -26,6 +15,22 @@ export function PostDraftGenerator({
   valueProposition: string;
   cooldowns?: Record<string, SubredditCooldown>;
 }) {
+  const t = useTranslations("contentLab.generator");
+  const tCommon = useTranslations("common");
+  const tCalendar = useTranslations("calendar");
+
+  const STYLES = [
+    { value: "tutorial", label: t("styles.tutorial") },
+    { value: "case_study", label: t("styles.case_study") },
+    { value: "controversial", label: t("styles.controversial") },
+  ];
+
+  const COOLDOWN_CONFIG = {
+    safe:    { color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0", label: tCalendar("safe")    },
+    caution: { color: "#D97706", bg: "#FFFBEB", border: "#FDE68A", label: tCalendar("caution") },
+    wait:    { color: "#DC2626", bg: "#FEF2F2", border: "#FEE2E2", label: tCalendar("wait")    },
+  };
+
   const formRef = useRef<HTMLFormElement>(null);
   const [isPending, startTransition] = useTransition();
   const [draft, setDraft] = useState<PostDraft | null>(null);
@@ -62,10 +67,10 @@ export function PostDraftGenerator({
         }}
       >
         <p style={{ fontSize: 14, fontWeight: 800, color: "#1C1C1E", marginBottom: 4 }}>
-          Generar borrador de post
+          {t("title")}
         </p>
         <p style={{ fontSize: 12, color: "#6B6B6E", marginBottom: 20 }}>
-          Elegí subreddit y estilo. La IA genera 3 títulos y un draft completo.
+          {t("description")}
         </p>
 
         <form ref={formRef} onSubmit={handleSubmit} style={{ display: "grid", gap: 14 }}>
@@ -73,7 +78,7 @@ export function PostDraftGenerator({
 
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
             <div className="field-group">
-              <span className="field-label">Subreddit</span>
+              <span className="field-label">{t("subreddit")}</span>
               {subreddits.length > 0 ? (
                 <select
                   className="select"
@@ -82,7 +87,7 @@ export function PostDraftGenerator({
                   value={selectedSubreddit}
                   onChange={(e) => setSelectedSubreddit(e.target.value)}
                 >
-                  <option value="">Elegir...</option>
+                  <option value="">{t("choosePlaceholder")}</option>
                   {subreddits.map((s) => (
                     <option key={s} value={s}>r/{s}</option>
                   ))}
@@ -91,7 +96,7 @@ export function PostDraftGenerator({
                 <input
                   className="settings-input"
                   name="subreddit"
-                  placeholder="ej: startups"
+                  placeholder={t("subredditPlaceholder")}
                   required
                   style={{ height: 42, borderRadius: 8 }}
                   onChange={(e) => setSelectedSubreddit(e.target.value)}
@@ -109,7 +114,7 @@ export function PostDraftGenerator({
                       {cfg.label}
                     </span>
                     <span style={{ fontSize: 11, color: "#8E8E93" }}>
-                      {cd.daysSince === 0 ? "posteaste hoy" : `hace ${cd.daysSince}d`}
+                      {cd.daysSince === 0 ? tCalendar("postedToday") : tCalendar("daysAgo", { days: cd.daysSince })}
                     </span>
                   </div>
                 );
@@ -117,7 +122,7 @@ export function PostDraftGenerator({
             </div>
 
             <label className="field-group">
-              <span className="field-label">Estilo</span>
+              <span className="field-label">{t("style")}</span>
               <select className="select" name="style">
                 {STYLES.map((s) => (
                   <option key={s.value} value={s.value}>
@@ -129,15 +134,15 @@ export function PostDraftGenerator({
           </div>
 
           <label className="field-group">
-            <span className="field-label">Tema / ángulo (opcional)</span>
+            <span className="field-label">{t("topic")}</span>
             <input
               className="settings-input"
               name="topic"
-              placeholder="ej: 'Cómo reducimos churn 40% en 3 meses'"
+              placeholder={t("topicPlaceholder")}
               style={{ height: 42, borderRadius: 8 }}
             />
             <span className="field-hint">
-              Dejalo vacío y la IA elige el ángulo más relevante para el subreddit.
+              {t("topicHint")}
             </span>
           </label>
 
@@ -146,7 +151,7 @@ export function PostDraftGenerator({
             disabled={isPending}
             className="h-10 rounded-[8px] font-extrabold"
           >
-            {isPending ? "Generando..." : "Generar borrador"}
+            {isPending ? t("generating") : t("generate")}
           </Button>
         </form>
 
@@ -189,7 +194,7 @@ export function PostDraftGenerator({
               }}
             />
             <span style={{ fontSize: 13, fontWeight: 700, color: "#6B6B6E" }}>
-              La IA está escribiendo tu borrador...
+              {t("writingDraft")}
             </span>
           </div>
           {[80, 60, 90, 70, 50].map((w, i) => (
@@ -230,7 +235,7 @@ export function PostDraftGenerator({
                 marginBottom: 12,
               }}
             >
-              3 opciones de título — elegí una
+              {t("titlesLabel")}
             </p>
             <div style={{ display: "grid", gap: 8 }}>
               {draft.titles.map((title, i) => (
@@ -308,7 +313,7 @@ export function PostDraftGenerator({
                     marginBottom: 3,
                   }}
                 >
-                  Borrador — r/{draft.subreddit}
+                  {t("draft")} — r/{draft.subreddit}
                 </p>
                 <p style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E" }}>
                   {draft.titles[selectedTitle]}
@@ -359,7 +364,7 @@ export function PostDraftGenerator({
               >
                 <span style={{ fontSize: 14, flexShrink: 0 }}>💡</span>
                 <p style={{ fontSize: 12, color: "#92400E", lineHeight: 1.5 }}>
-                  <strong>Link tip:</strong> {draft.linkPlacementTip}
+                  <strong>{t("linkTip")}:</strong> {draft.linkPlacementTip}
                 </p>
               </div>
             )}
@@ -371,6 +376,7 @@ export function PostDraftGenerator({
 }
 
 function CopyDraftButton({ title, body }: { title: string; body: string }) {
+  const t = useTranslations("common");
   const [copied, setCopied] = useState(false);
 
   async function handleCopy() {
@@ -398,7 +404,7 @@ function CopyDraftButton({ title, body }: { title: string; body: string }) {
         transition: "color 150ms ease",
       }}
     >
-      {copied ? "Copiado ✓" : "Copiar todo"}
+      {copied ? t("copied") : t("copyAll")}
     </button>
   );
 }

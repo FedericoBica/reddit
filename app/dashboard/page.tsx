@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { AutoRefresh } from "@/app/components/auto-refresh";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { Badge } from "@/components/ui/badge";
@@ -22,17 +23,12 @@ type DashboardPageProps = {
   }>;
 };
 
-const FILTERS = [
-  { label: "Todos", value: undefined },
-  { label: "Nuevos", value: "new" },
-  { label: "Respondidos", value: "replied" },
-  { label: "Irrelevantes", value: "irrelevant" },
-];
-
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
   const user = await requireUser("/dashboard");
   const params = await searchParams;
   const projectState = await resolveCurrentProject(params?.projectId);
+  const t = await getTranslations("dashboard");
+  const tLeads = await getTranslations("leads");
 
   if (projectState.status === "missing") {
     redirect("/signup/company");
@@ -62,6 +58,27 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const highIntentCount = allLeads.filter((lead) => (lead.intent_score ?? 0) >= 80).length;
   const selectedLead = leads[0] ?? null;
 
+  const FILTERS = [
+    { label: t("filters.all"), value: undefined },
+    { label: t("filters.new"), value: "new" },
+    { label: t("filters.replied"), value: "replied" },
+    { label: t("filters.irrelevant"), value: "irrelevant" },
+  ];
+
+  const emptyLabels = {
+    empty: t("empty"),
+  };
+
+  const footerLabels = {
+    lastScan: (date: string) => `Último scan ${date}`,
+    pending: "Scan pendiente",
+  };
+
+  const previewLabels = {
+    generateReplies: tLeads("generateReplies"),
+    openReddit: tLeads("viewOnReddit"),
+  };
+
   return (
     <DashboardShell
       user={user}
@@ -88,13 +105,13 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
               {highIntentCount} high intent
             </Badge>
             <Badge variant="outline" className="rounded-[7px] font-extrabold text-[#6B6B6E]">
-              {newLeadsCount} nuevos
+              {newLeadsCount} {t("filters.new").toLowerCase()}
             </Badge>
           </div>
         </header>
 
         <div className="searchbox-body">
-          <section className="opportunity-column" aria-label="Oportunidades">
+          <section className="opportunity-column" aria-label={t("title")}>
             <div className="opportunity-toolbar">
               <div className="filter-row" aria-label="Filtros de leads" style={{ marginBottom: 0 }}>
                 {FILTERS.map((filter) => {
@@ -115,7 +132,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                 })}
               </div>
               <div className="opportunity-count">
-                <span>{leads.length} oportunidades</span>
+                <span>{leads.length} {t("title").toLowerCase()}</span>
                 <span>Ordenado por intención</span>
               </div>
             </div>
@@ -131,17 +148,18 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
                   />
                 ))
               ) : (
-                <EmptyLeads projectName={currentProject.name} />
+                <EmptyLeads projectName={currentProject.name} labels={emptyLabels} />
               )}
             </div>
 
             <ProjectFooter
               lastScrapedAt={currentProject.last_scraped_at}
               language={currentProject.primary_language}
+              labels={footerLabels}
             />
           </section>
 
-          <LeadPreview lead={selectedLead} projectId={currentProject.id} />
+          <LeadPreview lead={selectedLead} projectId={currentProject.id} labels={previewLabels} />
         </div>
       </section>
     </DashboardShell>
@@ -182,10 +200,16 @@ function OpportunityCard({
   );
 }
 
-function EmptyLeads({ projectName }: { projectName: string }) {
+function EmptyLeads({
+  projectName,
+  labels,
+}: {
+  projectName: string;
+  labels: { empty: string };
+}) {
   return (
     <div className="empty-state">
-      <p className="section-title">Todavía no hay leads para {projectName}</p>
+      <p className="section-title">{labels.empty}</p>
       <p className="section-copy" style={{ maxWidth: 520, margin: "10px auto 0" }}>
         Cuando el scraper encuentre conversaciones con intención real, van a
         aparecer ordenadas por score. Revisá que el onboarding tenga keywords y
@@ -195,12 +219,20 @@ function EmptyLeads({ projectName }: { projectName: string }) {
   );
 }
 
-function LeadPreview({ lead, projectId }: { lead: LeadDTO | null; projectId: string }) {
+function LeadPreview({
+  lead,
+  projectId,
+  labels,
+}: {
+  lead: LeadDTO | null;
+  projectId: string;
+  labels: { generateReplies: string; openReddit: string };
+}) {
   if (!lead) {
     return (
       <section className="detail-pane">
         <div className="detail-content">
-          <EmptyLeads projectName="este proyecto" />
+          <EmptyLeads projectName="este proyecto" labels={{ empty: "Todavía no hay leads para este proyecto" }} />
         </div>
       </section>
     );
@@ -296,7 +328,7 @@ function LeadPreview({ lead, projectId }: { lead: LeadDTO | null; projectId: str
             rel="noreferrer"
             style={{ color: "#E07000", fontSize: 12, fontWeight: 800, textDecoration: "none" }}
           >
-            Ver post en Reddit
+            {labels.openReddit}
           </a>
         </div>
       </article>
@@ -314,12 +346,12 @@ function LeadPreview({ lead, projectId }: { lead: LeadDTO | null; projectId: str
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 10 }}>
           <Button asChild className="h-8 rounded-[8px] px-3 font-extrabold">
             <Link href={`/leads/${lead.id}?projectId=${projectId}`}>
-              Generar respuestas
+              {labels.generateReplies}
             </Link>
           </Button>
           <Button asChild variant="secondary" className="h-8 rounded-[8px] bg-[#1C1C1E] px-3 font-extrabold text-white hover:bg-[#2D2D30]">
             <a href={`https://reddit.com${lead.permalink}`} target="_blank" rel="noreferrer">
-              Abrir Reddit
+              {labels.openReddit}
             </a>
           </Button>
         </div>
@@ -344,9 +376,11 @@ function FeatureNote({ title, text }: { title: string; text: string }) {
 function ProjectFooter({
   lastScrapedAt,
   language,
+  labels,
 }: {
   lastScrapedAt: string | null;
   language: string;
+  labels: { lastScan: (date: string) => string; pending: string };
 }) {
   return (
     <div
@@ -362,7 +396,7 @@ function ProjectFooter({
         background: "#FFFFFF",
       }}
     >
-      <span>{lastScrapedAt ? `Último scan ${formatDate(lastScrapedAt)}` : "Scan pendiente"}</span>
+      <span>{lastScrapedAt ? labels.lastScan(formatDate(lastScrapedAt)) : labels.pending}</span>
       <span>{language.toUpperCase()}</span>
     </div>
   );

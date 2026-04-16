@@ -1,0 +1,245 @@
+{
+  "nav": {
+    "searchbox": "Searchbox",
+    "new": "New",
+    "threads": "Threads",
+    "mentions": "Mentions",
+    "analytics": "Analytics",
+    "contentLab": "Content Lab",
+    "calendar": "Calendar",
+    "settings": "Settings",
+    "signOut": "Sign out",
+    "admin": "Admin"
+  },
+  "common": {
+    "back": "Back",
+    "save": "Save",
+    "cancel": "Cancel",
+    "optional": "Optional",
+    "copied": "Copied ✓",
+    "copyAll": "Copy all",
+    "error": "Error",
+    "today": "today",
+    "daysAgo": "{days}d ago",
+    "backToDashboard": "← Back to dashboard",
+    "viewBilling": "View billing in Settings"
+  },
+  "status": {
+    "new": "New",
+    "reviewing": "Reviewing",
+    "replied": "Replied",
+    "won": "Won",
+    "lost": "Lost",
+    "irrelevant": "Irrelevant"
+  },
+  "plan": {
+    "starter": "Starter",
+    "growth": "Growth",
+    "enterprise": "Enterprise"
+  },
+  "dashboard": {
+    "kicker": "Dashboard",
+    "title": "Leads",
+    "filters": {
+      "all": "All",
+      "new": "New",
+      "replied": "Replied",
+      "irrelevant": "Irrelevant"
+    },
+    "empty": "No leads yet.",
+    "emptyFilter": "No leads match this filter."
+  },
+  "leads": {
+    "backToSearchbox": "← Back to Searchbox",
+    "intentScore": "Intent score",
+    "generateReplies": "Generate AI replies",
+    "generating": "Generating...",
+    "replies": "AI Replies",
+    "useReply": "Use this reply",
+    "replyUsed": "Used",
+    "viewOnReddit": "View on Reddit",
+    "snooze": "Snooze",
+    "unsnooze": "Unsnooze",
+    "postedBy": "by"
+  },
+  "calendar": {
+    "kicker": "Posting Calendar",
+    "title": "Reply history by subreddit",
+    "description": "Track when you replied in each subreddit to avoid posting too frequently.",
+    "cooldown": "Posting cooldown",
+    "statusLabel": "Status",
+    "safe": "Safe to post",
+    "caution": "Caution",
+    "wait": "Wait",
+    "safeDetail": ">7 days",
+    "cautionDetail": "4–7 days",
+    "waitDetail": "<4 days",
+    "createDraft": "Create post draft",
+    "empty": "Reply to some leads to see subreddit status.",
+    "postedToday": "posted today",
+    "daysAgo": "{days}d ago"
+  },
+  "contentLab": {
+    "kicker": "Content Lab",
+    "title": "Create content that converts",
+    "description": "Spot trending questions and generate Reddit-native post drafts in seconds.",
+    "viewCalendar": "View calendar",
+    "trending": "Trending in your subreddits",
+    "emptyTrending": "Collect more leads to see trends.",
+    "generator": {
+      "title": "Generate post draft",
+      "description": "Choose subreddit and style. AI generates 3 titles and a full draft.",
+      "subreddit": "Subreddit",
+      "choosePlaceholder": "Choose...",
+      "subredditPlaceholder": "e.g. startups",
+      "style": "Style",
+      "topic": "Topic / angle (optional)",
+      "topicPlaceholder": "e.g. 'How we reduced churn 40% in 3 months'",
+      "topicHint": "Leave blank and AI picks the most relevant angle for the subreddit.",
+      "generate": "Generate draft",
+      "generating": "Generating...",
+      "writingDraft": "AI is writing your draft...",
+      "titlesLabel": "3 title options — pick one",
+      "draft": "Draft",
+      "linkTip": "Link tip",
+      "styles": {
+        "tutorial": "Tutorial",
+        "case_study": "Case Study",
+        "controversial": "Controversial Opinion"
+      }
+    }
+  },
+  "settings": {
+    "kicker": "Settings",
+    "projectName": "Project name",
+    "website": "Website",
+    "websiteHint": "Optional, but improves keyword suggestions.",
+    "valueProposition": "Value proposition",
+    "region": "Region",
+    "language": "Language",
+    "save": "Save changes",
+    "keywords": "Keywords",
+    "activeKeywords": "active",
+    "subreddits": "Subreddits",
+    "activeSubreddits": "active",
+    "addKeyword": "Add keyword",
+    "addSubreddit": "Add subreddit",
+    "scrapeHistory": "Scrape history",
+    "appLanguage": "Interface language",
+    "appLanguageHint": "Overrides browser language detection.",
+    "languageOptions": {
+      "auto": "Auto (browser)",
+      "en": "English",
+      "es": "Español",
+      "pt": "Português"
+    }
+  },
+  "bootstrap": {
+    "eyebrow": "5-minute setup",
+    "headline": "Tell us what you sell. We find buying signals.",
+    "description": "With your website and a short description we generate keywords, subreddits and a first intent map.",
+    "whatHappensNext": "What happens next",
+    "steps": ["We generate initial suggestions", "You choose which keywords and subreddits to use", "The scraper starts finding relevant leads"],
+    "kicker": "First project",
+    "title": "Set up your Searchbox",
+    "subtitle": "Keep the description concrete. The clearer the ICP, the better the suggestions.",
+    "form": {
+      "name": "Project name",
+      "namePlaceholder": "My SaaS",
+      "websiteHint": "Optional, but helps detect positioning.",
+      "valuePropositionPlaceholder": "We help B2B teams to...",
+      "regionPlaceholder": "US, LATAM, global",
+      "submit": "Create project"
+    }
+  },
+  "newProject": {
+    "eyebrow": "New Searchbox",
+    "headline": "Another product, another market. Same detection power.",
+    "description": "Separate projects by product, segment or region. Each has its own keywords, subreddits and leads.",
+    "whatHappensNext": "What happens next",
+    "steps": ["We generate keyword and subreddit suggestions", "You choose which to activate for this project", "The scraper starts finding relevant leads"],
+    "kicker": "New project",
+    "title": "Set up your Searchbox",
+    "subtitle": "Keep the description concrete. The clearer the ICP, the better the suggestions.",
+    "planUsage": "Current plan",
+    "backToDashboard": "← Back to dashboard",
+    "form": {
+      "namePlaceholder": "Product, region or vertical",
+      "websiteHint": "Optional, but improves keyword suggestions.",
+      "valuePropositionPlaceholder": "We help B2B teams to...",
+      "regionPlaceholder": "US, LATAM, global",
+      "submit": "Create project and configure"
+    },
+    "limitTitle": "Project limit reached",
+    "limitDescription": "Your {plan} plan allows up to {max} projects. To create another Searchbox you need to upgrade.",
+    "viewBilling": "View billing in Settings",
+    "afterCreate": "After creating",
+    "afterSteps": ["You choose your own keywords and subreddits", "The project is selected automatically", "The dashboard filters leads by that project"]
+  },
+  "onboarding": {
+    "generating": "Generating suggestions...",
+    "pending": "We're analyzing your site and generating keywords and subreddits for your project.",
+    "reviewTitle": "Choose your keywords and subreddits",
+    "keywords": "Keywords",
+    "subreddits": "Subreddits",
+    "addCustomKeyword": "Add custom keyword",
+    "addCustomSubreddit": "Add custom subreddit",
+    "startScraping": "Start scanning",
+    "retry": "Retry suggestions",
+    "failed": "Failed to generate suggestions"
+  },
+  "auth": {
+    "kicker": "Login",
+    "title": "Sign in to ReddProwl",
+    "emailLabel": "Email",
+    "submit": "Send magic link",
+    "orContinueWith": "or continue with",
+    "signInWithGoogle": "Sign in with Google",
+    "checkEmail": "Check your email — we sent you a login link."
+  },
+  "admin": {
+    "nav": {
+      "stats": "Stats",
+      "users": "Users",
+      "scraping": "Scraping logs",
+      "backToDashboard": "Back to dashboard"
+    },
+    "stats": {
+      "kicker": "Admin",
+      "title": "Global stats",
+      "totalUsers": "Total users",
+      "totalProjects": "Active projects",
+      "totalLeads": "Total leads",
+      "leads7Days": "Leads last 7 days",
+      "leads30Days": "Leads last 30 days",
+      "totalReplies": "AI replies generated",
+      "totalScrapeRuns": "Total scrape runs"
+    },
+    "users": {
+      "kicker": "Admin",
+      "email": "Email",
+      "plan": "Plan",
+      "projects": "Projects",
+      "leads": "Leads",
+      "registered": "Registered",
+      "changePlan": "Change plan",
+      "save": "Save",
+      "noUsers": "No users yet.",
+      "adminBadge": "admin"
+    },
+    "scraping": {
+      "kicker": "Admin",
+      "title": "Scraping logs",
+      "description": "Last 200 scraping runs.",
+      "project": "Project",
+      "owner": "Owner",
+      "status": "Status",
+      "start": "Start",
+      "postsSeen": "Posts seen",
+      "leads": "Leads",
+      "dupes": "Dupes",
+      "error": "Error",
+      "noLogs": "No scraping logs yet."
+    }
+  }
+}

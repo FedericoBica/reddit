@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Logo, Wordmark } from "./logo";
 import { ProjectSwitcher } from "./project-switcher";
 import { PushNotificationToggle } from "./push-notification-toggle";
@@ -66,7 +67,11 @@ async function DashboardShellContent({
   isAdminPromise: Promise<boolean>;
   children: React.ReactNode;
 }) {
-  const [billingLimit, isAdmin] = await Promise.all([billingLimitPromise, isAdminPromise]);
+  const [billingLimit, isAdmin, t] = await Promise.all([
+    billingLimitPromise,
+    isAdminPromise,
+    getTranslations("nav"),
+  ]);
 
   return (
     <div
@@ -159,7 +164,7 @@ async function DashboardShellContent({
                   transition: "color 160ms ease",
                 }}
               >
-                Cerrar sesión
+                {t("signOut")}
               </button>
             </form>
             {isAdmin && (
@@ -176,7 +181,7 @@ async function DashboardShellContent({
                   letterSpacing: "0.02em",
                 }}
               >
-                Admin
+                {t("admin")}
               </Link>
             )}
           </div>
