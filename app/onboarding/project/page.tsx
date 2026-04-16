@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Logo, Wordmark } from "@/app/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,9 +42,10 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
     redirect(`/dashboard?projectId=${project.id}`);
   }
 
-  const [keywords, subreddits] = await Promise.all([
+  const [keywords, subreddits, t] = await Promise.all([
     listProjectKeywordSuggestions(project.id),
     listProjectSubredditSuggestions(project.id),
+    getTranslations("onboarding"),
   ]);
 
   const isGenerating = project.onboarding_status === "suggestions_pending";
@@ -75,10 +77,9 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
       <section className="page-header" style={{ borderBottom: 0, paddingBottom: 8 }}>
         <div>
           <p className="page-kicker">Onboarding</p>
-          <h1 className="page-title">Elegí dónde vamos a buscar leads</h1>
+          <h1 className="page-title">{t("reviewTitle")}</h1>
           <p className="page-copy">
-            Confirmá las sugerencias y agregá señales manuales. Esto define qué
-            conversaciones monitorea ReddProwl para {project.name}.
+            {t("pending")}
           </p>
         </div>
         <StepBadge status={project.onboarding_status} />
@@ -88,10 +89,9 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
         {isGenerating && (
           <Card className="mb-[18px] gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
             <CardContent className="p-5">
-              <p className="section-title">Estamos generando sugerencias</p>
+              <p className="section-title">{t("generating")}</p>
               <p className="section-copy" style={{ marginTop: 8 }}>
-                Podés refrescar en unos segundos. Si preferís avanzar ahora,
-                completá keywords y subreddits manualmente abajo.
+                {t("pending")}
               </p>
             </CardContent>
           </Card>
@@ -107,18 +107,17 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
               <div>
                 <p className="section-title">
                   {project.onboarding_status === "suggestions_failed"
-                    ? "No pudimos generar sugerencias"
-                    : "Generá sugerencias con IA"}
+                    ? t("failed")
+                    : t("generating")}
                 </p>
                 <p className="section-copy" style={{ marginTop: 8 }}>
-                  {project.suggestions_error ??
-                    "Analizamos tu producto para proponer keywords y subreddits iniciales."}
+                  {project.suggestions_error ?? t("pending")}
                 </p>
               </div>
               <form action={retryInitialProjectSuggestions}>
                 <input type="hidden" name="projectId" value={project.id} />
                 <Button className="h-10 rounded-[8px] font-extrabold" type="submit">
-                  Generar sugerencias
+                  {t("retry")}
                 </Button>
               </form>
             </CardContent>
@@ -131,7 +130,7 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
           <div className="suggestion-grid">
             <Card className="gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
               <CardContent className="p-5">
-                <p className="section-title">Keywords sugeridas</p>
+                <p className="section-title">{t("keywords")}</p>
                 <p className="section-copy" style={{ marginTop: 8 }}>
                   Buscamos señales como dolor, comparación, intención de compra y
                   alternativas a competidores.
@@ -169,7 +168,7 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
 
             <Card className="gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
               <CardContent className="p-5">
-                <p className="section-title">Subreddits sugeridos</p>
+                <p className="section-title">{t("subreddits")}</p>
                 <p className="section-copy" style={{ marginTop: 8 }}>
                   Priorizá comunidades donde tu comprador pregunta, compara o
                   pide recomendaciones.
@@ -217,23 +216,23 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
                 }}
               >
                 <label className="field-group">
-                  <span className="field-label">Keywords manuales</span>
+                  <span className="field-label">{t("addCustomKeyword")}</span>
                   <Textarea
                     className="min-h-[112px] rounded-[8px] bg-white px-3 py-3 text-sm"
                     name="customKeywords"
                     placeholder={"best crm for startups\nhubspot alternative\nneed lead gen tool"}
                   />
-                  <span className="field-hint">Una por línea o separadas por coma.</span>
+                  <span className="field-hint">One per line or comma-separated.</span>
                 </label>
 
                 <label className="field-group">
-                  <span className="field-label">Subreddits manuales</span>
+                  <span className="field-label">{t("addCustomSubreddit")}</span>
                   <Textarea
                     className="min-h-[112px] rounded-[8px] bg-white px-3 py-3 text-sm"
                     name="customSubreddits"
                     placeholder={"SaaS\nstartups\ngrowthhacking"}
                   />
-                  <span className="field-hint">Sin el prefijo r/.</span>
+                  <span className="field-hint">Without the r/ prefix.</span>
                 </label>
               </div>
             </CardContent>
@@ -254,7 +253,7 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
                 : "Necesitás al menos una keyword o subreddit manual si todavía no hay sugerencias."}
             </p>
             <Button className="h-10 rounded-[8px] font-extrabold" type="submit">
-              Activar monitoreo
+              {t("startScraping")}
             </Button>
           </div>
         </form>
@@ -265,11 +264,11 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
 
 function StepBadge({ status }: { status: string }) {
   const labelByStatus: Record<string, string> = {
-    needs_suggestions: "Sugerencias pendientes",
-    suggestions_pending: "Generando",
-    suggestions_ready: "Listo para revisar",
-    suggestions_failed: "Reintentar",
-    completed: "Completado",
+    needs_suggestions: "Pending",
+    suggestions_pending: "Generating…",
+    suggestions_ready: "Ready to review",
+    suggestions_failed: "Retry",
+    completed: "Completed",
   };
 
   return (

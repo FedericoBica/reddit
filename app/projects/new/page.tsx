@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Logo, Wordmark } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -16,7 +17,7 @@ import { createAdditionalProject } from "@/modules/projects/actions";
 import { resolveCurrentProject } from "@/modules/projects/current";
 
 export const metadata: Metadata = {
-  title: "Nuevo proyecto",
+  title: "New project",
 };
 
 type NewProjectPageProps = {
@@ -33,8 +34,15 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
   }
 
   const { currentProject, projects } = projectState;
-  const limit = await getCurrentBillingPlan();
+  const [limit, t] = await Promise.all([
+    getCurrentBillingPlan(),
+    getTranslations("newProject"),
+  ]);
+  const tCommon = await getTranslations("common");
+  const tPlan = await getTranslations("plan");
   const canCreate = canCreateProject(projects.length, limit);
+
+  const steps = t.raw("steps") as string[];
 
   return (
     <main className="auth-shell">
@@ -45,7 +53,7 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
         </div>
 
         <div style={{ maxWidth: 700 }}>
-          <span className="eyebrow">Nuevo Searchbox</span>
+          <span className="eyebrow">{t("eyebrow")}</span>
           <h1
             style={{
               fontSize: "clamp(40px, 7vw, 72px)",
@@ -55,24 +63,19 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
               marginTop: 24,
             }}
           >
-            Otro producto, otro mercado. Mismo poder de detección.
+            {t("headline")}
           </h1>
           <p className="page-copy" style={{ fontSize: 18, marginTop: 24 }}>
-            Separá proyectos por producto, segmento o región. Cada uno tiene
-            sus propias keywords, subreddits y leads.
+            {t("description")}
           </p>
         </div>
 
         <Card className="max-w-[640px] gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
           <CardContent className="p-5">
-            <p className="section-title">Qué pasa después</p>
+            <p className="section-title">{t("whatHappensNext")}</p>
             <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
-              {[
-                ["01", "Generamos sugerencias de keywords y subreddits"],
-                ["02", "Elegís cuáles activar para este proyecto"],
-                ["03", "El scraper empieza a buscar leads relevantes"],
-              ].map(([step, text]) => (
-                <div key={step} style={{ display: "flex", gap: 14, alignItems: "center" }}>
+              {steps.map((text, i) => (
+                <div key={i} style={{ display: "flex", gap: 14, alignItems: "center" }}>
                   <span
                     style={{
                       color: "#E07000",
@@ -82,7 +85,7 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
                       minWidth: 38,
                     }}
                   >
-                    {step}
+                    {String(i + 1).padStart(2, "0")}
                   </span>
                   <span style={{ fontSize: 14, color: "#6B6B6E", lineHeight: 1.5 }}>{text}</span>
                 </div>
@@ -105,15 +108,15 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
               marginBottom: 14,
             }}
           >
-            ← Volver al dashboard
+            {tCommon("backToDashboard")}
           </Link>
 
-          <p className="page-kicker">Nuevo proyecto</p>
+          <p className="page-kicker">{t("kicker")}</p>
           <h2 className="page-title" style={{ fontSize: 38 }}>
-            Configurá tu Searchbox
+            {t("title")}
           </h2>
           <p className="page-copy">
-            Plan actual: {limit.label} · {formatProjectUsage(projects.length, limit)}.
+            {t("planUsage")}: {limit.label} · {formatProjectUsage(projects.length, limit)}.
           </p>
 
           {params?.error && (
@@ -127,50 +130,50 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
           {canCreate ? (
             <form action={createAdditionalProject} style={{ display: "grid", gap: 18, marginTop: 28 }}>
               <label className="field-group">
-                <span className="field-label">Nombre del proyecto</span>
+                <span className="field-label">Project name</span>
                 <Input
                   className="h-11 rounded-[8px] bg-white px-3 text-sm"
                   name="name"
-                  placeholder="Producto, región o vertical"
+                  placeholder={t("form.namePlaceholder")}
                   required
                   maxLength={120}
                 />
               </label>
 
               <label className="field-group">
-                <span className="field-label">Sitio web</span>
+                <span className="field-label">Website</span>
                 <Input
                   className="h-11 rounded-[8px] bg-white px-3 text-sm"
                   name="websiteUrl"
                   type="url"
-                  placeholder="https://tuproducto.com"
+                  placeholder="https://yourproduct.com"
                 />
                 <span className="field-hint">
-                  Opcional, pero mejora las sugerencias de keywords.
+                  {t("form.websiteHint")}
                 </span>
               </label>
 
               <label className="field-group">
-                <span className="field-label">Propuesta de valor</span>
+                <span className="field-label">Value proposition</span>
                 <Textarea
                   className="min-h-[112px] rounded-[8px] bg-white px-3 py-3 text-sm"
                   name="valueProposition"
-                  placeholder="Ayudamos a equipos B2B a..."
+                  placeholder={t("form.valuePropositionPlaceholder")}
                   maxLength={2000}
                 />
               </label>
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
                 <label className="field-group">
-                  <span className="field-label">Región</span>
+                  <span className="field-label">Region</span>
                   <Input
                     className="h-11 rounded-[8px] bg-white px-3 text-sm"
                     name="region"
-                    placeholder="US, LATAM, global"
+                    placeholder={t("form.regionPlaceholder")}
                   />
                 </label>
                 <label className="field-group">
-                  <span className="field-label">Idioma</span>
+                  <span className="field-label">Language</span>
                   <select className="select" name="primaryLanguage" defaultValue="en">
                     <option value="en">English</option>
                     <option value="es">Español</option>
@@ -180,19 +183,18 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
               </div>
 
               <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                Crear proyecto y configurar
+                {t("form.submit")}
               </Button>
             </form>
           ) : (
             <div style={{ marginTop: 28 }}>
-              <p className="section-title">Límite de proyectos alcanzado</p>
+              <p className="section-title">{t("limitTitle")}</p>
               <p className="section-copy" style={{ marginTop: 10 }}>
-                Tu plan {limit.label} permite hasta {limit.maxProjects} proyectos.
-                Para crear otro Searchbox necesitás cambiar de plan.
+                {t("limitDescription", { plan: limit.label, max: limit.maxProjects ?? "∞" })}
               </p>
               <Button asChild className="mt-5 h-10 rounded-[8px] font-extrabold">
                 <Link href={`/settings?projectId=${currentProject.id}`}>
-                  Ver billing en Settings
+                  {tCommon("viewBilling")}
                 </Link>
               </Button>
             </div>

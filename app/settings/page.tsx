@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getLocale } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "@/app/components/locale-switcher";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listProjectKeywords, listProjectSubreddits, listRecentScrapeRuns } from "@/db/queries/settings";
@@ -38,8 +38,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     redirect(`/onboarding/project?projectId=${currentProject.id}`);
   }
 
-  const currentLocale = await getLocale();
-  const [keywords, subreddits, scrapeRuns] = await Promise.all([
+  const [currentLocale, t, keywords, subreddits, scrapeRuns] = await Promise.all([
+    getLocale(),
+    getTranslations("settings"),
     listProjectKeywords(currentProject.id),
     listProjectSubreddits(currentProject.id),
     listRecentScrapeRuns(currentProject.id, 8),
@@ -58,10 +59,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
       <div className="app-page" style={{ minHeight: "100vh" }}>
         <header className="page-header">
           <div>
-            <p className="page-kicker">Settings</p>
+            <p className="page-kicker">{t("kicker")}</p>
             <h1 className="page-title">{currentProject.name}</h1>
             <p className="page-copy">
-              {activeKeywords.length} keywords · {activeSubreddits.length} subreddits monitored
+              {activeKeywords.length} {t("keywords").toLowerCase()} · {activeSubreddits.length} {t("subreddits").toLowerCase()} monitored
             </p>
           </div>
         </header>
@@ -84,7 +85,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <form action={updateProjectFromForm}>
               <input type="hidden" name="projectId" value={currentProject.id} />
               <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <FieldRow label="Project name">
+                <FieldRow label={t("projectName")}>
                   <input
                     className="settings-input"
                     name="name"
@@ -93,7 +94,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     required
                   />
                 </FieldRow>
-                <FieldRow label="Website URL">
+                <FieldRow label={t("website")}>
                   <input
                     className="settings-input"
                     name="websiteUrl"
@@ -102,7 +103,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     type="url"
                   />
                 </FieldRow>
-                <FieldRow label="Value proposition" vertical>
+                <FieldRow label={t("valueProposition")} vertical>
                   <textarea
                     className="settings-input"
                     name="valueProposition"
@@ -122,7 +123,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                     style={{ resize: "vertical" }}
                   />
                 </FieldRow>
-                <FieldRow label="Region">
+                <FieldRow label={t("region")}>
                   <input
                     className="settings-input"
                     name="region"
@@ -132,7 +133,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 </FieldRow>
                 <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 4 }}>
                   <button type="submit" className="settings-btn-primary">
-                    Save changes
+                    {t("save")}
                   </button>
                 </div>
               </div>
@@ -141,9 +142,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
           {/* Keywords */}
           <SettingsSection
-            title="Keywords"
+            title={t("keywords")}
             description="Terms the scraper looks for in Reddit posts. Toggle to pause without deleting."
-            badge={`${activeKeywords.length} active`}
+            badge={`${activeKeywords.length} ${t("activeKeywords")}`}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {keywords.length === 0 ? (
@@ -162,7 +163,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <input
                 className="settings-input"
                 name="term"
-                placeholder="Add keyword…"
+                placeholder={t("addKeyword")}
                 required
                 style={{ flex: 1 }}
               />
@@ -174,9 +175,9 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
           {/* Subreddits */}
           <SettingsSection
-            title="Subreddits"
+            title={t("subreddits")}
             description="Communities scanned for matching posts. Toggle to pause without deleting."
-            badge={`${activeSubreddits.length} active`}
+            badge={`${activeSubreddits.length} ${t("activeSubreddits")}`}
           >
             <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
               {subreddits.length === 0 ? (
@@ -195,7 +196,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <input
                 className="settings-input"
                 name="name"
-                placeholder="r/subreddit or subredditname"
+                placeholder={t("addSubreddit")}
                 required
                 style={{ flex: 1 }}
               />
@@ -207,7 +208,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
           {/* Scraper health */}
           <SettingsSection
-            title="Scraper health"
+            title={t("scrapeHistory")}
             description="Recent scrape runs for this project."
           >
             <ScraperHealth project={currentProject} scrapeRuns={scrapeRuns} />
@@ -215,8 +216,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
           {/* Interface Language */}
           <SettingsSection
-            title="Interface language"
-            description="Auto-detected from your browser. Override it here."
+            title={t("appLanguage")}
+            description={t("appLanguageHint")}
           >
             <LocaleSwitcher currentLocale={currentLocale} />
           </SettingsSection>

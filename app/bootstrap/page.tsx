@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Logo, Wordmark } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,16 +11,21 @@ import { requireUser } from "@/modules/auth/server";
 import { createFirstProject } from "@/modules/projects/actions";
 
 export const metadata: Metadata = {
-  title: "Crear proyecto",
+  title: "Setup",
 };
 
 export default async function BootstrapPage() {
   await requireUser("/bootstrap");
-  const projects = await listProjectsForCurrentUser();
+  const [projects, t] = await Promise.all([
+    listProjectsForCurrentUser(),
+    getTranslations("bootstrap"),
+  ]);
 
   if (projects.length > 0) {
     redirect("/dashboard");
   }
+
+  const steps = t.raw("steps") as string[];
 
   return (
     <main className="auth-shell">
@@ -30,7 +36,7 @@ export default async function BootstrapPage() {
         </div>
 
         <div style={{ maxWidth: 700 }}>
-          <span className="eyebrow">Setup en 5 minutos</span>
+          <span className="eyebrow">{t("eyebrow")}</span>
           <h1
             style={{
               fontSize: "clamp(40px, 7vw, 72px)",
@@ -40,24 +46,19 @@ export default async function BootstrapPage() {
               marginTop: 24,
             }}
           >
-            Decinos qué vendés. Nosotros buscamos señales de compra.
+            {t("headline")}
           </h1>
           <p className="page-copy" style={{ fontSize: 18, marginTop: 24 }}>
-            Con tu web y una descripción corta generamos keywords, subreddits y
-            un primer mapa de intención.
+            {t("description")}
           </p>
         </div>
 
         <Card className="max-w-[640px] gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
           <CardContent className="p-5">
-            <p className="section-title">Qué pasa después</p>
+            <p className="section-title">{t("whatHappensNext")}</p>
             <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
-              {[
-                ["01", "Generamos sugerencias iniciales"],
-                ["02", "Elegís qué keywords y subreddits usar"],
-                ["03", "El scraper empieza a buscar leads relevantes"],
-              ].map(([step, text]) => (
-                <div key={step} style={{ display: "flex", gap: 14, alignItems: "center" }}>
+              {steps.map((text, i) => (
+                <div key={i} style={{ display: "flex", gap: 14, alignItems: "center" }}>
                   <span
                     style={{
                       color: "#E07000",
@@ -67,7 +68,7 @@ export default async function BootstrapPage() {
                       minWidth: 38,
                     }}
                   >
-                    {step}
+                    {String(i + 1).padStart(2, "0")}
                   </span>
                   <span style={{ fontSize: 14, color: "#6B6B6E", lineHeight: 1.5 }}>{text}</span>
                 </div>
@@ -79,49 +80,46 @@ export default async function BootstrapPage() {
 
       <section className="auth-panel">
         <div style={{ maxWidth: 430, width: "100%", margin: "0 auto" }}>
-          <p className="page-kicker">Primer proyecto</p>
+          <p className="page-kicker">{t("kicker")}</p>
           <h2 className="page-title" style={{ fontSize: 38 }}>
-            Configurá tu Searchbox
+            {t("title")}
           </h2>
-          <p className="page-copy">
-            Mantené la descripción concreta. Cuanto más claro el ICP, mejores
-            van a ser las sugerencias.
-          </p>
+          <p className="page-copy">{t("subtitle")}</p>
 
           <form action={createFirstProject} style={{ display: "grid", gap: 18, marginTop: 28 }}>
             <label className="field-group">
-              <span className="field-label">Nombre del proyecto</span>
-              <Input className="h-11 rounded-[8px] bg-white px-3 text-sm" name="name" placeholder="Mi SaaS" required maxLength={120} />
+              <span className="field-label">{t("form.name")}</span>
+              <Input className="h-11 rounded-[8px] bg-white px-3 text-sm" name="name" placeholder={t("form.namePlaceholder")} required maxLength={120} />
             </label>
 
             <label className="field-group">
-              <span className="field-label">Sitio web</span>
+              <span className="field-label">Website</span>
               <Input
                 className="h-11 rounded-[8px] bg-white px-3 text-sm"
                 name="websiteUrl"
                 type="url"
-                placeholder="https://tuproducto.com"
+                placeholder="https://yourproduct.com"
               />
-              <span className="field-hint">Opcional, pero ayuda a detectar posicionamiento.</span>
+              <span className="field-hint">{t("form.websiteHint")}</span>
             </label>
 
             <label className="field-group">
-              <span className="field-label">Propuesta de valor</span>
+              <span className="field-label">Value proposition</span>
               <Textarea
                 className="min-h-[112px] rounded-[8px] bg-white px-3 py-3 text-sm"
                 name="valueProposition"
-                placeholder="Ayudamos a equipos B2B a..."
+                placeholder={t("form.valuePropositionPlaceholder")}
                 maxLength={2000}
               />
             </label>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <label className="field-group">
-                <span className="field-label">Región</span>
-                <Input className="h-11 rounded-[8px] bg-white px-3 text-sm" name="region" placeholder="US, LATAM, global" />
+                <span className="field-label">Region</span>
+                <Input className="h-11 rounded-[8px] bg-white px-3 text-sm" name="region" placeholder={t("form.regionPlaceholder")} />
               </label>
               <label className="field-group">
-                <span className="field-label">Idioma</span>
+                <span className="field-label">Language</span>
                 <select className="select" name="primaryLanguage" defaultValue="en">
                   <option value="en">English</option>
                   <option value="es">Español</option>
@@ -131,7 +129,7 @@ export default async function BootstrapPage() {
             </div>
 
             <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-              Crear proyecto
+              {t("form.submit")}
             </Button>
           </form>
         </div>
