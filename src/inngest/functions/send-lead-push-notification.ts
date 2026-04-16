@@ -7,7 +7,7 @@ export const sendLeadPushNotification = inngest.createFunction(
     name: "Send lead push notification",
     retries: 2,
     concurrency: {
-      limit: 10,
+      limit: 5,
       key: "event.data.projectId",
     },
     triggers: [{ event: "leads/high_intent.created" }],
