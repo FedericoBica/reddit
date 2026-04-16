@@ -36,14 +36,20 @@ OPENAI_LEAD_CLASSIFIER_MODEL=gpt-4o-mini
 OPENAI_LEAD_CLASSIFIER_TEMPERATURE=0.2
 OPENAI_LEAD_CLASSIFIER_TIMEOUT_MS=25000
 LEAD_INTENT_THRESHOLD=70
-REDDIT_CLIENT_ID=<reddit app client id>
-REDDIT_CLIENT_SECRET=<reddit app client secret>
-REDDIT_USER_AGENT=web:reddit-lead-radar:0.1.0 (by /u/replace-with-real-reddit-username)
+REDDIT_PROVIDER=apify
+APIFY_API_TOKEN=<apify api token>
+APIFY_REDDIT_ACTOR_ID=harshmaur/reddit-scraper
+APIFY_REDDIT_TIMEOUT_SECS=90
+REDDIT_CLIENT_ID=<optional reddit app client id if REDDIT_PROVIDER=oauth>
+REDDIT_CLIENT_SECRET=<optional reddit app client secret if REDDIT_PROVIDER=oauth>
+REDDIT_USER_AGENT=web:reddprowl:0.1.0 (contact: your-email-or-domain)
 SCRAPE_GLOBAL_CRON=*/30 * * * *
 SCRAPE_MAX_PROJECTS_PER_RUN=10
 SCRAPE_MAX_SUBREDDITS_PER_PROJECT=5
 SCRAPE_MAX_POSTS_PER_SUBREDDIT=25
 ```
+
+`REDDIT_PROVIDER=apify` runs the Apify actor `harshmaur/reddit-scraper` and does not require an official Reddit app. Use `REDDIT_PROVIDER=oauth` only if you already have official Reddit API credentials, or `REDDIT_PROVIDER=public` for Reddit's public JSON listings.
 
 Start the Next.js dev server:
 
@@ -147,3 +153,4 @@ npm run lint
 npm run typecheck
 npm run build
 ```
+# reddit
