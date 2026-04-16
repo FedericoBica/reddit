@@ -1,26 +1,30 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { getAdminStats } from "@/db/queries/admin";
 
 export const metadata: Metadata = { title: "Admin — Stats" };
 
 export default async function AdminStatsPage() {
-  const stats = await getAdminStats();
+  const [stats, t] = await Promise.all([
+    getAdminStats(),
+    getTranslations("admin.stats"),
+  ]);
 
   const cards = [
-    { label: "Usuarios totales", value: stats.totalUsers },
-    { label: "Proyectos activos", value: stats.totalProjects },
-    { label: "Leads totales", value: stats.totalLeads },
-    { label: "Leads últimos 7 días", value: stats.leadsLast7Days },
-    { label: "Leads últimos 30 días", value: stats.leadsLast30Days },
-    { label: "AI replies generadas", value: stats.totalReplies },
-    { label: "Scrape runs totales", value: stats.totalScrapeRuns },
+    { label: t("totalUsers"), value: stats.totalUsers },
+    { label: t("totalProjects"), value: stats.totalProjects },
+    { label: t("totalLeads"), value: stats.totalLeads },
+    { label: t("leads7Days"), value: stats.leadsLast7Days },
+    { label: t("leads30Days"), value: stats.leadsLast30Days },
+    { label: t("totalReplies"), value: stats.totalReplies },
+    { label: t("totalScrapeRuns"), value: stats.totalScrapeRuns },
   ];
 
   return (
     <div className="app-page">
       <header className="page-header">
-        <p className="page-kicker">Admin</p>
-        <h1 className="page-title">Stats globales</h1>
+        <p className="page-kicker">{t("kicker")}</p>
+        <h1 className="page-title">{t("title")}</h1>
       </header>
 
       <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 32px 40px" }}>

@@ -1,9 +1,13 @@
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { Logo, Wordmark } from "@/app/components/logo";
 import { requireAdmin } from "@/modules/auth/admin";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const user = await requireAdmin();
+  const [user, t] = await Promise.all([
+    requireAdmin(),
+    getTranslations("admin.nav"),
+  ]);
 
   return (
     <div style={{ display: "flex", height: "100vh", overflow: "hidden", background: "#FAFAF8" }}>
@@ -29,9 +33,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
         <nav style={{ flex: 1, padding: "10px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
           {[
-            { href: "/admin", label: "Stats" },
-            { href: "/admin/users", label: "Usuarios" },
-            { href: "/admin/scraping", label: "Scraping logs" },
+            { href: "/admin",          label: t("stats")   },
+            { href: "/admin/users",    label: t("users")   },
+            { href: "/admin/scraping", label: t("scraping") },
           ].map((item) => (
             <Link
               key={item.href}
@@ -49,7 +53,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             {user.email}
           </p>
           <Link href="/dashboard" style={{ fontSize: 11, fontWeight: 600, color: "#8E8E93", textDecoration: "underline", textUnderlineOffset: 2 }}>
-            Volver al dashboard
+            {t("backToDashboard")}
           </Link>
         </div>
       </aside>

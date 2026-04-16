@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { listAdminScrapeLogs } from "@/db/queries/admin";
 
 export const metadata: Metadata = { title: "Admin — Scraping logs" };
@@ -11,14 +12,17 @@ const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
 };
 
 export default async function AdminScrapingPage() {
-  const logs = await listAdminScrapeLogs(200);
+  const [logs, t] = await Promise.all([
+    listAdminScrapeLogs(200),
+    getTranslations("admin.scraping"),
+  ]);
 
   return (
     <div className="app-page">
       <header className="page-header">
-        <p className="page-kicker">Admin</p>
-        <h1 className="page-title">Scraping logs</h1>
-        <p className="page-copy">Últimas 200 ejecuciones de scraping.</p>
+        <p className="page-kicker">{t("kicker")}</p>
+        <h1 className="page-title">{t("title")}</h1>
+        <p className="page-copy">{t("description")}</p>
       </header>
 
       <section style={{ maxWidth: 1200, margin: "0 auto", padding: "0 32px 40px" }}>
@@ -33,7 +37,7 @@ export default async function AdminScrapingPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #F0F0EE", background: "#FAFAF8" }}>
-                {["Proyecto", "Owner", "Estado", "Inicio", "Posts vistos", "Leads", "Dupes", "Error"].map((h) => (
+                {[t("project"), t("owner"), t("status"), t("start"), t("postsSeen"), t("leads"), t("dupes"), t("error")].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -82,7 +86,7 @@ export default async function AdminScrapingPage() {
                       </span>
                     </td>
                     <td style={{ padding: "10px 14px", fontSize: 12, color: "#6B6B6E", whiteSpace: "nowrap" }}>
-                      {new Date(log.started_at).toLocaleString("es-AR", {
+                      {new Date(log.started_at).toLocaleString(undefined, {
                         day: "2-digit", month: "2-digit",
                         hour: "2-digit", minute: "2-digit",
                       })}
@@ -107,7 +111,7 @@ export default async function AdminScrapingPage() {
 
           {logs.length === 0 && (
             <p style={{ padding: 24, fontSize: 13, color: "#8E8E93", textAlign: "center" }}>
-              No hay logs de scraping todavía.
+              {t("noLogs")}
             </p>
           )}
         </div>

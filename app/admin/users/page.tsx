@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { listAdminUsers } from "@/db/queries/admin";
 import { updateUserBillingPlan } from "@/modules/admin/actions";
 
@@ -17,13 +18,16 @@ const PLAN_COLORS: Record<string, string> = {
 };
 
 export default async function AdminUsersPage() {
-  const users = await listAdminUsers();
+  const [users, t] = await Promise.all([
+    listAdminUsers(),
+    getTranslations("admin.users"),
+  ]);
 
   return (
     <div className="app-page">
       <header className="page-header">
-        <p className="page-kicker">Admin</p>
-        <h1 className="page-title">Usuarios ({users.length})</h1>
+        <p className="page-kicker">{t("kicker")}</p>
+        <h1 className="page-title">Users ({users.length})</h1>
       </header>
 
       <section style={{ maxWidth: 1100, margin: "0 auto", padding: "0 32px 40px" }}>
@@ -38,7 +42,7 @@ export default async function AdminUsersPage() {
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid #F0F0EE", background: "#FAFAF8" }}>
-                {["Email", "Plan", "Proyectos", "Leads", "Registro", "Cambiar plan"].map((h) => (
+                {[t("email"), t("plan"), t("projects"), t("leads"), t("registered"), t("changePlan")].map((h) => (
                   <th
                     key={h}
                     style={{
@@ -108,7 +112,7 @@ export default async function AdminUsersPage() {
                     {user.leads_count}
                   </td>
                   <td style={{ padding: "12px 16px", fontSize: 12, color: "#8E8E93" }}>
-                    {new Date(user.created_at).toLocaleDateString("es-AR")}
+                    {new Date(user.created_at).toLocaleDateString()}
                   </td>
                   <td style={{ padding: "12px 16px" }}>
                     <form action={updateUserBillingPlan} style={{ display: "flex", gap: 6, alignItems: "center" }}>
@@ -143,7 +147,7 @@ export default async function AdminUsersPage() {
                           cursor: "pointer",
                         }}
                       >
-                        Guardar
+                        {t("save")}
                       </button>
                     </form>
                   </td>
@@ -154,7 +158,7 @@ export default async function AdminUsersPage() {
 
           {users.length === 0 && (
             <p style={{ padding: 24, fontSize: 13, color: "#8E8E93", textAlign: "center" }}>
-              No hay usuarios todavía.
+              {t("noUsers")}
             </p>
           )}
         </div>

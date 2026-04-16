@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { Logo, Wordmark } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,7 +13,7 @@ import {
 import { getCurrentUser } from "@/modules/auth/server";
 
 export const metadata: Metadata = {
-  title: "Ingresar",
+  title: "Login",
 };
 
 type LoginPageProps = {
@@ -25,7 +26,10 @@ type LoginPageProps = {
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const user = await getCurrentUser();
+  const [user, t] = await Promise.all([
+    getCurrentUser(),
+    getTranslations("auth"),
+  ]);
   const params = await searchParams;
   const next = sanitizeNext(params?.next);
   const email = String(params?.email ?? "").trim().toLowerCase();
@@ -44,7 +48,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         </div>
 
         <div style={{ maxWidth: 660 }}>
-          <span className="eyebrow">Leads de Reddit en piloto automático</span>
+          <span className="eyebrow">Reddit leads on autopilot</span>
           <h1
             style={{
               fontSize: "clamp(42px, 7vw, 76px)",
@@ -55,11 +59,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               maxWidth: 720,
             }}
           >
-            Encontrá clientes donde ya están pidiendo tu producto.
+            Find customers where they're already asking for your product.
           </h1>
           <p className="page-copy" style={{ fontSize: 18, marginTop: 24 }}>
-            ReddProwl detecta intención de compra, prioriza oportunidades y te
-            ayuda a responder sin sonar como spam.
+            ReddProwl detects buying intent, prioritizes opportunities and helps
+            you reply without sounding like spam.
           </p>
         </div>
 
@@ -72,9 +76,9 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           }}
         >
           {[
-            ["92%", "relevancia esperada"],
-            ["60s", "primer setup"],
-            ["3x", "más rápido que manual"],
+            ["92%", "expected relevance"],
+            ["60s", "first setup"],
+            ["3x", "faster than manual"],
           ].map(([value, label]) => (
             <div className="metric" key={label}>
               <div className="metric-value">{value}</div>
@@ -86,20 +90,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
       <section className="auth-panel">
         <div style={{ maxWidth: 390, width: "100%", margin: "0 auto" }}>
-          <p className="page-kicker">Acceso</p>
+          <p className="page-kicker">{t("kicker")}</p>
           <h2 className="page-title" style={{ fontSize: 38 }}>
-            {isCodeStep ? "Ingresá el código" : "Entrá a tu dashboard"}
+            {t("title")}
           </h2>
-          <p className="page-copy">
-            {isCodeStep
-              ? `Te enviamos un código a ${email}.`
-              : "Si ya tenés cuenta, te mandamos un código de acceso. Las cuentas nuevas se crean desde signup."}
-          </p>
 
           {params?.sent === "1" && (
             <Card className="mt-[22px] gap-0 rounded-[8px] border-[#D1FAE5] bg-[#F0FDF4] py-0 text-[#065F46] shadow-none ring-0">
               <CardContent className="p-5 text-sm leading-6">
-                Te enviamos el código de acceso. En local podés verlo en Mailpit.
+                {t("checkEmail")}
               </CardContent>
             </Card>
           )}
@@ -115,7 +114,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               <input type="hidden" name="email" value={email} />
               <input type="hidden" name="next" value={next} />
               <label className="field-group">
-                <span className="field-label">Código de acceso</span>
+                <span className="field-label">Access code</span>
                 <Input
                   className="h-11 rounded-[8px] bg-white px-3 text-sm"
                   name="token"
@@ -125,11 +124,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   required
                 />
                 <span className="field-hint">
-                  Mailpit local: http://127.0.0.1:54324
+                  Local Mailpit: http://127.0.0.1:54324
                 </span>
               </label>
               <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                Entrar al dashboard
+                Enter dashboard
                 <ArrowRightIcon />
               </Button>
             </form>
@@ -143,44 +142,34 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   variant="outline"
                 >
                   <GoogleIcon />
-                  Entrar con Google
+                  {t("signInWithGoogle")}
                 </Button>
               </form>
 
               <div className="signup-auth-divider">
-                <span>o usá email</span>
+                <span>{t("orContinueWith")}</span>
               </div>
 
               <form action={signInWithMagicLink} style={{ display: "grid", gap: 18, marginTop: 22 }}>
                 <input type="hidden" name="next" value={next} />
                 <label className="field-group">
-                  <span className="field-label">Email de trabajo</span>
+                  <span className="field-label">{t("emailLabel")}</span>
                   <Input
                     className="h-11 rounded-[8px] bg-white px-3 text-sm"
                     name="email"
                     type="email"
-                    placeholder="vos@empresa.com"
+                    placeholder="you@company.com"
                     autoComplete="email"
                     required
                   />
                 </label>
                 <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                  Enviarme código
+                  {t("submit")}
                   <ArrowRightIcon />
                 </Button>
               </form>
             </>
           )}
-
-          <p className="section-copy" style={{ marginTop: 18, textAlign: "center" }}>
-            ¿No tenés cuenta?{" "}
-            <a
-              href="/signup"
-              style={{ color: "#E07000", fontWeight: 800, textDecoration: "none" }}
-            >
-              Crear cuenta
-            </a>
-          </p>
         </div>
       </section>
     </main>
