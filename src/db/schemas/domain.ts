@@ -31,7 +31,7 @@ export const createProjectSchema = z.object({
   name: z.string().trim().min(1).max(120),
   websiteUrl: z.string().url().max(500).optional().nullable(),
   valueProposition: z.string().trim().max(2_000).optional().nullable(),
-  tone: z.string().trim().max(120).optional().nullable(),
+  tone: z.string().trim().max(2_000).optional().nullable(),
   region: z.string().trim().max(80).optional().nullable(),
   currencyCode: z.string().trim().length(3).toUpperCase().default("USD"),
   primaryLanguage: z.string().trim().min(2).max(20).default("en"),
@@ -120,6 +120,19 @@ export type SaveProjectOnboardingInput = z.infer<typeof saveProjectOnboardingSch
 export type ListLeadsInput = z.infer<typeof listLeadsInputSchema>;
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 export type UpdateLeadStatusInput = z.infer<typeof updateLeadStatusSchema>;
+
+export type Keyword = Tables<"keywords">;
+export type Subreddit = Tables<"subreddits">;
+
+export type KeywordDTO = Pick<
+  Keyword,
+  "id" | "project_id" | "term" | "type" | "intent_category" | "is_active" | "created_at" | "updated_at"
+>;
+
+export type SubredditDTO = Pick<
+  Subreddit,
+  "id" | "project_id" | "name" | "type" | "is_active" | "is_regional" | "last_scanned_at" | "avg_daily_posts" | "created_at" | "updated_at"
+>;
 
 export type ProjectDTO = Pick<
   Project,

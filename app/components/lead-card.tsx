@@ -5,12 +5,9 @@ const STATUS_CONFIG: Record<
   string,
   { label: string; bg: string; color: string }
 > = {
-  new: { label: "Nuevo", bg: "#DBEAFE", color: "#1E40AF" },
-  reviewing: { label: "Revisando", bg: "#FEF3C7", color: "#92400E" },
-  replied: { label: "Respondido", bg: "#EDE9FE", color: "#4C1D95" },
-  won: { label: "Ganado", bg: "#D1FAE5", color: "#065F46" },
-  lost: { label: "Perdido", bg: "#FEE2E2", color: "#991B1B" },
-  irrelevant: { label: "Irrelevante", bg: "#F3F4F6", color: "#6B6B6E" },
+  new:       { label: "Nuevo",       bg: "#DBEAFE", color: "#1E40AF" },
+  replied:   { label: "Respondido",  bg: "#EDE9FE", color: "#4C1D95" },
+  irrelevant:{ label: "Irrelevante", bg: "#F3F4F6", color: "#6B6B6E" },
 };
 
 function timeAgo(dateStr: string | null): string {

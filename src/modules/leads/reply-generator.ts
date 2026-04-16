@@ -6,7 +6,7 @@ import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { leadIdSchema, projectIdSchema, type LeadDTO, type ProjectDTO, type ReplyStyle } from "@/db/schemas/domain";
 
-const REPLY_PROMPT_VERSION = "lead_reply_v1";
+const REPLY_PROMPT_VERSION = "lead_reply_v2_tone_templates";
 
 const replyResponseSchema = z.object({
   content: z.string().trim().min(40).max(1_500),
@@ -24,6 +24,34 @@ export type GeneratedLeadReplyVariant = {
   model: string;
   inputTokens: number | null;
   outputTokens: number | null;
+};
+
+type ToneTemplate = {
+  label: string;
+  instructions: string;
+};
+
+const toneTemplates: Record<string, ToneTemplate> = {
+  founder_led: {
+    label: "Founder-led",
+    instructions:
+      "Sound like a founder or senior operator replying personally: candid, specific, low-polish, and grounded in lived experience. Use first person only when it fits the post.",
+  },
+  helpful_consultant: {
+    label: "Helpful consultant",
+    instructions:
+      "Diagnose the situation before pitching. Ask one useful question when appropriate, explain tradeoffs, and keep the product mention secondary.",
+  },
+  technical_operator: {
+    label: "Technical operator",
+    instructions:
+      "Be precise and implementation-minded. Mention concrete workflows, constraints, and failure modes. Avoid vague marketing language.",
+  },
+  direct_sales: {
+    label: "Direct sales",
+    instructions:
+      "Be brief, transparent, and explicit about fit. State why the product may help, what it is not for, and avoid manufactured excitement.",
+  },
 };
 
 const projectColumns = `
@@ -124,6 +152,7 @@ export async function generateLeadReplyVariant(
   const temperature = Number(process.env.OPENAI_REPLY_TEMPERATURE ?? "0.55");
   const timeoutMs = Number(process.env.OPENAI_REPLY_TIMEOUT_MS ?? "30000");
   const client = new OpenAI({ apiKey, timeout: timeoutMs });
+  const toneTemplate = resolveToneTemplate(context.project.tone);
   const response = await client.responses.parse(
     {
       model,
@@ -134,13 +163,15 @@ export async function generateLeadReplyVariant(
         "Be specific to the post. Avoid hype, spam, aggressive competitor attacks, and generic CTAs.",
         "Do not invent product facts that are not present in the project context.",
         styleInstruction(style),
+        toneTemplate.instructions,
       ].join("\n"),
       input: [
         `Reply style: ${style}`,
         `Project name: ${context.project.name}`,
         `Project website: ${context.project.website_url ?? "not provided"}`,
         `Project value proposition: ${context.project.value_proposition ?? "not provided"}`,
-        `Project tone: ${context.project.tone ?? "not provided"}`,
+        `Project tone template: ${toneTemplate.label}`,
+        `Project raw tone setting: ${context.project.tone ?? "not provided"}`,
         `Project region: ${context.project.region ?? "global / not provided"}`,
         `Primary language: ${context.project.primary_language}`,
         `Secondary language: ${context.project.secondary_language ?? "not provided"}`,
@@ -175,6 +206,43 @@ export async function generateLeadReplyVariant(
     inputTokens: response.usage?.input_tokens ?? null,
     outputTokens: response.usage?.output_tokens ?? null,
   };
+}
+
+function resolveToneTemplate(tone: string | null): ToneTemplate {
+  const normalized = normalizeToneKey(tone);
+
+  if (normalized && toneTemplates[normalized]) {
+    return toneTemplates[normalized];
+  }
+
+  if (tone?.trim()) {
+    return {
+      label: "Custom",
+      instructions: [
+        "Custom tone template from project settings:",
+        tone.trim(),
+        "Apply this tone unless it conflicts with being helpful, honest, and non-spammy on Reddit.",
+      ].join("\n"),
+    };
+  }
+
+  return {
+    label: "Default human Reddit tone",
+    instructions:
+      "Default tone: practical, calm, lightly conversational, and written like a real Reddit user. No corporate slogans.",
+  };
+}
+
+function normalizeToneKey(tone: string | null) {
+  if (!tone) {
+    return null;
+  }
+
+  return tone
+    .trim()
+    .toLocaleLowerCase()
+    .replace(/^template:/, "")
+    .replace(/[\s-]+/g, "_");
 }
 
 function styleInstruction(style: ReplyStyle) {

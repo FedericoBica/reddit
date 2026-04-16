@@ -2,6 +2,7 @@ import "server-only";
 
 import { logOpenAIUsageForProject, logRedditUsageForProject } from "@/db/mutations/api-usage";
 import { createLeadForProjectWorker } from "@/db/mutations/leads";
+import { inngest } from "@/inngest/client";
 import {
   completeProjectScrapeRun,
   createProjectScrapeRun,
@@ -12,7 +13,7 @@ import {
 import { listProjectsDueForScraping } from "@/db/queries/scraping";
 import { classifyLeadCandidate } from "@/modules/discovery/classification/lead-classifier";
 import { findMatchedKeywords } from "@/modules/discovery/classification/keyword-match";
-import { RedditApiProvider } from "@/modules/discovery/reddit/reddit-api-provider";
+import { createRedditDiscoveryProvider } from "@/modules/discovery/reddit/provider";
 import type { RedditDiscoveryProvider } from "@/modules/discovery/reddit/types";
 
 type RunGlobalScrapeOptions = {
@@ -21,7 +22,7 @@ type RunGlobalScrapeOptions = {
 };
 
 export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
-  const provider = options.provider ?? new RedditApiProvider();
+  const provider = options.provider ?? createRedditDiscoveryProvider();
   const runId = options.runId ?? crypto.randomUUID();
   const maxProjects = readPositiveIntEnv("SCRAPE_MAX_PROJECTS_PER_RUN", 10);
   const maxSubreddits = readPositiveIntEnv("SCRAPE_MAX_SUBREDDITS_PER_PROJECT", 5);
@@ -121,6 +122,17 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
             duplicatesSkipped += 1;
           } else {
             leadsCreated += 1;
+
+            if (result.lead && (result.lead.intent_score ?? 0) > 80) {
+              await inngest.send({
+                name: "leads/high_intent.created",
+                data: {
+                  projectId: target.project.id,
+                  leadId: result.lead.id,
+                  intentScore: result.lead.intent_score,
+                },
+              });
+            }
           }
         }
 

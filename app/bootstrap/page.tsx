@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Logo, Wordmark } from "@/app/components/logo";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { listProjectsForCurrentUser } from "@/db/queries/projects";
 import { requireUser } from "@/modules/auth/server";
 import { createFirstProject } from "@/modules/projects/actions";
@@ -44,31 +48,33 @@ export default async function BootstrapPage() {
           </p>
         </div>
 
-        <div className="panel panel-pad" style={{ maxWidth: 640 }}>
-          <p className="section-title">Qué pasa después</p>
-          <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
-            {[
-              ["01", "Generamos sugerencias iniciales"],
-              ["02", "Elegís qué keywords y subreddits usar"],
-              ["03", "El scraper empieza a buscar leads relevantes"],
-            ].map(([step, text]) => (
-              <div key={step} style={{ display: "flex", gap: 14, alignItems: "center" }}>
-                <span
-                  style={{
-                    color: "#E07000",
-                    fontSize: 22,
-                    fontWeight: 900,
-                    letterSpacing: "-0.04em",
-                    minWidth: 38,
-                  }}
-                >
-                  {step}
-                </span>
-                <span style={{ fontSize: 14, color: "#6B6B6E", lineHeight: 1.5 }}>{text}</span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <Card className="max-w-[640px] gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
+          <CardContent className="p-5">
+            <p className="section-title">Qué pasa después</p>
+            <div style={{ display: "grid", gap: 14, marginTop: 18 }}>
+              {[
+                ["01", "Generamos sugerencias iniciales"],
+                ["02", "Elegís qué keywords y subreddits usar"],
+                ["03", "El scraper empieza a buscar leads relevantes"],
+              ].map(([step, text]) => (
+                <div key={step} style={{ display: "flex", gap: 14, alignItems: "center" }}>
+                  <span
+                    style={{
+                      color: "#E07000",
+                      fontSize: 22,
+                      fontWeight: 900,
+                      letterSpacing: "-0.04em",
+                      minWidth: 38,
+                    }}
+                  >
+                    {step}
+                  </span>
+                  <span style={{ fontSize: 14, color: "#6B6B6E", lineHeight: 1.5 }}>{text}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </section>
 
       <section className="auth-panel">
@@ -85,13 +91,13 @@ export default async function BootstrapPage() {
           <form action={createFirstProject} style={{ display: "grid", gap: 18, marginTop: 28 }}>
             <label className="field-group">
               <span className="field-label">Nombre del proyecto</span>
-              <input className="input" name="name" placeholder="Mi SaaS" required maxLength={120} />
+              <Input className="h-11 rounded-[8px] bg-white px-3 text-sm" name="name" placeholder="Mi SaaS" required maxLength={120} />
             </label>
 
             <label className="field-group">
               <span className="field-label">Sitio web</span>
-              <input
-                className="input"
+              <Input
+                className="h-11 rounded-[8px] bg-white px-3 text-sm"
                 name="websiteUrl"
                 type="url"
                 placeholder="https://tuproducto.com"
@@ -101,8 +107,8 @@ export default async function BootstrapPage() {
 
             <label className="field-group">
               <span className="field-label">Propuesta de valor</span>
-              <textarea
-                className="textarea"
+              <Textarea
+                className="min-h-[112px] rounded-[8px] bg-white px-3 py-3 text-sm"
                 name="valueProposition"
                 placeholder="Ayudamos a equipos B2B a..."
                 maxLength={2000}
@@ -112,7 +118,7 @@ export default async function BootstrapPage() {
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <label className="field-group">
                 <span className="field-label">Región</span>
-                <input className="input" name="region" placeholder="US, LATAM, global" />
+                <Input className="h-11 rounded-[8px] bg-white px-3 text-sm" name="region" placeholder="US, LATAM, global" />
               </label>
               <label className="field-group">
                 <span className="field-label">Idioma</span>
@@ -124,9 +130,9 @@ export default async function BootstrapPage() {
               </label>
             </div>
 
-            <button className="button button-primary" type="submit">
+            <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
               Crear proyecto
-            </button>
+            </Button>
           </form>
         </div>
       </section>

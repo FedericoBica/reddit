@@ -115,6 +115,46 @@ export async function markLeadOpened(projectId: string, leadId: string): Promise
   return data;
 }
 
+export async function snoozeLead(
+  projectId: string,
+  leadId: string,
+  snoozedUntil: string,
+): Promise<LeadDTO> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("leads")
+    .update({ snoozed_until: snoozedUntil })
+    .eq("project_id", projectId)
+    .eq("id", leadId)
+    .select(leadDTOColumns)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to snooze lead: ${error.message}`);
+  }
+
+  return data;
+}
+
+export async function unsnoozeLead(projectId: string, leadId: string): Promise<LeadDTO> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("leads")
+    .update({ snoozed_until: null })
+    .eq("project_id", projectId)
+    .eq("id", leadId)
+    .select(leadDTOColumns)
+    .single();
+
+  if (error) {
+    throw new Error(`Failed to unsnooze lead: ${error.message}`);
+  }
+
+  return data;
+}
+
 export async function updateLeadStatus(input: UpdateLeadStatusInput): Promise<LeadDTO> {
   const parsed = updateLeadStatusSchema.parse(input);
   const supabase = await createSupabaseServerClient();

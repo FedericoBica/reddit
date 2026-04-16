@@ -3,6 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AutoRefresh } from "@/app/components/auto-refresh";
 import { DashboardShell } from "@/app/components/dashboard-shell";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { listProjectLeads } from "@/db/queries/leads";
 import type { LeadDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
@@ -22,9 +25,8 @@ type DashboardPageProps = {
 const FILTERS = [
   { label: "Todos", value: undefined },
   { label: "Nuevos", value: "new" },
-  { label: "Revisando", value: "reviewing" },
   { label: "Respondidos", value: "replied" },
-  { label: "Ganados", value: "won" },
+  { label: "Irrelevantes", value: "irrelevant" },
 ];
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
@@ -33,7 +35,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   const projectState = await resolveCurrentProject(params?.projectId);
 
   if (projectState.status === "missing") {
-    redirect("/bootstrap");
+    redirect("/signup/company");
   }
 
   const { currentProject, projects } = projectState;
@@ -82,12 +84,12 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
             </p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <span className="badge" style={{ background: "#FFF3E8", color: "#E07000" }}>
+            <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
               {highIntentCount} high intent
-            </span>
-            <span className="badge" style={{ background: "#F7F7F5", color: "#6B6B6E" }}>
+            </Badge>
+            <Badge variant="outline" className="rounded-[7px] font-extrabold text-[#6B6B6E]">
               {newLeadsCount} nuevos
-            </span>
+            </Badge>
           </div>
         </header>
 
@@ -173,12 +175,8 @@ function OpportunityCard({
           "Conversación detectada por keywords y señales de intención."}
       </p>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span className="badge" style={{ background: "#F7F7F5", color: "#6B6B6E" }}>
-          {translateStatus(lead.status)}
-        </span>
-        <span className="badge" style={{ background: "#E07000", color: "#FFFFFF" }}>
-          {lead.intent_score ?? "-"}
-        </span>
+        <StatusPill status={lead.status} />
+        <ScorePill score={lead.intent_score} />
       </div>
     </Link>
   );
@@ -218,12 +216,12 @@ function LeadPreview({ lead, projectId }: { lead: LeadDTO | null; projectId: str
           <span>{lead.author ? `u/${lead.author}` : "autor desconocido"}</span>
         </div>
         <div style={{ display: "flex", gap: 9 }}>
-          <span className="badge" style={{ background: "#FFF3E8", color: "#E07000" }}>
+          <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
             Intent Scoring IA
-          </span>
-          <span className="badge" style={{ background: "#D1FAE5", color: "#065F46" }}>
+          </Badge>
+          <Badge variant="secondary" className="rounded-[7px] bg-[#D1FAE5] font-extrabold text-[#065F46]">
             Account Protection
-          </span>
+          </Badge>
         </div>
       </div>
 
@@ -241,16 +239,16 @@ function LeadPreview({ lead, projectId }: { lead: LeadDTO | null; projectId: str
         </h2>
         <div style={{ display: "flex", gap: 9, flexWrap: "wrap", marginTop: 18 }}>
           {lead.keywords_matched.slice(0, 4).map((keyword) => (
-            <span key={keyword} className="badge" style={{ background: "#FFF3E8", color: "#E07000" }}>
+            <Badge key={keyword} variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
               {keyword}
-            </span>
+            </Badge>
           ))}
-          <span className="badge" style={{ background: "#F7F7F5", color: "#6B6B6E" }}>
+          <Badge variant="outline" className="rounded-[7px] font-extrabold text-[#6B6B6E]">
             Keyword match
-          </span>
-          <span className="badge" style={{ background: "#F7F7F5", color: "#6B6B6E" }}>
+          </Badge>
+          <Badge variant="outline" className="rounded-[7px] font-extrabold text-[#6B6B6E]">
             Reply Generator
-          </span>
+          </Badge>
         </div>
         <div
           style={{
@@ -260,9 +258,22 @@ function LeadPreview({ lead, projectId }: { lead: LeadDTO | null; projectId: str
             marginTop: 18,
           }}
         >
-          <FeatureNote title="Battlecards" text="Si menciona competidores, prepará ángulos de respuesta." />
-          <FeatureNote title="Ghostwriter" text="Después de responder, seguí el hilo hasta el DM." />
-          <FeatureNote title="ROI" text="Marcá won/lost desde el detalle para medir pipeline." />
+          <FeatureNote
+            title="⚔️ Battlecards"
+            text={
+              lead.keywords_matched.length > 0
+                ? `Keywords: ${lead.keywords_matched.slice(0, 2).join(", ")}. Abrí el lead para ver ángulos de respuesta.`
+                : "Si menciona competidores, prepará ángulos de respuesta desde el detalle."
+            }
+          />
+          <FeatureNote
+            title="💬 Ghostwriter"
+            text={
+              lead.reply_generation_status === "ready"
+                ? "Replies generadas. Ver threads para seguir el hilo."
+                : "Generá respuestas para activar el Ghostwriter."
+            }
+          />
         </div>
       </div>
 
@@ -301,17 +312,16 @@ function LeadPreview({ lead, projectId }: { lead: LeadDTO | null; projectId: str
           variantes por tono y mantiene protección anti-spam antes de abrir Reddit.
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 10, marginTop: 10 }}>
-          <Link className="button button-primary" href={`/leads/${lead.id}?projectId=${projectId}`}>
-            Generar respuestas
-          </Link>
-          <a
-            className="button button-secondary"
-            href={`https://reddit.com${lead.permalink}`}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Abrir Reddit
-          </a>
+          <Button asChild className="h-8 rounded-[8px] px-3 font-extrabold">
+            <Link href={`/leads/${lead.id}?projectId=${projectId}`}>
+              Generar respuestas
+            </Link>
+          </Button>
+          <Button asChild variant="secondary" className="h-8 rounded-[8px] bg-[#1C1C1E] px-3 font-extrabold text-white hover:bg-[#2D2D30]">
+            <a href={`https://reddit.com${lead.permalink}`} target="_blank" rel="noreferrer">
+              Abrir Reddit
+            </a>
+          </Button>
         </div>
       </div>
     </section>
@@ -320,19 +330,14 @@ function LeadPreview({ lead, projectId }: { lead: LeadDTO | null; projectId: str
 
 function FeatureNote({ title, text }: { title: string; text: string }) {
   return (
-    <div
-      style={{
-        border: "1px solid #F0F0EE",
-        borderRadius: 8,
-        padding: 12,
-        background: "#FFFFFF",
-      }}
-    >
-      <p style={{ fontSize: 12, fontWeight: 900, color: "#1C1C1E" }}>{title}</p>
-      <p style={{ fontSize: 11, lineHeight: 1.45, color: "#6B6B6E", marginTop: 5 }}>
-        {text}
-      </p>
-    </div>
+    <Card className="gap-0 rounded-[8px] border border-[#F0F0EE] py-0 shadow-none ring-0">
+      <CardContent className="p-3">
+        <p style={{ fontSize: 12, fontWeight: 900, color: "#1C1C1E" }}>{title}</p>
+        <p style={{ fontSize: 11, lineHeight: 1.45, color: "#6B6B6E", marginTop: 5 }}>
+          {text}
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -357,24 +362,16 @@ function ProjectFooter({
         background: "#FFFFFF",
       }}
     >
-      <span>{lastScrapedAt ? `Last scan ${formatDate(lastScrapedAt)}` : "Scan pendiente"}</span>
+      <span>{lastScrapedAt ? `Último scan ${formatDate(lastScrapedAt)}` : "Scan pendiente"}</span>
       <span>{language.toUpperCase()}</span>
     </div>
   );
 }
 
 function parseStatus(status?: string): LeadDTO["status"] | undefined {
-  if (
-    status === "new" ||
-    status === "reviewing" ||
-    status === "replied" ||
-    status === "won" ||
-    status === "lost" ||
-    status === "irrelevant"
-  ) {
+  if (status === "new" || status === "replied" || status === "irrelevant") {
     return status;
   }
-
   return undefined;
 }
 
@@ -399,14 +396,81 @@ function formatRelative(dateStr: string) {
 function translateStatus(status: LeadDTO["status"]) {
   const labels: Record<LeadDTO["status"], string> = {
     new: "New",
-    reviewing: "Reviewing",
+    reviewing: "New",
     replied: "Replied",
-    won: "Won",
-    lost: "Lost",
+    won: "Replied",
+    lost: "Irrelevant",
     irrelevant: "Irrelevant",
   };
 
   return labels[status];
+}
+
+function ScorePill({ score }: { score: number | null }) {
+  const val = score ?? 0;
+  let bg = "#E5E5EA";
+  let color = "#8E8E93";
+
+  if (val >= 80) {
+    bg = "#E07000";
+    color = "#FFFFFF";
+  } else if (val >= 60) {
+    bg = "#FF9F40";
+    color = "#FFFFFF";
+  } else if (val >= 40) {
+    bg = "#F5F5F3";
+    color = "#6B6B6E";
+  }
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        minWidth: 36,
+        padding: "3px 9px",
+        borderRadius: 7,
+        fontSize: 12,
+        fontWeight: 900,
+        letterSpacing: "-0.02em",
+        background: bg,
+        color,
+      }}
+    >
+      {score ?? "–"}
+    </span>
+  );
+}
+
+function StatusPill({ status }: { status: LeadDTO["status"] }) {
+  const styles: Record<LeadDTO["status"], { bg: string; color: string }> = {
+    new:        { bg: "#FFF3E8", color: "#C96500" },
+    reviewing:  { bg: "#FFF3E8", color: "#C96500" },
+    replied:    { bg: "#F0FDF4", color: "#15803D" },
+    won:        { bg: "#F0FDF4", color: "#15803D" },
+    lost:       { bg: "#F5F5F3", color: "#8E8E93" },
+    irrelevant: { bg: "#F5F5F3", color: "#8E8E93" },
+  };
+
+  const s = styles[status] ?? { bg: "#F5F5F3", color: "#8E8E93" };
+
+  return (
+    <span
+      style={{
+        display: "inline-flex",
+        alignItems: "center",
+        padding: "3px 9px",
+        borderRadius: 7,
+        fontSize: 11,
+        fontWeight: 800,
+        background: s.bg,
+        color: s.color,
+      }}
+    >
+      {translateStatus(status)}
+    </span>
+  );
 }
 
 function InboxIcon() {

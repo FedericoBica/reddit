@@ -1,7 +1,10 @@
 import type { User } from "@supabase/supabase-js";
 import { Logo, Wordmark } from "./logo";
+import { ProjectSwitcher } from "./project-switcher";
+import { PushNotificationToggle } from "./push-notification-toggle";
 import { SidebarLinks } from "./sidebar-links";
 import { signOut } from "@/modules/auth/actions";
+import { getCurrentBillingPlan } from "@/modules/billing/current";
 import type { ProjectDTO } from "@/db/schemas/domain";
 
 export function DashboardShell({
@@ -17,6 +20,38 @@ export function DashboardShell({
   newLeadsCount?: number;
   children: React.ReactNode;
 }) {
+  const billingLimitPromise = getCurrentBillingPlan();
+
+  return (
+    <DashboardShellContent
+      user={user}
+      projects={projects}
+      currentProject={currentProject}
+      newLeadsCount={newLeadsCount}
+      billingLimitPromise={billingLimitPromise}
+    >
+      {children}
+    </DashboardShellContent>
+  );
+}
+
+async function DashboardShellContent({
+  user,
+  projects,
+  currentProject,
+  newLeadsCount,
+  billingLimitPromise,
+  children,
+}: {
+  user: User;
+  projects: ProjectDTO[];
+  currentProject: ProjectDTO;
+  newLeadsCount?: number;
+  billingLimitPromise: ReturnType<typeof getCurrentBillingPlan>;
+  children: React.ReactNode;
+}) {
+  const billingLimit = await billingLimitPromise;
+
   return (
     <div
       style={{
@@ -26,22 +61,23 @@ export function DashboardShell({
         background: "#FAFAF8",
       }}
     >
+      {/* ── SIDEBAR ── */}
       <aside
         style={{
-          width: 220,
+          width: 224,
           background: "#F7F7F5",
-          borderRight: "1px solid #F0F0EE",
+          borderRight: "1px solid #EEEEED",
           display: "flex",
           flexDirection: "column",
           flexShrink: 0,
           overflow: "hidden",
         }}
       >
-        {/* Logo + project name */}
+        {/* Logo + project selector */}
         <div
           style={{
             padding: "16px 14px 14px",
-            borderBottom: "1px solid #F0F0EE",
+            borderBottom: "1px solid #EEEEED",
           }}
         >
           <div
@@ -50,32 +86,22 @@ export function DashboardShell({
               alignItems: "center",
               gap: 6,
               marginBottom: 12,
+              padding: "0 3px",
             }}
           >
             <Logo size={22} />
             <Wordmark size={14} />
           </div>
-          <div
-            style={{
-              fontSize: 12,
-              fontWeight: 700,
-              color: "#1C1C1E",
-              padding: "7px 10px",
-              background: "#FFF",
-              borderRadius: 8,
-              border: "1px solid #F0F0EE",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-              whiteSpace: "nowrap",
-            }}
-          >
-            {currentProject.name}
-          </div>
+
+          <ProjectSwitcher
+            projects={projects}
+            currentProject={currentProject}
+            billingLimit={billingLimit}
+          />
         </div>
 
-        {/* Nav */}
+        {/* Nav links */}
         <SidebarLinks
-          projects={projects}
           currentProjectId={currentProject.id}
           newLeadsCount={newLeadsCount}
         />
@@ -84,14 +110,15 @@ export function DashboardShell({
         <div
           style={{
             padding: "12px 14px",
-            borderTop: "1px solid #F0F0EE",
+            borderTop: "1px solid #EEEEED",
+            background: "#F2F2F0",
           }}
         >
           <p
             style={{
               fontSize: 11,
               color: "#AEAEB2",
-              marginBottom: 7,
+              marginBottom: 6,
               overflow: "hidden",
               textOverflow: "ellipsis",
               whiteSpace: "nowrap",
@@ -103,22 +130,26 @@ export function DashboardShell({
             <button
               type="submit"
               style={{
-                fontSize: 12,
-                color: "#6B6B6E",
+                fontSize: 11,
+                fontWeight: 600,
+                color: "#8E8E93",
                 background: "none",
                 border: "none",
                 cursor: "pointer",
                 padding: 0,
                 textDecoration: "underline",
                 textUnderlineOffset: 2,
+                transition: "color 160ms ease",
               }}
             >
               Cerrar sesión
             </button>
           </form>
+          <PushNotificationToggle publicKey={process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY} />
         </div>
       </aside>
 
+      {/* ── MAIN CONTENT ── */}
       <main
         style={{
           flex: 1,

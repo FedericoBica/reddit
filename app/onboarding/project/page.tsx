@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Logo, Wordmark } from "@/app/components/logo";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import {
   listProjectKeywordSuggestions,
   listProjectSubredditSuggestions,
@@ -28,7 +32,7 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
   const projectState = await resolveCurrentProject(params?.projectId);
 
   if (projectState.status === "missing") {
-    redirect("/bootstrap");
+    redirect("/signup/company");
   }
 
   const project = projectState.currentProject;
@@ -63,9 +67,9 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
           <Logo size={28} />
           <Wordmark size={18} />
         </div>
-        <span className="badge" style={{ background: "#FFF3E8", color: "#E07000" }}>
+        <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
           {project.name}
-        </span>
+        </Badge>
       </header>
 
       <section className="page-header" style={{ borderBottom: 0, paddingBottom: 8 }}>
@@ -82,154 +86,158 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
 
       <div className="content-flow" style={{ maxWidth: 1180, margin: "0 auto" }}>
         {isGenerating && (
-          <div className="panel panel-pad" style={{ marginBottom: 18 }}>
-            <p className="section-title">Estamos generando sugerencias</p>
-            <p className="section-copy" style={{ marginTop: 8 }}>
-              Podés refrescar en unos segundos. Si preferís avanzar ahora,
-              completá keywords y subreddits manualmente abajo.
-            </p>
-          </div>
+          <Card className="mb-[18px] gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
+            <CardContent className="p-5">
+              <p className="section-title">Estamos generando sugerencias</p>
+              <p className="section-copy" style={{ marginTop: 8 }}>
+                Podés refrescar en unos segundos. Si preferís avanzar ahora,
+                completá keywords y subreddits manualmente abajo.
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {(project.onboarding_status === "needs_suggestions" ||
           project.onboarding_status === "suggestions_failed") && (
-          <div
-            className="panel panel-pad"
-            style={{
-              marginBottom: 18,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 18,
-            }}
-          >
-            <div>
-              <p className="section-title">
-                {project.onboarding_status === "suggestions_failed"
-                  ? "No pudimos generar sugerencias"
-                  : "Generá sugerencias con IA"}
-              </p>
-              <p className="section-copy" style={{ marginTop: 8 }}>
-                {project.suggestions_error ??
-                  "Analizamos tu producto para proponer keywords y subreddits iniciales."}
-              </p>
-            </div>
-            <form action={retryInitialProjectSuggestions}>
-              <input type="hidden" name="projectId" value={project.id} />
-              <button className="button button-primary" type="submit">
-                Generar sugerencias
-              </button>
-            </form>
-          </div>
+          <Card className="mb-[18px] gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
+            <CardContent
+              className="flex items-center justify-between gap-[18px] p-5"
+              style={{ flexWrap: "wrap" }}
+            >
+              <div>
+                <p className="section-title">
+                  {project.onboarding_status === "suggestions_failed"
+                    ? "No pudimos generar sugerencias"
+                    : "Generá sugerencias con IA"}
+                </p>
+                <p className="section-copy" style={{ marginTop: 8 }}>
+                  {project.suggestions_error ??
+                    "Analizamos tu producto para proponer keywords y subreddits iniciales."}
+                </p>
+              </div>
+              <form action={retryInitialProjectSuggestions}>
+                <input type="hidden" name="projectId" value={project.id} />
+                <Button className="h-10 rounded-[8px] font-extrabold" type="submit">
+                  Generar sugerencias
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         )}
 
         <form action={completeProjectOnboarding} style={{ display: "grid", gap: 20 }}>
           <input type="hidden" name="projectId" value={project.id} />
 
           <div className="suggestion-grid">
-            <section className="panel panel-pad">
-              <p className="section-title">Keywords sugeridas</p>
-              <p className="section-copy" style={{ marginTop: 8 }}>
-                Buscamos señales como dolor, comparación, intención de compra y
-                alternativas a competidores.
-              </p>
+            <Card className="gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
+              <CardContent className="p-5">
+                <p className="section-title">Keywords sugeridas</p>
+                <p className="section-copy" style={{ marginTop: 8 }}>
+                  Buscamos señales como dolor, comparación, intención de compra y
+                  alternativas a competidores.
+                </p>
 
-              <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
-                {keywords.length > 0 ? (
-                  keywords.map((keyword) => (
-                    <label className="suggestion-option" key={keyword.id}>
-                      <input
-                        type="checkbox"
-                        name="keywordSuggestionIds"
-                        value={keyword.id}
-                        defaultChecked
-                      />
-                      <span>
-                        <strong style={{ display: "block", fontSize: 14 }}>
-                          {keyword.term}
-                        </strong>
-                        <span className="field-hint">
-                          {keyword.intent_category} · {keyword.rationale}
+                <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
+                  {keywords.length > 0 ? (
+                    keywords.map((keyword) => (
+                      <label className="suggestion-option" key={keyword.id}>
+                        <input
+                          type="checkbox"
+                          name="keywordSuggestionIds"
+                          value={keyword.id}
+                          defaultChecked
+                        />
+                        <span>
+                          <strong style={{ display: "block", fontSize: 14 }}>
+                            {keyword.term}
+                          </strong>
+                          <span className="field-hint">
+                            {keyword.intent_category} · {keyword.rationale}
+                          </span>
                         </span>
-                      </span>
-                    </label>
-                  ))
-                ) : (
-                  <p className="section-copy" style={{ marginTop: 8 }}>
-                    Todavía no hay sugerencias. Agregá keywords manuales para
-                    avanzar.
-                  </p>
-                )}
-              </div>
-            </section>
+                      </label>
+                    ))
+                  ) : (
+                    <p className="section-copy" style={{ marginTop: 8 }}>
+                      Todavía no hay sugerencias. Agregá keywords manuales para
+                      avanzar.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-            <section className="panel panel-pad">
-              <p className="section-title">Subreddits sugeridos</p>
-              <p className="section-copy" style={{ marginTop: 8 }}>
-                Priorizá comunidades donde tu comprador pregunta, compara o
-                pide recomendaciones.
-              </p>
+            <Card className="gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
+              <CardContent className="p-5">
+                <p className="section-title">Subreddits sugeridos</p>
+                <p className="section-copy" style={{ marginTop: 8 }}>
+                  Priorizá comunidades donde tu comprador pregunta, compara o
+                  pide recomendaciones.
+                </p>
 
-              <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
-                {subreddits.length > 0 ? (
-                  subreddits.map((subreddit) => (
-                    <label className="suggestion-option" key={subreddit.id}>
-                      <input
-                        type="checkbox"
-                        name="subredditSuggestionIds"
-                        value={subreddit.id}
-                        defaultChecked
-                      />
-                      <span>
-                        <strong style={{ display: "block", fontSize: 14 }}>
-                          r/{subreddit.name}
-                        </strong>
-                        <span className="field-hint">
-                          {subreddit.is_regional ? "Regional" : "Global"} ·{" "}
-                          {subreddit.rationale}
+                <div style={{ display: "grid", gap: 10, marginTop: 18 }}>
+                  {subreddits.length > 0 ? (
+                    subreddits.map((subreddit) => (
+                      <label className="suggestion-option" key={subreddit.id}>
+                        <input
+                          type="checkbox"
+                          name="subredditSuggestionIds"
+                          value={subreddit.id}
+                          defaultChecked
+                        />
+                        <span>
+                          <strong style={{ display: "block", fontSize: 14 }}>
+                            r/{subreddit.name}
+                          </strong>
+                          <span className="field-hint">
+                            {subreddit.is_regional ? "Regional" : "Global"} ·{" "}
+                            {subreddit.rationale}
+                          </span>
                         </span>
-                      </span>
-                    </label>
-                  ))
-                ) : (
-                  <p className="section-copy" style={{ marginTop: 8 }}>
-                    Todavía no hay sugerencias. Agregá subreddits manuales para
-                    avanzar.
-                  </p>
-                )}
-              </div>
-            </section>
+                      </label>
+                    ))
+                  ) : (
+                    <p className="section-copy" style={{ marginTop: 8 }}>
+                      Todavía no hay sugerencias. Agregá subreddits manuales para
+                      avanzar.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
-          <section className="panel panel-pad">
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 18,
-              }}
-            >
-              <label className="field-group">
-                <span className="field-label">Keywords manuales</span>
-                <textarea
-                  className="textarea"
-                  name="customKeywords"
-                  placeholder={"best crm for startups\nhubspot alternative\nneed lead gen tool"}
-                />
-                <span className="field-hint">Una por línea o separadas por coma.</span>
-              </label>
+          <Card className="gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
+            <CardContent className="p-5">
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                  gap: 18,
+                }}
+              >
+                <label className="field-group">
+                  <span className="field-label">Keywords manuales</span>
+                  <Textarea
+                    className="min-h-[112px] rounded-[8px] bg-white px-3 py-3 text-sm"
+                    name="customKeywords"
+                    placeholder={"best crm for startups\nhubspot alternative\nneed lead gen tool"}
+                  />
+                  <span className="field-hint">Una por línea o separadas por coma.</span>
+                </label>
 
-              <label className="field-group">
-                <span className="field-label">Subreddits manuales</span>
-                <textarea
-                  className="textarea"
-                  name="customSubreddits"
-                  placeholder={"SaaS\nstartups\ngrowthhacking"}
-                />
-                <span className="field-hint">Sin el prefijo r/.</span>
-              </label>
-            </div>
-          </section>
+                <label className="field-group">
+                  <span className="field-label">Subreddits manuales</span>
+                  <Textarea
+                    className="min-h-[112px] rounded-[8px] bg-white px-3 py-3 text-sm"
+                    name="customSubreddits"
+                    placeholder={"SaaS\nstartups\ngrowthhacking"}
+                  />
+                  <span className="field-hint">Sin el prefijo r/.</span>
+                </label>
+              </div>
+            </CardContent>
+          </Card>
 
           <div
             style={{
@@ -245,9 +253,9 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
                 ? "Podés desmarcar sugerencias débiles antes de activar el proyecto."
                 : "Necesitás al menos una keyword o subreddit manual si todavía no hay sugerencias."}
             </p>
-            <button className="button button-primary" type="submit">
+            <Button className="h-10 rounded-[8px] font-extrabold" type="submit">
               Activar monitoreo
-            </button>
+            </Button>
           </div>
         </form>
       </div>
@@ -265,8 +273,8 @@ function StepBadge({ status }: { status: string }) {
   };
 
   return (
-    <span className="badge" style={{ background: "#FFFFFF", color: "#6B6B6E", border: "1px solid #F0F0EE" }}>
+    <Badge variant="outline" className="rounded-[7px] bg-white font-extrabold text-[#6B6B6E]">
       {labelByStatus[status] ?? status}
-    </span>
+    </Badge>
   );
 }

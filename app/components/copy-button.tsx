@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 export function CopyButton({
   text,
@@ -21,10 +22,11 @@ export function CopyButton({
   };
 
   return (
-    <button
+    <Button
       onClick={handleCopy}
-      className="button button-primary"
+      className="h-9 rounded-[8px] px-4 font-extrabold"
       style={{ background: copied ? "#059669" : undefined }}
+      type="button"
     >
       {copied ? (
         <>
@@ -44,6 +46,6 @@ export function CopyButton({
       ) : (
         "Copiar"
       )}
-    </button>
+    </Button>
   );
 }

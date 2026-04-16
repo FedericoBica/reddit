@@ -1,30 +1,32 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import type { ProjectDTO } from "@/db/schemas/domain";
+import { usePathname } from "next/navigation";
 
 const NAV = [
-  { href: "/dashboard", label: "Searchbox", icon: InboxIcon },
-  { href: "/threads", label: "Threads", icon: ThreadsIcon, soon: true },
-  { href: "/mentions", label: "Mentions", icon: SignalIcon, soon: true },
-  { href: "/analytics", label: "Analytics", icon: ChartIcon, soon: true },
+  { href: "/dashboard",     label: "Searchbox",      icon: InboxIcon       },
+  { href: "/opportunities", label: "New",             icon: FlashIcon       },
+  { href: "/threads",       label: "Threads",         icon: ThreadsIcon     },
+  { href: "/mentions",      label: "Mentions",        icon: SignalIcon      },
+  { href: "/analytics",     label: "Analytics",       icon: ChartIcon       },
+  { href: "/content-lab",   label: "Content Lab",     icon: BeakerIcon      },
+  { href: "/calendar",      label: "Calendar",        icon: CalendarIcon    },
+  { href: "/settings",      label: "Settings",        icon: GearIcon        },
 ];
 
 export function SidebarLinks({
-  projects,
   currentProjectId,
   newLeadsCount = 0,
 }: {
-  projects: ProjectDTO[];
   currentProjectId: string;
   newLeadsCount?: number;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
 
-  const isSearchboxActive =
-    pathname === "/dashboard" || pathname.startsWith("/leads/");
+  const isActive = (href: string) => {
+    if (href === "/dashboard") return pathname === "/dashboard" || pathname.startsWith("/leads/");
+    return pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
+  };
 
   return (
     <nav
@@ -37,50 +39,19 @@ export function SidebarLinks({
         gap: 2,
       }}
     >
-      {/* Project switcher — only shown when multiple projects */}
-      {projects.length > 1 && (
-        <select
-          value={currentProjectId}
-          onChange={(e) =>
-            router.push(`/dashboard?projectId=${e.target.value}`)
-          }
-          style={{
-            width: "100%",
-            padding: "8px 10px",
-            borderRadius: 8,
-            border: "1px solid #F0F0EE",
-            background: "#FFF",
-            fontSize: 12,
-            fontWeight: 600,
-            color: "#1C1C1E",
-            cursor: "pointer",
-            marginBottom: 8,
-          }}
-        >
-          {projects.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
-      )}
-
       {NAV.map((item) => {
-        const isActive =
-          item.href === "/dashboard" ? isSearchboxActive : false;
+        const active = isActive(item.href);
         const Icon = item.icon;
 
         return (
           <Link
             key={item.href}
-            href={item.soon ? "#" : item.href}
+            href={`${item.href}?projectId=${currentProjectId}`}
             className="sidebar-link"
-            aria-disabled={item.soon}
             style={{
-              fontWeight: isActive ? 700 : 500,
-              color: item.soon ? "#AEAEB2" : isActive ? "#1C1C1E" : "#6B6B6E",
-              background: isActive ? "#EAEAE8" : "transparent",
-              pointerEvents: item.soon ? "none" : "auto",
+              fontWeight: active ? 700 : 500,
+              color: active ? "#1C1C1E" : "#6B6B6E",
+              background: active ? "#EAEAE8" : "transparent",
             }}
           >
             <Icon className="sidebar-icon" />
@@ -98,20 +69,6 @@ export function SidebarLinks({
                 }}
               >
                 {newLeadsCount}
-              </span>
-            )}
-            {item.soon && (
-              <span
-                style={{
-                  fontSize: 9,
-                  fontWeight: 600,
-                  color: "#AEAEB2",
-                  background: "#F0F0EE",
-                  padding: "2px 5px",
-                  borderRadius: 4,
-                }}
-              >
-                Soon
               </span>
             )}
           </Link>
@@ -152,6 +109,54 @@ function ChartIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M4 19.25h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
       <path d="M6.5 17V11M12 17V6M17.5 17v-8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PipelineIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="5" width="4" height="14" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="10" y="8" width="4" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+      <rect x="17" y="3" width="4" height="13" rx="1.5" stroke="currentColor" strokeWidth="1.8" />
+    </svg>
+  );
+}
+
+function CalendarIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="3" y="4" width="18" height="18" rx="3" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M3 9h18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M8 2v4M16 2v4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M7 13h2M11 13h2M15 13h2M7 17h2M11 17h2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function FlashIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M13 2L4.5 13.5H11L10 22L20 10H13.5L13 2Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function BeakerIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9 3v8.5L4.5 18A2 2 0 0 0 6.32 21h11.36a2 2 0 0 0 1.82-3L15 11.5V3" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9 3h6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M6.5 16.5h11" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function GearIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

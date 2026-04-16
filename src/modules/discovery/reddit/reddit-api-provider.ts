@@ -2,26 +2,12 @@ import "server-only";
 
 import { requireEnv } from "@/lib/env";
 import type { RedditDiscoveryProvider, RedditPost } from "./types";
-
-type RedditListingResponse = {
-  data?: {
-    children?: {
-      data?: {
-        id?: string;
-        name?: string;
-        title?: string;
-        selftext?: string;
-        subreddit?: string;
-        author?: string;
-        permalink?: string;
-        url?: string;
-        created_utc?: number;
-        score?: number;
-        num_comments?: number;
-      };
-    }[];
-  };
-};
+import {
+  getRedditUserAgent,
+  mapRedditListingResponse,
+  normalizeSubredditName,
+  type RedditListingResponse,
+} from "./common";
 
 type CachedRedditAccessToken = {
   token: string;
@@ -50,30 +36,7 @@ export class RedditApiProvider implements RedditDiscoveryProvider {
     }
 
     const payload = (await response.json()) as RedditListingResponse;
-    const children = payload.data?.children ?? [];
-
-    return children.flatMap((child) => {
-      const post = child.data;
-
-      if (!post?.id || !post.name || !post.title || !post.subreddit) {
-        return [];
-      }
-
-      return {
-        id: post.id,
-        fullname: post.name,
-        title: post.title,
-        body: post.selftext || null,
-        subreddit: post.subreddit,
-        author: post.author ?? null,
-        permalink: post.permalink ? `https://www.reddit.com${post.permalink}` : "",
-        url: post.url ?? null,
-        createdUtc: post.created_utc ? new Date(post.created_utc * 1_000).toISOString() : null,
-        score: post.score ?? null,
-        numComments: post.num_comments ?? null,
-        rawData: post,
-      };
-    });
+    return mapRedditListingResponse(payload);
   }
 
   private async getAccessToken() {
@@ -114,18 +77,4 @@ export class RedditApiProvider implements RedditDiscoveryProvider {
 
     return payload.access_token;
   }
-}
-
-function normalizeSubredditName(subreddit: string) {
-  return subreddit.trim().replace(/^\/?r\//i, "").replace(/\s+/g, "");
-}
-
-function getRedditUserAgent() {
-  const userAgent = requireEnv("REDDIT_USER_AGENT");
-
-  if (userAgent.includes("your-reddit-username")) {
-    throw new Error("REDDIT_USER_AGENT must include the real Reddit username, not the placeholder");
-  }
-
-  return userAgent;
 }
