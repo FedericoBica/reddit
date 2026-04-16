@@ -668,6 +668,7 @@ export type Database = {
           email: string
           full_name: string | null
           id: string
+          is_admin: boolean
           onboarding_status: Database["public"]["Enums"]["onboarding_status"]
           updated_at: string
         }
@@ -678,6 +679,7 @@ export type Database = {
           email: string
           full_name?: string | null
           id: string
+          is_admin?: boolean
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           updated_at?: string
         }
@@ -688,6 +690,7 @@ export type Database = {
           email?: string
           full_name?: string | null
           id?: string
+          is_admin?: boolean
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           updated_at?: string
         }

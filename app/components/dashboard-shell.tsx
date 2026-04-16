@@ -1,10 +1,12 @@
 import type { User } from "@supabase/supabase-js";
+import Link from "next/link";
 import { Logo, Wordmark } from "./logo";
 import { ProjectSwitcher } from "./project-switcher";
 import { PushNotificationToggle } from "./push-notification-toggle";
 import { SidebarLinks } from "./sidebar-links";
 import { signOut } from "@/modules/auth/actions";
 import { getCurrentBillingPlan } from "@/modules/billing/current";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ProjectDTO } from "@/db/schemas/domain";
 
 export function DashboardShell({
@@ -21,6 +23,7 @@ export function DashboardShell({
   children: React.ReactNode;
 }) {
   const billingLimitPromise = getCurrentBillingPlan();
+  const isAdminPromise = checkIsAdmin(user.id);
 
   return (
     <DashboardShellContent
@@ -29,10 +32,21 @@ export function DashboardShell({
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
       billingLimitPromise={billingLimitPromise}
+      isAdminPromise={isAdminPromise}
     >
       {children}
     </DashboardShellContent>
   );
+}
+
+async function checkIsAdmin(userId: string): Promise<boolean> {
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data } = await supabase.from("users").select("is_admin").eq("id", userId).single();
+    return data?.is_admin ?? false;
+  } catch {
+    return false;
+  }
 }
 
 async function DashboardShellContent({
@@ -41,6 +55,7 @@ async function DashboardShellContent({
   currentProject,
   newLeadsCount,
   billingLimitPromise,
+  isAdminPromise,
   children,
 }: {
   user: User;
@@ -48,9 +63,10 @@ async function DashboardShellContent({
   currentProject: ProjectDTO;
   newLeadsCount?: number;
   billingLimitPromise: ReturnType<typeof getCurrentBillingPlan>;
+  isAdminPromise: Promise<boolean>;
   children: React.ReactNode;
 }) {
-  const billingLimit = await billingLimitPromise;
+  const [billingLimit, isAdmin] = await Promise.all([billingLimitPromise, isAdminPromise]);
 
   return (
     <div
@@ -126,25 +142,44 @@ async function DashboardShellContent({
           >
             {user.email}
           </p>
-          <form action={signOut}>
-            <button
-              type="submit"
-              style={{
-                fontSize: 11,
-                fontWeight: 600,
-                color: "#8E8E93",
-                background: "none",
-                border: "none",
-                cursor: "pointer",
-                padding: 0,
-                textDecoration: "underline",
-                textUnderlineOffset: 2,
-                transition: "color 160ms ease",
-              }}
-            >
-              Cerrar sesión
-            </button>
-          </form>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <form action={signOut}>
+              <button
+                type="submit"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 600,
+                  color: "#8E8E93",
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  padding: 0,
+                  textDecoration: "underline",
+                  textUnderlineOffset: 2,
+                  transition: "color 160ms ease",
+                }}
+              >
+                Cerrar sesión
+              </button>
+            </form>
+            {isAdmin && (
+              <Link
+                href="/admin"
+                style={{
+                  fontSize: 11,
+                  fontWeight: 700,
+                  color: "#E07000",
+                  textDecoration: "none",
+                  padding: "2px 7px",
+                  borderRadius: 4,
+                  background: "#FFF4E6",
+                  letterSpacing: "0.02em",
+                }}
+              >
+                Admin
+              </Link>
+            )}
+          </div>
           <PushNotificationToggle publicKey={process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY} />
         </div>
       </aside>
