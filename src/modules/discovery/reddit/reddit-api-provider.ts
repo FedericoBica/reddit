@@ -1,7 +1,7 @@
 import "server-only";
 
 import { requireEnv } from "@/lib/env";
-import type { RedditDiscoveryProvider, RedditPost } from "./types";
+import type { RedditDiscoveryProvider, RedditPost, RedditSearchInput } from "./types";
 import {
   getRedditUserAgent,
   mapRedditListingResponse,
@@ -33,6 +33,39 @@ export class RedditApiProvider implements RedditDiscoveryProvider {
 
     if (!response.ok) {
       throw new Error(`Reddit API failed for r/${subreddit}: ${response.status}`);
+    }
+
+    const payload = (await response.json()) as RedditListingResponse;
+    return mapRedditListingResponse(payload);
+  }
+
+  async searchPosts(input: RedditSearchInput): Promise<RedditPost[]> {
+    const accessToken = await this.getAccessToken();
+    const userAgent = getRedditUserAgent();
+    const url = new URL("https://oauth.reddit.com/search");
+    url.searchParams.set("q", input.query);
+    url.searchParams.set("sort", input.sort ?? "new");
+    url.searchParams.set("limit", String(Math.min(Math.max(input.limit, 1), 100)));
+    url.searchParams.set("type", "link");
+
+    if (input.time) {
+      url.searchParams.set("t", input.time);
+    }
+
+    if (input.subreddit) {
+      url.searchParams.set("restrict_sr", "true");
+      url.pathname = `/r/${normalizeSubredditName(input.subreddit)}/search`;
+    }
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "User-Agent": userAgent,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Reddit API search failed for "${input.query}": ${response.status}`);
     }
 
     const payload = (await response.json()) as RedditListingResponse;

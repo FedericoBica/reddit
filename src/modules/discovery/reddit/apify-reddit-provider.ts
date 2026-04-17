@@ -1,12 +1,18 @@
 import "server-only";
 
 import { requireEnv } from "@/lib/env";
-import type { RedditDiscoveryProvider, RedditPost } from "./types";
+import type {
+  RedditBatchSearchInput,
+  RedditDiscoveryProvider,
+  RedditPost,
+  RedditSearchInput,
+} from "./types";
 import { normalizeSubredditName } from "./common";
 
 type ApifyRedditItem = {
   id?: string;
   postId?: string;
+  parsedId?: string;
   name?: string;
   title?: string;
   text?: string;
@@ -14,6 +20,7 @@ type ApifyRedditItem = {
   selftext?: string;
   communityName?: string;
   parsedCommunityName?: string;
+  subredditName?: string;
   subreddit?: string;
   author?: string;
   userName?: string;
@@ -34,14 +41,59 @@ type ApifyRedditItem = {
   num_comments?: number;
   dataType?: string;
   type?: string;
+  searchTerm?: string;
 };
 
 export class ApifyRedditProvider implements RedditDiscoveryProvider {
   async fetchNewPosts(input: { subreddit: string; limit: number }): Promise<RedditPost[]> {
     const subreddit = normalizeSubredditName(input.subreddit);
+    const maxPostsCount = Math.min(Math.max(input.limit, 1), 100);
+
+    const items = await this.runActor({
+      startUrls: [{ url: `https://www.reddit.com/r/${subreddit}/new/` }],
+      maxPostsCount,
+      crawlCommentsPerPost: false,
+      maxCommentsPerPost: 0,
+    });
+
+    return items.flatMap((item) => mapApifyItem(item, subreddit)).slice(0, maxPostsCount);
+  }
+
+  async searchPosts(input: RedditSearchInput): Promise<RedditPost[]> {
+    return this.searchPostsBatch({
+      queries: [input.query],
+      sort: input.sort,
+      time: input.time,
+      subreddit: input.subreddit,
+      limitPerQuery: input.limit,
+    });
+  }
+
+  async searchPostsBatch(input: RedditBatchSearchInput): Promise<RedditPost[]> {
+    const maxPostsCount = Math.min(Math.max(input.limitPerQuery, 1), 100);
+
+    const body: Record<string, unknown> = {
+      searchTerms: input.queries,
+      searchPosts: true,
+      searchComments: false,
+      searchCommunities: false,
+      searchSort: input.sort ?? "new",
+      searchTime: input.time ?? "week",
+      maxPostsCount,
+      includeNSFW: false,
+    };
+
+    if (input.subreddit) {
+      body.withinCommunity = `r/${normalizeSubredditName(input.subreddit)}`;
+    }
+
+    const items = await this.runActor(body);
+    return items.flatMap((item) => mapApifyItem(item, ""));
+  }
+
+  private async runActor(body: Record<string, unknown>): Promise<ApifyRedditItem[]> {
     const actorId = process.env.APIFY_REDDIT_ACTOR_ID ?? "harshmaur/reddit-scraper";
     const timeoutSecs = readPositiveIntEnv("APIFY_REDDIT_TIMEOUT_SECS", 90);
-    const maxItems = Math.min(Math.max(input.limit, 1), 100);
     const url = new URL(
       `https://api.apify.com/v2/acts/${encodeURIComponent(actorId)}/run-sync-get-dataset-items`,
     );
@@ -50,32 +102,15 @@ export class ApifyRedditProvider implements RedditDiscoveryProvider {
 
     const response = await fetch(url, {
       method: "POST",
-      headers: {
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        startUrls: [
-          {
-            url: `https://www.reddit.com/r/${subreddit}/new/`,
-          },
-        ],
-        maxItems,
-        maxPosts: maxItems,
-        maxPostCount: maxItems,
-        maxPostsCount: maxItems,
-        sort: "new",
-        searchSort: "new",
-        includeComments: false,
-        maxComments: 0,
-      }),
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
-      throw new Error(`Apify Reddit scraper failed for r/${subreddit}: ${response.status}`);
+      throw new Error(`Apify Reddit actor failed: ${response.status}`);
     }
 
-    const items = (await response.json()) as ApifyRedditItem[];
-    return items.flatMap((item) => mapApifyItem(item, subreddit)).slice(0, maxItems);
+    return response.json() as Promise<ApifyRedditItem[]>;
   }
 }
 
@@ -85,7 +120,9 @@ function mapApifyItem(item: ApifyRedditItem, fallbackSubreddit: string): RedditP
   }
 
   const title = item.title?.trim();
-  const id = normalizePostId(item.postId ?? item.id ?? item.name ?? item.url ?? item.postUrl);
+  const id = normalizePostId(
+    item.parsedId ?? item.postId ?? item.id ?? item.name ?? item.postUrl ?? item.url,
+  );
 
   if (!title || !id) {
     return [];
@@ -93,7 +130,11 @@ function mapApifyItem(item: ApifyRedditItem, fallbackSubreddit: string): RedditP
 
   const permalink = normalizePermalink(item.postUrl ?? item.permalink ?? item.url);
   const subreddit = normalizeSubredditName(
-    item.parsedCommunityName ?? item.communityName ?? item.subreddit ?? fallbackSubreddit,
+    item.parsedCommunityName ??
+      item.communityName ??
+      item.subredditName ??
+      item.subreddit ??
+      fallbackSubreddit,
   );
 
   return [
@@ -109,7 +150,11 @@ function mapApifyItem(item: ApifyRedditItem, fallbackSubreddit: string): RedditP
       createdUtc: normalizeCreatedAt(item),
       score: item.upVotes ?? item.upvotes ?? item.score ?? null,
       numComments:
-        item.numberOfComments ?? item.commentsCount ?? item.numComments ?? item.num_comments ?? null,
+        item.numberOfComments ??
+        item.commentsCount ??
+        item.numComments ??
+        item.num_comments ??
+        null,
       rawData: item,
     },
   ];
@@ -121,55 +166,30 @@ function isPostItem(item: ApifyRedditItem) {
 }
 
 function normalizePostId(value?: string) {
-  if (!value) {
-    return null;
-  }
+  if (!value) return null;
 
   const text = value.trim();
   const commentsMatch = /\/comments\/([^/?#]+)/i.exec(text);
-
-  if (commentsMatch?.[1]) {
-    return commentsMatch[1];
-  }
+  if (commentsMatch?.[1]) return commentsMatch[1];
 
   return text.replace(/^t3_/i, "").replace(/[^a-zA-Z0-9_]/g, "").slice(0, 128) || null;
 }
 
 function normalizePermalink(value?: string) {
-  if (!value) {
-    return "";
-  }
-
-  if (value.startsWith("http")) {
-    return value;
-  }
-
+  if (!value) return "";
+  if (value.startsWith("http")) return value;
   return `https://www.reddit.com${value.startsWith("/") ? value : `/${value}`}`;
 }
 
 function normalizeCreatedAt(item: ApifyRedditItem) {
-  if (item.createdAt) {
-    return new Date(item.createdAt).toISOString();
-  }
-
-  if (item.createdUtc) {
-    return new Date(item.createdUtc).toISOString();
-  }
-
-  if (item.created_utc) {
-    return new Date(item.created_utc * 1_000).toISOString();
-  }
-
+  if (item.createdAt) return new Date(item.createdAt).toISOString();
+  if (item.createdUtc) return new Date(item.createdUtc).toISOString();
+  if (item.created_utc) return new Date(item.created_utc * 1_000).toISOString();
   return null;
 }
 
 function readPositiveIntEnv(name: string, fallback: number) {
   const rawValue = process.env[name];
   const value = rawValue ? Number.parseInt(rawValue, 10) : fallback;
-
-  if (!Number.isFinite(value) || value < 1) {
-    return fallback;
-  }
-
-  return value;
+  return !Number.isFinite(value) || value < 1 ? fallback : value;
 }

@@ -25,6 +25,51 @@ export type ScrapeTarget = {
   }[];
 };
 
+export async function getProjectForScraping(projectId: string): Promise<ScrapeTarget | null> {
+  const supabase = createSupabaseAdminClient();
+
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select(
+      "id, name, website_url, value_proposition, tone, region, primary_language, scrape_fail_count, last_scraped_at, owner_id",
+    )
+    .eq("id", projectId)
+    .eq("status", "active")
+    .single();
+
+  if (projectError || !project) {
+    return null;
+  }
+
+  const [
+    { data: subreddits, error: subredditsError },
+    { data: keywords, error: keywordsError },
+  ] = await Promise.all([
+    supabase
+      .from("subreddits")
+      .select("id, project_id, name")
+      .eq("project_id", projectId)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true }),
+    supabase
+      .from("keywords")
+      .select("id, project_id, term")
+      .eq("project_id", projectId)
+      .eq("is_active", true)
+      .order("created_at", { ascending: true }),
+  ]);
+
+  if (subredditsError || keywordsError) {
+    return null;
+  }
+
+  return {
+    project,
+    keywords: (keywords ?? []).map((k) => ({ id: k.id, term: k.term })),
+    subreddits: (subreddits ?? []).map((s) => ({ id: s.id, name: s.name })),
+  };
+}
+
 export async function listProjectsDueForScraping(limit: number): Promise<ScrapeTarget[]> {
   const supabase = createSupabaseAdminClient();
   const now = new Date().toISOString();

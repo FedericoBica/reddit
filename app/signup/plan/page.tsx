@@ -14,9 +14,9 @@ type PlanPageProps = {
 };
 
 const plans = [
-  { id: "starter", name: "Starter", price: "$29", projects: "1 proyecto", note: "Para validar Reddit como canal" },
-  { id: "growth", name: "Growth", price: "$79", projects: "3 proyectos", note: "Trial completo recomendado" },
-  { id: "enterprise", name: "Enterprise", price: "$199", projects: "Ilimitados", note: "Para equipos y múltiples verticales" },
+  { id: "startup", name: "Startup", price: "$19", seats: "1 seat", note: "Para empezar a generar leads desde Reddit" },
+  { id: "growth", name: "Growth", price: "$39", seats: "2 seats", note: "Insights diarios para convertir más leads" },
+  { id: "professional", name: "Professional", price: "$79", seats: "3 seats", note: "Máximo alcance para múltiples marcas" },
 ];
 
 export default async function SignupPlanPage({ searchParams }: PlanPageProps) {
@@ -57,7 +57,7 @@ export default async function SignupPlanPage({ searchParams }: PlanPageProps) {
                   <strong>{plan.name}</strong>
                   <em>{plan.price}/mo</em>
                   <p>{plan.note}</p>
-                  <small>{plan.projects}</small>
+                  <small>{plan.seats}</small>
                 </button>
               </form>
             ))}

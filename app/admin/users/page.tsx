@@ -6,15 +6,15 @@ import { updateUserBillingPlan } from "@/modules/admin/actions";
 export const metadata: Metadata = { title: "Admin — Usuarios" };
 
 const PLAN_LABELS: Record<string, string> = {
-  starter: "Starter",
+  startup: "Startup",
   growth: "Growth",
-  enterprise: "Enterprise",
+  professional: "Professional",
 };
 
 const PLAN_COLORS: Record<string, string> = {
-  starter: "#6B6B6E",
+  startup: "#6B6B6E",
   growth: "#2563EB",
-  enterprise: "#E07000",
+  professional: "#E07000",
 };
 
 export default async function AdminUsersPage() {
@@ -130,9 +130,9 @@ export default async function AdminUsersPage() {
                           cursor: "pointer",
                         }}
                       >
-                        <option value="starter">Starter</option>
+                        <option value="startup">Startup</option>
                         <option value="growth">Growth</option>
-                        <option value="enterprise">Enterprise</option>
+                        <option value="professional">Professional</option>
                       </select>
                       <button
                         type="submit"

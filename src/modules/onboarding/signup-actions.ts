@@ -9,6 +9,7 @@ import { createSupabaseServerClient as createClient } from "@/lib/supabase/serve
 import { requireUser } from "@/modules/auth/server";
 import { setCurrentBillingPlan } from "@/modules/billing/current";
 import { parseBillingPlan, type BillingPlan } from "@/modules/billing/limits";
+import { inngest } from "@/inngest/client";
 import { analyzeCompanyWithAI } from "@/modules/onboarding/company-analyzer";
 import { setCurrentProject } from "@/modules/projects/current";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
@@ -222,5 +223,13 @@ export async function choosePlanFromSignup(formData: FormData) {
   const plan = parseBillingPlan(String(formData.get("plan") ?? "")) ?? "growth";
 
   await setCurrentBillingPlan(plan as BillingPlan);
+
+  if (projectId) {
+    await inngest.send({
+      name: "project/backfill.requested",
+      data: { projectId },
+    });
+  }
+
   redirect(`/signup/loading?projectId=${projectId}`);
 }

@@ -1,4 +1,6 @@
-export type BillingPlan = "starter" | "growth" | "enterprise";
+export type BillingPlan = "startup" | "growth" | "professional";
+
+export type KeywordSearchTimeWindow = "hour" | "day" | "week" | "month" | "year" | "all";
 
 export type ProjectLimit = {
   plan: BillingPlan;
@@ -7,6 +9,7 @@ export type ProjectLimit = {
   maxKeywords: number | null;
   maxCompetitors: number | null;
   scrapeIntervalHours: number;
+  keywordSearchTimeWindow: KeywordSearchTimeWindow;
   maxAiRepliesPerMonth: number | null;
   maxGhostwriterThreads: number | null;
   maxTeamMembers: number | null;
@@ -21,13 +24,14 @@ export type ProjectLimit = {
 };
 
 const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
-  starter: {
-    plan: "starter",
-    label: "Starter",
+  startup: {
+    plan: "startup",
+    label: "Startup",
     maxProjects: 1,
-    maxKeywords: 10,
+    maxKeywords: 20,
     maxCompetitors: 3,
-    scrapeIntervalHours: 12,
+    scrapeIntervalHours: 168,
+    keywordSearchTimeWindow: "week",
     maxAiRepliesPerMonth: 100,
     maxGhostwriterThreads: 5,
     maxTeamMembers: 1,
@@ -43,32 +47,34 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
   growth: {
     plan: "growth",
     label: "Growth",
-    maxProjects: 3,
-    maxKeywords: 25,
+    maxProjects: 2,
+    maxKeywords: 40,
     maxCompetitors: 6,
-    scrapeIntervalHours: 4,
-    maxAiRepliesPerMonth: 400,
-    maxGhostwriterThreads: 20,
-    maxTeamMembers: 3,
+    scrapeIntervalHours: 24,
+    keywordSearchTimeWindow: "day",
+    maxAiRepliesPerMonth: 300,
+    maxGhostwriterThreads: 15,
+    maxTeamMembers: 2,
     maxRedditAccounts: 2,
     integrations: {
-      slack: true,
+      slack: false,
       telegram: true,
-      webhooks: true,
+      webhooks: false,
     },
     accountProtection: true,
     battlecards: true,
   },
-  enterprise: {
-    plan: "enterprise",
-    label: "Enterprise",
-    maxProjects: 10,
-    maxKeywords: 50,
-    maxCompetitors: 10,
-    scrapeIntervalHours: 1,
-    maxAiRepliesPerMonth: 1000,
+  professional: {
+    plan: "professional",
+    label: "Professional",
+    maxProjects: 3,
+    maxKeywords: 60,
+    maxCompetitors: 8,
+    scrapeIntervalHours: 24,
+    keywordSearchTimeWindow: "day",
+    maxAiRepliesPerMonth: 500,
     maxGhostwriterThreads: null,
-    maxTeamMembers: 5,
+    maxTeamMembers: 3,
     maxRedditAccounts: null,
     integrations: {
       slack: true,
@@ -81,7 +87,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
 };
 
 export function getEffectiveProjectLimit(): ProjectLimit {
-  return PROJECT_LIMITS.growth;
+  return PROJECT_LIMITS.startup;
 }
 
 export function getProjectLimitForPlan(plan: BillingPlan | null | undefined): ProjectLimit {
@@ -93,9 +99,13 @@ export function getProjectLimitForPlan(plan: BillingPlan | null | undefined): Pr
 }
 
 export function parseBillingPlan(value: string | null | undefined): BillingPlan | null {
-  if (value === "starter" || value === "growth" || value === "enterprise") {
+  if (value === "startup" || value === "growth" || value === "professional") {
     return value;
   }
+
+  // backwards compat with old plan names
+  if (value === "starter") return "startup";
+  if (value === "enterprise") return "professional";
 
   return null;
 }

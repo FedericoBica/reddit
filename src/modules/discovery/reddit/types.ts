@@ -15,9 +15,27 @@ export type RedditPost = {
   rawData: Json;
 };
 
+export type RedditSearchSort = "new" | "hot" | "top" | "relevance";
+export type RedditSearchTime = "hour" | "day" | "week" | "month" | "year" | "all";
+
+export type RedditSearchInput = {
+  query: string;
+  sort?: RedditSearchSort;
+  time?: RedditSearchTime;
+  subreddit?: string;
+  limit: number;
+};
+
+export type RedditBatchSearchInput = {
+  queries: string[];
+  sort?: RedditSearchSort;
+  time?: RedditSearchTime;
+  subreddit?: string;
+  limitPerQuery: number;
+};
+
 export type RedditDiscoveryProvider = {
-  fetchNewPosts(input: {
-    subreddit: string;
-    limit: number;
-  }): Promise<RedditPost[]>;
+  fetchNewPosts(input: { subreddit: string; limit: number }): Promise<RedditPost[]>;
+  searchPosts?(input: RedditSearchInput): Promise<RedditPost[]>;
+  searchPostsBatch?(input: RedditBatchSearchInput): Promise<RedditPost[]>;
 };
