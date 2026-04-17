@@ -22,6 +22,7 @@ const searchboxResultDTOColumns = [
   "intent_score",
   "classification_reason",
   "status",
+  "lead_id",
   "first_seen_at",
   "last_seen_at",
   "created_at",
@@ -114,6 +115,58 @@ export async function updateSearchboxResultStatus(
     .eq("project_id", input.projectId);
 
   if (error) throw new Error(`Failed to update searchbox result status: ${error.message}`);
+}
+
+export async function createLeadFromSearchboxResult(
+  result: SearchboxResultDTO,
+  userId: string,
+): Promise<string> {
+  const supabase = await createSupabaseServerClient();
+
+  // Reuse existing lead if the post was already discovered by the scraper
+  const { data: existing } = await supabase
+    .from("leads")
+    .select("id")
+    .eq("project_id", result.project_id)
+    .eq("reddit_post_id", result.reddit_post_id)
+    .maybeSingle();
+
+  const leadId = existing?.id ?? await (async () => {
+    const { data, error } = await supabase
+      .from("leads")
+      .insert({
+        project_id: result.project_id,
+        reddit_post_id: result.reddit_post_id,
+        title: result.title,
+        body: result.body,
+        subreddit: result.subreddit,
+        author: result.author,
+        permalink: result.permalink,
+        url: result.url ?? result.permalink,
+        score: result.reddit_score,
+        num_comments: result.reddit_num_comments,
+        created_utc: result.reddit_created_utc,
+        intent_score: result.intent_score,
+        classification_reason: result.classification_reason,
+        keywords_matched: [result.google_keyword],
+        raw_data: { source: "searchbox" },
+      })
+      .select("id")
+      .single();
+
+    if (error) throw new Error(`Failed to create lead from searchbox result: ${error.message}`);
+    return data.id;
+  })();
+
+  const { error: linkError } = await supabase
+    .from("searchbox_results")
+    .update({ lead_id: leadId, updated_at: new Date().toISOString() })
+    .eq("id", result.id)
+    .eq("project_id", result.project_id);
+
+  if (linkError) throw new Error(`Failed to link searchbox result to lead: ${linkError.message}`);
+
+  return leadId;
 }
 
 export async function markProjectSearchboxScanned(projectId: string): Promise<void> {

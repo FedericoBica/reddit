@@ -6,6 +6,7 @@ import { listProjectsDueForSearchbox } from "@/db/queries/searchbox";
 import { classifyLeadCandidate } from "@/modules/discovery/classification/lead-classifier";
 import type { RedditPost } from "@/modules/discovery/reddit/types";
 import { searchGoogleForRedditPosts } from "@/modules/searchbox/serp/serp-provider";
+import { fetchRedditPostMetadata } from "@/modules/searchbox/scraping/fetch-reddit-metadata";
 
 const SEARCHBOX_INTENT_THRESHOLD = 60;
 const MAX_RESULTS_PER_PROJECT = 50;
@@ -74,6 +75,8 @@ export async function runSearchboxScrape() {
 
           if (classification.intentScore < SEARCHBOX_INTENT_THRESHOLD) continue;
 
+          const meta = await fetchRedditPostMetadata(serpResult.redditPostId);
+
           const { isNew } = await upsertSearchboxResult({
             projectId: target.project.id,
             redditPostId: serpResult.redditPostId,
@@ -85,9 +88,9 @@ export async function runSearchboxScrape() {
             author: null,
             permalink: serpResult.permalink,
             url: serpResult.permalink,
-            redditScore: null,
-            redditNumComments: null,
-            redditCreatedUtc: null,
+            redditScore: meta.score,
+            redditNumComments: meta.numComments,
+            redditCreatedUtc: meta.createdUtc,
             intentScore: classification.intentScore,
             classificationReason: classification.classificationReason,
           });

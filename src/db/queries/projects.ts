@@ -22,6 +22,7 @@ const projectColumns = `
   onboarding_completed_at,
   suggestions_error,
   last_scraped_at,
+  last_searchbox_at,
   scrape_fail_count,
   scrape_backoff_until,
   last_scrape_error,

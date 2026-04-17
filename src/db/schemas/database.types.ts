@@ -625,6 +625,7 @@ export type Database = {
           id: string
           intent_score: number | null
           last_seen_at: string
+          lead_id: string | null
           permalink: string
           project_id: string
           reddit_created_utc: string | null
@@ -648,6 +649,7 @@ export type Database = {
           id?: string
           intent_score?: number | null
           last_seen_at?: string
+          lead_id?: string | null
           permalink: string
           project_id: string
           reddit_created_utc?: string | null
@@ -671,6 +673,7 @@ export type Database = {
           id?: string
           intent_score?: number | null
           last_seen_at?: string
+          lead_id?: string | null
           permalink?: string
           project_id?: string
           reddit_created_utc?: string | null
@@ -689,6 +692,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "searchbox_results_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
             referencedColumns: ["id"]
           },
         ]
