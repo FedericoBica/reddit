@@ -13,7 +13,7 @@ export const scrapeGlobalProjects = inngest.createFunction(
     },
     triggers: [
       {
-        cron: process.env.SCRAPE_GLOBAL_CRON ?? "*/30 * * * *",
+        cron: process.env.SCRAPE_GLOBAL_CRON ?? "0 9 * * *",
       },
     ],
   },
