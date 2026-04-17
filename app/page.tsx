@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Logo, Wordmark } from "@/app/components/logo";
+import { BrandLink } from "@/app/components/logo";
 
 function Counter({ end, suffix = "" }: { end: number; suffix?: string }) {
   const [count, setCount] = useState(0);
@@ -176,10 +176,7 @@ export default function LandingPage() {
             alignItems: "center",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <Logo size={26} />
-            <Wordmark size={18} />
-          </div>
+          <BrandLink logoSize={26} wordmarkSize={18} />
           <div style={{ display: "flex", alignItems: "center", gap: 28 }}>
             <a href="#features" className="lp-nav-link" style={{ fontSize: 13, fontWeight: 500, color: "#6B6B6E", textDecoration: "none" }}>Features</a>
             <a href="#pricing"  className="lp-nav-link" style={{ fontSize: 13, fontWeight: 500, color: "#6B6B6E", textDecoration: "none" }}>Pricing</a>
@@ -350,10 +347,7 @@ export default function LandingPage() {
           <div style={{ display: "flex", minHeight: 380 }}>
             {/* Sidebar */}
             <div style={{ width: 190, background: "#F7F7F5", padding: "14px 8px", borderRight: "1px solid #F0F0EE", flexShrink: 0 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 6, padding: "0 7px 14px" }}>
-                <Logo size={18} />
-                <Wordmark size={12} />
-              </div>
+              <BrandLink logoSize={18} wordmarkSize={12} style={{ gap: 6, padding: "0 7px 14px" }} />
               <div style={{ padding: "0 7px 10px" }}>
                 <div style={{ padding: "6px 9px", background: "#FFF", borderRadius: 7, border: "1px solid #F0F0EE", fontSize: 11, fontWeight: 700, color: "#1C1C1E", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   Mi SaaS B2B
@@ -750,10 +744,7 @@ export default function LandingPage() {
             gap: 16,
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-            <Logo size={20} />
-            <Wordmark size={14} />
-          </div>
+          <BrandLink logoSize={20} wordmarkSize={14} style={{ gap: 7 }} />
           <div style={{ display: "flex", gap: 28, alignItems: "center", flexWrap: "wrap" }}>
             {["Privacidad", "Términos"].map((x) => (
               <a key={x} href="#" style={{ fontSize: 13, color: "#AEAEB2", textDecoration: "none" }}>{x}</a>

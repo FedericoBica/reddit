@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getLocale, getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "@/app/components/locale-switcher";
 import { DashboardShell } from "@/app/components/dashboard-shell";
-import { listProjectKeywords, listProjectSubreddits, listRecentScrapeRuns } from "@/db/queries/settings";
-import type { KeywordDTO, SubredditDTO, ProjectScrapeRunDTO, ProjectDTO } from "@/db/schemas/domain";
+import { listProjectKeywords, listProjectSubreddits } from "@/db/queries/settings";
+import type { KeywordDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
+import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import {
   updateProjectFromForm,
   addKeywordFromForm,
+  addCompetitorFromForm,
+  updateKeywordFromForm,
   removeKeywordFromForm,
   toggleKeywordFromForm,
-  addSubredditFromForm,
-  removeSubredditFromForm,
-  toggleSubredditFromForm,
 } from "@/modules/projects/settings-actions";
 
 export const metadata: Metadata = {
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 type SettingsPageProps = {
-  searchParams?: Promise<{ projectId?: string }>;
+  searchParams?: Promise<{ projectId?: string; tab?: string }>;
 };
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
@@ -38,16 +39,20 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     redirect(`/onboarding/project?projectId=${currentProject.id}`);
   }
 
-  const [currentLocale, t, keywords, subreddits, scrapeRuns] = await Promise.all([
+  const [currentLocale, t, keywords, subreddits, billingPlan] = await Promise.all([
     getLocale(),
     getTranslations("settings"),
     listProjectKeywords(currentProject.id),
     listProjectSubreddits(currentProject.id),
-    listRecentScrapeRuns(currentProject.id, 8),
+    getCurrentBillingPlan(),
   ]);
 
-  const activeKeywords = keywords.filter((k) => k.is_active);
+  const selectedTab = parseSettingsTab(params?.tab);
+  const competitorKeywords = keywords.filter((k) => k.type === "competitor");
+  const searchKeywords = keywords.filter((k) => k.type !== "competitor");
+  const activeKeywords = searchKeywords.filter((k) => k.is_active);
   const activeSubreddits = subreddits.filter((s) => s.is_active);
+  const activeCompetitors = competitorKeywords.filter((k) => k.is_active);
 
   return (
     <DashboardShell
@@ -62,165 +67,151 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="page-kicker">{t("kicker")}</p>
             <h1 className="page-title">{currentProject.name}</h1>
             <p className="page-copy">
-              {activeKeywords.length} {t("keywords").toLowerCase()} · {activeSubreddits.length} {t("subreddits").toLowerCase()} monitored
+              {activeKeywords.length} active keywords · {activeCompetitors.length} competitors · {activeSubreddits.length} communities monitored
             </p>
           </div>
         </header>
 
         <main
           style={{
-            maxWidth: 760,
+            maxWidth: 1040,
             margin: "0 auto",
             padding: "0 20px 60px",
-            display: "flex",
-            flexDirection: "column",
-            gap: 28,
           }}
         >
-          {/* Project Info */}
-          <SettingsSection
-            title="Project info"
-            description="Used for context when classifying leads and generating replies."
-          >
-            <form action={updateProjectFromForm}>
-              <input type="hidden" name="projectId" value={currentProject.id} />
-              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-                <FieldRow label={t("projectName")}>
-                  <input
-                    className="settings-input"
-                    name="name"
-                    defaultValue={currentProject.name}
-                    placeholder="e.g. My SaaS"
-                    required
-                  />
-                </FieldRow>
-                <FieldRow label={t("website")}>
-                  <input
-                    className="settings-input"
-                    name="websiteUrl"
-                    defaultValue={currentProject.website_url ?? ""}
-                    placeholder="https://yoursite.com"
-                    type="url"
-                  />
-                </FieldRow>
-                <FieldRow label={t("valueProposition")} vertical>
-                  <textarea
-                    className="settings-input"
-                    name="valueProposition"
-                    defaultValue={currentProject.value_proposition ?? ""}
-                    placeholder="What makes your product unique..."
-                    rows={3}
-                    style={{ resize: "vertical" }}
-                  />
-                </FieldRow>
-                <FieldRow label="Tone template" vertical>
+          <SettingsTabs projectId={currentProject.id} selectedTab={selectedTab} />
+
+          {selectedTab === "general" && (
+            <SettingsSection
+              title="General"
+              description="Project identity and company context used across classification, mentions and reply generation."
+            >
+              <form action={updateProjectFromForm}>
+                <input type="hidden" name="projectId" value={currentProject.id} />
+                <div style={{ display: "grid", gap: 14 }}>
+                  <FieldRow label="Project name">
+                    <input className="settings-input" name="name" defaultValue={currentProject.name} required />
+                  </FieldRow>
+                  <FieldRow label="Website">
+                    <input className="settings-input" name="websiteUrl" defaultValue={currentProject.website_url ?? ""} placeholder="https://yoursite.com" type="url" />
+                  </FieldRow>
+                  <FieldRow label="Region">
+                    <input className="settings-input" name="region" defaultValue={currentProject.region ?? ""} placeholder="US, LATAM, Global" />
+                  </FieldRow>
+                  <FieldRow label="Company info" vertical>
+                    <textarea className="settings-input" name="valueProposition" defaultValue={currentProject.value_proposition ?? ""} placeholder="What you sell, who it is for, positioning, ICP, use cases and proof points." rows={5} style={{ resize: "vertical" }} />
+                  </FieldRow>
+                  <FieldRow label="App language">
+                    <LocaleSwitcher currentLocale={currentLocale} />
+                  </FieldRow>
+                  <FormFooter label="Save general settings" />
+                </div>
+              </form>
+            </SettingsSection>
+          )}
+
+          {selectedTab === "competitors" && (
+            <SettingsSection
+              title="Competitors"
+              description="Competitor names are tracked as competitor keywords for mentions, comparisons and battlecards."
+              badge={`${activeCompetitors.length} active`}
+            >
+              <div style={{ display: "grid", gap: 10 }}>
+                {competitorKeywords.length === 0 ? (
+                  <EmptyHint>No competitors yet. Add one below.</EmptyHint>
+                ) : (
+                  competitorKeywords.map((keyword) => (
+                    <KeywordRow key={keyword.id} keyword={keyword} projectId={currentProject.id} editable />
+                  ))
+                )}
+              </div>
+              <form action={addCompetitorFromForm} style={{ display: "grid", gridTemplateColumns: "1fr 1fr auto", gap: 8, marginTop: 14 }}>
+                <input type="hidden" name="projectId" value={currentProject.id} />
+                <input className="settings-input" name="term" placeholder="Competitor name" required />
+                <input className="settings-input" name="website" placeholder="Website (coming next)" disabled />
+                <button type="submit" className="settings-btn-primary">Add</button>
+              </form>
+              <p className="section-copy" style={{ marginTop: 10 }}>
+                Competitor websites are not persisted yet because the current data model stores competitors as keyword records.
+              </p>
+            </SettingsSection>
+          )}
+
+          {selectedTab === "keywords" && (
+            <SettingsSection
+              title="Keywords"
+              description="AI suggested and custom terms used to discover keyword opportunities. Toggle, edit, delete or add terms."
+              badge={`${activeKeywords.length} active`}
+            >
+              <KeywordGroup title="Suggested by AI" keywords={searchKeywords.filter((k) => k.type === "ai_suggested")} projectId={currentProject.id} />
+              <KeywordGroup title="Custom" keywords={searchKeywords.filter((k) => k.type === "custom")} projectId={currentProject.id} editable />
+              <form action={addKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                <input type="hidden" name="projectId" value={currentProject.id} />
+                <input className="settings-input" name="term" placeholder="Add custom keyword" required style={{ flex: 1 }} />
+                <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
+              </form>
+            </SettingsSection>
+          )}
+
+          {selectedTab === "prompts" && (
+            <SettingsSection
+              title="Prompts"
+              description="Shape the tone and behavior of the AI reply generator for this project."
+            >
+              <form action={updateProjectFromForm}>
+                <input type="hidden" name="projectId" value={currentProject.id} />
+                <FieldRow label="Reply generator tone" vertical>
                   <textarea
                     className="settings-input"
                     name="tone"
                     defaultValue={currentProject.tone ?? ""}
-                    placeholder="Use a preset key like founder_led, helpful_consultant, technical_operator, direct_sales, or write custom tone instructions."
-                    rows={4}
+                    placeholder="Example: concise, founder-led, helpful but not salesy. Avoid hype. Mention product only when it naturally solves the user's problem."
+                    rows={8}
                     style={{ resize: "vertical" }}
                   />
                 </FieldRow>
-                <FieldRow label={t("region")}>
-                  <input
-                    className="settings-input"
-                    name="region"
-                    defaultValue={currentProject.region ?? ""}
-                    placeholder="e.g. US, LATAM, Global"
-                  />
-                </FieldRow>
-                <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 4 }}>
-                  <button type="submit" className="settings-btn-primary">
-                    {t("save")}
-                  </button>
-                </div>
+                <FormFooter label="Save prompt settings" />
+              </form>
+            </SettingsSection>
+          )}
+
+          {selectedTab === "notifications" && (
+            <SettingsSection
+              title="Notifications"
+              description="Channels and fetch frequency for mention monitoring and keyword opportunities."
+            >
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12, marginBottom: 18 }}>
+                <NotificationChannel label="Browser push" enabled />
+                <NotificationChannel label="Telegram" enabled={billingPlan.integrations.telegram} />
+                <NotificationChannel label="Slack" enabled={billingPlan.integrations.slack} />
               </div>
-            </form>
-          </SettingsSection>
+              <div style={{ display: "grid", gap: 10 }}>
+                <FrequencyRow label="Mention fetching" value={`Every ${billingPlan.scrapeIntervalHours}h`} />
+                <FrequencyRow label="Keyword opportunities" value={`Search window: ${billingPlan.keywordSearchTimeWindow}`} />
+                <FrequencyRow label="Webhook delivery" value={billingPlan.integrations.webhooks ? "Available" : "Upgrade required"} />
+              </div>
+            </SettingsSection>
+          )}
 
-          {/* Keywords */}
-          <SettingsSection
-            title={t("keywords")}
-            description="Terms the scraper looks for in Reddit posts. Toggle to pause without deleting."
-            badge={`${activeKeywords.length} ${t("activeKeywords")}`}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {keywords.length === 0 ? (
-                <EmptyHint>No keywords yet. Add one below.</EmptyHint>
-              ) : (
-                keywords.map((kw) => (
-                  <KeywordRow key={kw.id} keyword={kw} projectId={currentProject.id} />
-                ))
-              )}
-            </div>
-            <form
-              action={addKeywordFromForm}
-              style={{ display: "flex", gap: 8, marginTop: keywords.length > 0 ? 12 : 0 }}
+          {selectedTab === "billing" && (
+            <SettingsSection
+              title="Billing"
+              description="Current plan limits and included capabilities."
             >
-              <input type="hidden" name="projectId" value={currentProject.id} />
-              <input
-                className="settings-input"
-                name="term"
-                placeholder={t("addKeyword")}
-                required
-                style={{ flex: 1 }}
-              />
-              <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>
-                Add
-              </button>
-            </form>
-          </SettingsSection>
-
-          {/* Subreddits */}
-          <SettingsSection
-            title={t("subreddits")}
-            description="Communities scanned for matching posts. Toggle to pause without deleting."
-            badge={`${activeSubreddits.length} ${t("activeSubreddits")}`}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-              {subreddits.length === 0 ? (
-                <EmptyHint>No subreddits yet. Add one below.</EmptyHint>
-              ) : (
-                subreddits.map((sr) => (
-                  <SubredditRow key={sr.id} subreddit={sr} projectId={currentProject.id} />
-                ))
-              )}
-            </div>
-            <form
-              action={addSubredditFromForm}
-              style={{ display: "flex", gap: 8, marginTop: subreddits.length > 0 ? 12 : 0 }}
-            >
-              <input type="hidden" name="projectId" value={currentProject.id} />
-              <input
-                className="settings-input"
-                name="name"
-                placeholder={t("addSubreddit")}
-                required
-                style={{ flex: 1 }}
-              />
-              <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>
-                Add
-              </button>
-            </form>
-          </SettingsSection>
-
-          {/* Scraper health */}
-          <SettingsSection
-            title={t("scrapeHistory")}
-            description="Recent scrape runs for this project."
-          >
-            <ScraperHealth project={currentProject} scrapeRuns={scrapeRuns} />
-          </SettingsSection>
-
-          {/* Interface Language */}
-          <SettingsSection
-            title={t("appLanguage")}
-            description={t("appLanguageHint")}
-          >
-            <LocaleSwitcher currentLocale={currentLocale} />
-          </SettingsSection>
+              <div className="metric-grid" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))", marginBottom: 18 }}>
+                <BillingMetric label="Plan" value={billingPlan.label} />
+                <BillingMetric label="Projects" value={formatLimit(projects.length, billingPlan.maxProjects)} />
+                <BillingMetric label="AI replies" value={formatLimit(0, billingPlan.maxAiRepliesPerMonth)} />
+              </div>
+              <div style={{ display: "grid", gap: 8 }}>
+                <PlanLimit label="Keywords" value={formatLimit(searchKeywords.length, billingPlan.maxKeywords)} />
+                <PlanLimit label="Competitors" value={formatLimit(competitorKeywords.length, billingPlan.maxCompetitors)} />
+                <PlanLimit label="Ghostwriter threads" value={formatLimit(0, billingPlan.maxGhostwriterThreads)} />
+                <PlanLimit label="Team members" value={formatLimit(1, billingPlan.maxTeamMembers)} />
+                <PlanLimit label="Reddit accounts" value={formatLimit(0, billingPlan.maxRedditAccounts)} />
+              </div>
+            </SettingsSection>
+          )}
         </main>
       </div>
     </DashboardShell>
@@ -228,6 +219,49 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 }
 
 /* ─── Section wrapper ─── */
+
+type SettingsTab = "general" | "competitors" | "keywords" | "prompts" | "notifications" | "billing";
+
+const SETTINGS_TABS: Array<{ id: SettingsTab; label: string }> = [
+  { id: "general", label: "General" },
+  { id: "competitors", label: "Competitors" },
+  { id: "keywords", label: "Keywords" },
+  { id: "prompts", label: "Prompts" },
+  { id: "notifications", label: "Notifications" },
+  { id: "billing", label: "Billing" },
+];
+
+function SettingsTabs({
+  projectId,
+  selectedTab,
+}: {
+  projectId: string;
+  selectedTab: SettingsTab;
+}) {
+  return (
+    <nav
+      aria-label="Settings sections"
+      className="panel"
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        gap: 6,
+        padding: 6,
+        marginBottom: 18,
+      }}
+    >
+      {SETTINGS_TABS.map((tab) => (
+        <Link
+          key={tab.id}
+          href={`/settings?projectId=${projectId}&tab=${tab.id}`}
+          className={`filter-pill${selectedTab === tab.id ? " filter-pill-active" : ""}`}
+        >
+          {tab.label}
+        </Link>
+      ))}
+    </nav>
+  );
+}
 
 function SettingsSection({
   title,
@@ -294,6 +328,16 @@ function SettingsSection({
   );
 }
 
+function FormFooter({ label }: { label: string }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "flex-end", paddingTop: 4 }}>
+      <button type="submit" className="settings-btn-primary">
+        {label}
+      </button>
+    </div>
+  );
+}
+
 /* ─── Form field helpers ─── */
 
 function FieldRow({
@@ -349,12 +393,44 @@ function EmptyHint({ children }: { children: React.ReactNode }) {
 
 /* ─── Keyword row ─── */
 
+function KeywordGroup({
+  title,
+  keywords,
+  projectId,
+  editable = false,
+}: {
+  title: string;
+  keywords: KeywordDTO[];
+  projectId: string;
+  editable?: boolean;
+}) {
+  return (
+    <div style={{ marginTop: title === "Suggested by AI" ? 0 : 18 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+        <p style={{ fontSize: 12, fontWeight: 800, color: "#1C1C1E" }}>{title}</p>
+        <span style={{ fontSize: 11, fontWeight: 700, color: "#8E8E93" }}>{keywords.length}</span>
+      </div>
+      <div style={{ display: "grid", gap: 0 }}>
+        {keywords.length === 0 ? (
+          <EmptyHint>No {title.toLowerCase()} keywords yet.</EmptyHint>
+        ) : (
+          keywords.map((keyword) => (
+            <KeywordRow key={keyword.id} keyword={keyword} projectId={projectId} editable={editable} />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
 function KeywordRow({
   keyword,
   projectId,
+  editable = false,
 }: {
   keyword: KeywordDTO;
   projectId: string;
+  editable?: boolean;
 }) {
   const typeBadgeColor = keyword.type === "ai_suggested" ? "#6B6B6E" : "#1C1C1E";
   const typeLabel = keyword.type === "ai_suggested" ? "AI" : keyword.type === "competitor" ? "Comp" : "Custom";
@@ -406,16 +482,31 @@ function KeywordRow({
       </form>
 
       {/* Term */}
-      <span
-        style={{
-          flex: 1,
-          fontSize: 13,
-          fontWeight: 500,
-          color: keyword.is_active ? "#1C1C1E" : "#AEAEB2",
-        }}
-      >
-        {keyword.term}
-      </span>
+      {editable ? (
+        <form action={updateKeywordFromForm} style={{ display: "flex", gap: 8, flex: 1, minWidth: 0 }}>
+          <input type="hidden" name="projectId" value={projectId} />
+          <input type="hidden" name="keywordId" value={keyword.id} />
+          <input
+            className="settings-input"
+            name="term"
+            defaultValue={keyword.term}
+            required
+            style={{ opacity: keyword.is_active ? 1 : 0.58 }}
+          />
+          <button type="submit" className="settings-btn-secondary">Save</button>
+        </form>
+      ) : (
+        <span
+          style={{
+            flex: 1,
+            fontSize: 13,
+            fontWeight: 500,
+            color: keyword.is_active ? "#1C1C1E" : "#AEAEB2",
+          }}
+        >
+          {keyword.term}
+        </span>
+      )}
 
       {/* Type badge */}
       <span
@@ -477,319 +568,52 @@ function KeywordRow({
   );
 }
 
-/* ─── Subreddit row ─── */
+/* ─── Notification and billing helpers ─── */
 
-function SubredditRow({
-  subreddit,
-  projectId,
-}: {
-  subreddit: SubredditDTO;
-  projectId: string;
-}) {
+function NotificationChannel({ label, enabled }: { label: string; enabled: boolean }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "9px 0",
-        borderBottom: "1px solid #F5F5F3",
-      }}
-    >
-      {/* Toggle */}
-      <form action={toggleSubredditFromForm} style={{ display: "flex" }}>
-        <input type="hidden" name="projectId" value={projectId} />
-        <input type="hidden" name="subredditId" value={subreddit.id} />
-        <input type="hidden" name="isActive" value={String(!subreddit.is_active)} />
-        <button
-          type="submit"
-          title={subreddit.is_active ? "Pause" : "Enable"}
-          style={{
-            width: 32,
-            height: 18,
-            borderRadius: 9,
-            border: "none",
-            cursor: "pointer",
-            padding: 0,
-            background: subreddit.is_active ? "#E07000" : "#D1D1D6",
-            position: "relative",
-            flexShrink: 0,
-            transition: "background 0.15s",
-          }}
-        >
-          <span
-            style={{
-              position: "absolute",
-              top: 2,
-              left: subreddit.is_active ? 14 : 2,
-              width: 14,
-              height: 14,
-              borderRadius: "50%",
-              background: "#FFF",
-              transition: "left 0.15s",
-            }}
-          />
-        </button>
-      </form>
-
-      {/* Name */}
-      <span
-        style={{
-          flex: 1,
-          fontSize: 13,
-          fontWeight: 500,
-          color: subreddit.is_active ? "#1C1C1E" : "#AEAEB2",
-        }}
-      >
-        r/{subreddit.name}
-      </span>
-
-      {/* Stats */}
-      {subreddit.avg_daily_posts != null && (
-        <span style={{ fontSize: 11, color: "#8E8E93" }}>
-          ~{subreddit.avg_daily_posts}/day
-        </span>
-      )}
-      {subreddit.last_scanned_at && (
-        <span style={{ fontSize: 11, color: "#AEAEB2" }}>
-          Scanned {formatRelative(subreddit.last_scanned_at)}
-        </span>
-      )}
-
-      {/* Type badge */}
-      <span
-        style={{
-          fontSize: 10,
-          fontWeight: 600,
-          color: "#6B6B6E",
-          background: "#F5F5F3",
-          borderRadius: 4,
-          padding: "2px 6px",
-        }}
-      >
-        {subreddit.type === "ai_suggested" ? "AI" : "Custom"}
-      </span>
-
-      {/* Remove */}
-      <form action={removeSubredditFromForm}>
-        <input type="hidden" name="projectId" value={projectId} />
-        <input type="hidden" name="subredditId" value={subreddit.id} />
-        <button
-          type="submit"
-          title="Remove"
-          style={{
-            width: 24,
-            height: 24,
-            border: "none",
-            background: "transparent",
-            color: "#C7C7CC",
-            cursor: "pointer",
-            borderRadius: 4,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            padding: 0,
-            fontSize: 16,
-            lineHeight: 1,
-          }}
-        >
-          ×
-        </button>
-      </form>
-    </div>
-  );
-}
-
-/* ─── Scraper health ─── */
-
-function ScraperHealth({
-  project,
-  scrapeRuns,
-}: {
-  project: ProjectDTO;
-  scrapeRuns: ProjectScrapeRunDTO[];
-}) {
-  const isHealthy = project.scrape_fail_count === 0;
-  const isBackedOff =
-    project.scrape_backoff_until != null &&
-    new Date(project.scrape_backoff_until) > new Date();
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      {/* Status row */}
-      <div
-        style={{
-          display: "flex",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <StatChip
-          label="Status"
-          value={isBackedOff ? "Backed off" : isHealthy ? "Healthy" : "Degraded"}
-          color={isBackedOff ? "#FF9F40" : isHealthy ? "#34C759" : "#FF3B30"}
-        />
-        <StatChip
-          label="Fail count"
-          value={String(project.scrape_fail_count)}
-          color={project.scrape_fail_count > 0 ? "#FF3B30" : "#8E8E93"}
-        />
-        {project.last_scraped_at && (
-          <StatChip
-            label="Last scan"
-            value={formatRelative(project.last_scraped_at)}
-            color="#8E8E93"
-          />
-        )}
-        {isBackedOff && project.scrape_backoff_until && (
-          <StatChip
-            label="Resumes"
-            value={formatDate(project.scrape_backoff_until)}
-            color="#FF9F40"
-          />
-        )}
+    <div className="metric">
+      <div className="metric-label">{label}</div>
+      <div className="metric-value" style={{ fontSize: 18, color: enabled ? "#15803D" : "#8E8E93" }}>
+        {enabled ? "Enabled" : "Locked"}
       </div>
-
-      {/* Last error */}
-      {project.last_scrape_error && (
-        <div
-          style={{
-            fontSize: 12,
-            color: "#FF3B30",
-            background: "#FFF1F0",
-            border: "1px solid #FFD6D3",
-            borderRadius: 8,
-            padding: "10px 12px",
-            fontFamily: "monospace",
-          }}
-        >
-          {project.last_scrape_error}
-        </div>
-      )}
-
-      {/* Run history */}
-      {scrapeRuns.length > 0 && (
-        <div>
-          <p style={{ fontSize: 11, fontWeight: 600, color: "#AEAEB2", marginBottom: 8, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-            Recent runs
-          </p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {scrapeRuns.map((run) => (
-              <ScrapeRunRow key={run.id} run={run} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {scrapeRuns.length === 0 && (
-        <EmptyHint>No scrape runs recorded yet.</EmptyHint>
-      )}
     </div>
   );
 }
 
-function StatChip({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color: string;
-}) {
+function FrequencyRow({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "column",
-        gap: 2,
-        background: "#F7F7F5",
-        border: "1px solid #EEEEED",
-        borderRadius: 8,
-        padding: "8px 12px",
-        minWidth: 90,
-      }}
-    >
-      <span style={{ fontSize: 10, color: "#8E8E93", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-        {label}
-      </span>
-      <span style={{ fontSize: 14, fontWeight: 700, color }}>{value}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderBottom: "1px solid #F5F5F3" }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E" }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 800, color: "#E07000" }}>{value}</span>
     </div>
   );
 }
 
-function ScrapeRunRow({ run }: { run: ProjectScrapeRunDTO }) {
-  const statusColor =
-    run.status === "completed"
-      ? "#34C759"
-      : run.status === "failed"
-        ? "#FF3B30"
-        : run.status === "started"
-          ? "#E07000"
-          : "#8E8E93";
-
+function BillingMetric({ label, value }: { label: string; value: string }) {
   return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 10,
-        padding: "8px 0",
-        borderBottom: "1px solid #F5F5F3",
-        fontSize: 12,
-      }}
-    >
-      <span
-        style={{
-          width: 7,
-          height: 7,
-          borderRadius: "50%",
-          background: statusColor,
-          flexShrink: 0,
-        }}
-      />
-      <span style={{ color: "#6B6B6E", flex: 1 }}>
-        {run.started_at ? formatDate(run.started_at) : "—"}
-      </span>
-      <span style={{ color: "#1C1C1E", fontWeight: 600 }}>
-        {run.leads_created ?? 0} leads
-      </span>
-      <span style={{ color: "#8E8E93" }}>{run.posts_seen ?? 0} seen</span>
-      {run.error_message && (
-        <span
-          style={{
-            color: "#FF3B30",
-            maxWidth: 200,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-          }}
-          title={run.error_message}
-        >
-          {run.error_message}
-        </span>
-      )}
+    <div className="metric">
+      <div className="metric-label">{label}</div>
+      <div className="metric-value" style={{ fontSize: 22 }}>{value}</div>
+    </div>
+  );
+}
+
+function PlanLimit({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "9px 0", borderBottom: "1px solid #F5F5F3" }}>
+      <span style={{ fontSize: 13, color: "#6B6B6E", fontWeight: 700 }}>{label}</span>
+      <span style={{ fontSize: 13, color: "#1C1C1E", fontWeight: 800 }}>{value}</span>
     </div>
   );
 }
 
 /* ─── Helpers ─── */
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+function parseSettingsTab(value: string | undefined): SettingsTab {
+  return SETTINGS_TABS.some((tab) => tab.id === value) ? (value as SettingsTab) : "general";
 }
 
-function formatRelative(iso: string) {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
+function formatLimit(current: number, max: number | null) {
+  return max === null ? `${current}/Unlimited` : `${current}/${max}`;
 }

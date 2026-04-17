@@ -32,7 +32,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   const stats = computeStats(allLeads);
   const subredditStats = computeSubredditStats(allLeads);
   const keywordStats = computeKeywordStats(allLeads);
-  const intentBuckets = computeIntentBuckets(allLeads);
+  const relevantSubreddits = computeRelevantSubreddits(allLeads);
   const timeline = computeTimeline(allLeads);
 
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
@@ -69,15 +69,19 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
             <KpiCard label="Score promedio" value={stats.avgScore > 0 ? stats.avgScore : "—"} />
           </div>
 
-          {/* ── Intent Distribution ── */}
+          {/* ── Relevant Subreddits ── */}
           <div className="panel panel-pad" style={{ marginBottom: 20 }}>
-            <p className="section-title" style={{ marginBottom: 16 }}>Distribución de intención</p>
-            <div style={{ display: "grid", gap: 12 }}>
-              {intentBuckets.map((b) => (
-                <IntentBucket key={b.label} {...b} total={stats.total} />
-              ))}
-            </div>
-            {stats.total === 0 && (
+            <p className="section-title" style={{ marginBottom: 6 }}>Subreddits más relevantes</p>
+            <p className="section-copy" style={{ marginBottom: 16 }}>
+              Relevancy score basado en intención promedio, volumen de leads y concentración de high intent.
+            </p>
+            {relevantSubreddits.length > 0 ? (
+              <div style={{ display: "grid", gap: 12 }}>
+                {relevantSubreddits.slice(0, 8).map((row) => (
+                  <RelevantSubredditBucket key={row.subreddit} {...row} />
+                ))}
+              </div>
+            ) : (
               <p className="section-copy" style={{ marginTop: 12 }}>
                 Todavía no hay leads para analizar.
               </p>
@@ -202,18 +206,19 @@ function ProjectHealthBadge({ project }: { project: { scrape_fail_count: number;
 }
 
 
-function IntentBucket({
-  label,
+function RelevantSubredditBucket({
+  subreddit,
+  relevancyScore,
   count,
-  color,
-  total,
+  avgScore,
+  highIntentRate,
 }: {
-  label: string;
+  subreddit: string;
+  relevancyScore: number;
   count: number;
-  color: string;
-  total: number;
+  avgScore: number;
+  highIntentRate: number;
 }) {
-  const pct = total > 0 ? Math.round((count / total) * 100) : 0;
   return (
     <div>
       <div
@@ -224,11 +229,13 @@ function IntentBucket({
           marginBottom: 5,
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>{label}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E" }}>r/{subreddit}</span>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <span style={{ fontSize: 12, color: "#AEAEB2", fontWeight: 700 }}>{pct}%</span>
-          <span style={{ fontSize: 14, fontWeight: 800, color: "#1C1C1E", minWidth: 28, textAlign: "right" }}>
-            {count}
+          <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>
+            avg {avgScore} · {count} leads · {highIntentRate}% high intent
+          </span>
+          <span style={{ fontSize: 14, fontWeight: 900, color: "#E07000", minWidth: 42, textAlign: "right" }}>
+            {relevancyScore}%
           </span>
         </div>
       </div>
@@ -237,8 +244,8 @@ function IntentBucket({
           style={{
             height: "100%",
             borderRadius: 99,
-            background: color,
-            width: `${pct}%`,
+            background: "#E07000",
+            width: `${relevancyScore}%`,
           }}
         />
       </div>
@@ -350,20 +357,6 @@ function computeStats(leads: LeadDTO[]) {
   return { total, new: newCount, replied, avgScore };
 }
 
-function computeIntentBuckets(leads: LeadDTO[]) {
-  const high   = leads.filter((l) => (l.intent_score ?? 0) >= 80).length;
-  const mid    = leads.filter((l) => (l.intent_score ?? 0) >= 60 && (l.intent_score ?? 0) < 80).length;
-  const low    = leads.filter((l) => (l.intent_score ?? 0) >= 40 && (l.intent_score ?? 0) < 60).length;
-  const vlow   = leads.filter((l) => (l.intent_score ?? 0) < 40 && (l.intent_score ?? 0) > 0).length;
-
-  return [
-    { label: "Alta intención  (80–100)", count: high,  color: "#E07000" },
-    { label: "Media-alta      (60–79)",  count: mid,   color: "#FF9F40" },
-    { label: "Media           (40–59)",  count: low,   color: "#FCD34D" },
-    { label: "Baja            (< 40)",   count: vlow,  color: "#E5E5EA" },
-  ];
-}
-
 function computeSubredditStats(leads: LeadDTO[]) {
   const map = new Map<string, { count: number; scoreSum: number }>();
   for (const l of leads) {
@@ -379,6 +372,43 @@ function computeSubredditStats(leads: LeadDTO[]) {
       avgScore: count > 0 ? Math.round(scoreSum / count) : 0,
     }))
     .sort((a, b) => b.count - a.count);
+}
+
+function computeRelevantSubreddits(leads: LeadDTO[]) {
+  const map = new Map<string, { count: number; scoreSum: number; highIntent: number }>();
+
+  for (const lead of leads) {
+    const entry = map.get(lead.subreddit) ?? { count: 0, scoreSum: 0, highIntent: 0 };
+    const score = lead.intent_score ?? 0;
+
+    entry.count++;
+    entry.scoreSum += score;
+    if (score >= 80) entry.highIntent++;
+    map.set(lead.subreddit, entry);
+  }
+
+  const maxCount = Math.max(...Array.from(map.values()).map((entry) => entry.count), 1);
+
+  return Array.from(map.entries())
+    .map(([subreddit, entry]) => {
+      const avgScore = entry.count > 0 ? Math.round(entry.scoreSum / entry.count) : 0;
+      const volumeScore = Math.round((entry.count / maxCount) * 100);
+      const highIntentRate = entry.count > 0 ? Math.round((entry.highIntent / entry.count) * 100) : 0;
+      const relevancyScore = Math.round(
+        avgScore * 0.55 +
+        volumeScore * 0.25 +
+        highIntentRate * 0.20,
+      );
+
+      return {
+        subreddit,
+        count: entry.count,
+        avgScore,
+        highIntentRate,
+        relevancyScore,
+      };
+    })
+    .sort((a, b) => b.relevancyScore - a.relevancyScore || b.count - a.count);
 }
 
 function computeKeywordStats(leads: LeadDTO[]) {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Logo, Wordmark } from "@/app/components/logo";
+import { BrandLink } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,8 +36,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   return (
     <main className="signup-wizard-shell">
       <header className="signup-wizard-brand">
-        <Logo size={28} />
-        <Wordmark size={18} />
+        <BrandLink logoSize={28} wordmarkSize={18} />
       </header>
 
       <Card className="signup-wizard-card">

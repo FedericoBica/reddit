@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Logo, Wordmark } from "@/app/components/logo";
+import { BrandLink } from "@/app/components/logo";
 import { requireAdmin } from "@/modules/auth/admin";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -22,10 +22,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         }}
       >
         <div style={{ padding: "16px 14px 14px", borderBottom: "1px solid #EEEEED" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 4 }}>
-            <Logo size={22} />
-            <Wordmark size={14} />
-          </div>
+          <BrandLink logoSize={22} wordmarkSize={14} style={{ gap: 6, marginBottom: 4 }} />
           <span style={{ fontSize: 10, fontWeight: 700, color: "#E07000", letterSpacing: "0.06em", textTransform: "uppercase" }}>
             Admin
           </span>

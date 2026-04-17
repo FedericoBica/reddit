@@ -121,6 +121,42 @@ export type ListLeadsInput = z.infer<typeof listLeadsInputSchema>;
 export type CreateLeadInput = z.infer<typeof createLeadSchema>;
 export type UpdateLeadStatusInput = z.infer<typeof updateLeadStatusSchema>;
 
+export const searchboxResultStatusSchema = z.enum(["new", "replied", "dismissed"]);
+
+export const updateSearchboxResultStatusSchema = z.object({
+  resultId: z.string().uuid(),
+  projectId: projectIdSchema,
+  status: searchboxResultStatusSchema,
+});
+
+export type SearchboxResult = Tables<"searchbox_results">;
+export type SearchboxResultStatus = z.infer<typeof searchboxResultStatusSchema>;
+export type UpdateSearchboxResultStatusInput = z.infer<typeof updateSearchboxResultStatusSchema>;
+
+export type SearchboxResultDTO = Pick<
+  SearchboxResult,
+  | "id"
+  | "project_id"
+  | "reddit_post_id"
+  | "google_keyword"
+  | "google_rank"
+  | "title"
+  | "body"
+  | "subreddit"
+  | "author"
+  | "permalink"
+  | "url"
+  | "reddit_score"
+  | "reddit_num_comments"
+  | "reddit_created_utc"
+  | "intent_score"
+  | "classification_reason"
+  | "status"
+  | "first_seen_at"
+  | "last_seen_at"
+  | "created_at"
+>;
+
 export type Keyword = Tables<"keywords">;
 export type Subreddit = Tables<"subreddits">;
 

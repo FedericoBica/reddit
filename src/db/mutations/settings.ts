@@ -2,10 +2,12 @@ import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { projectIdSchema } from "@/db/schemas/domain";
+import type { Enums } from "@/db/schemas/database.types";
 
 export async function addKeyword(
   projectId: string,
   term: string,
+  type: Enums<"keyword_type"> = "custom",
 ): Promise<void> {
   const parsedProjectId = projectIdSchema.parse(projectId);
   const normalized = term.trim().replace(/\s+/g, " ");
@@ -14,12 +16,28 @@ export async function addKeyword(
   const { error } = await supabase
     .from("keywords")
     .upsert(
-      { project_id: parsedProjectId, term: normalized, type: "custom", is_active: true },
+      { project_id: parsedProjectId, term: normalized, type, is_active: true },
       { onConflict: "project_id,term", ignoreDuplicates: false },
     );
 
   if (error) {
     throw new Error(`Failed to add keyword: ${error.message}`);
+  }
+}
+
+export async function updateKeyword(projectId: string, keywordId: string, term: string): Promise<void> {
+  const parsedProjectId = projectIdSchema.parse(projectId);
+  const normalized = term.trim().replace(/\s+/g, " ");
+  const supabase = await createSupabaseServerClient();
+
+  const { error } = await supabase
+    .from("keywords")
+    .update({ term: normalized })
+    .eq("project_id", parsedProjectId)
+    .eq("id", keywordId);
+
+  if (error) {
+    throw new Error(`Failed to update keyword: ${error.message}`);
   }
 }
 

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Logo, Wordmark } from "@/app/components/logo";
+import { BrandLink } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -42,10 +42,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="auth-shell">
       <section className="auth-story" aria-label="ReddProwl">
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Logo size={30} />
-          <Wordmark size={20} />
-        </div>
+        <BrandLink logoSize={30} wordmarkSize={20} />
 
         <div style={{ maxWidth: 660 }}>
           <span className="eyebrow">Reddit leads on autopilot</span>

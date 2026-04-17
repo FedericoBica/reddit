@@ -75,47 +75,6 @@ export type Database = {
           },
         ]
       }
-      push_subscriptions: {
-        Row: {
-          auth: string
-          created_at: string
-          endpoint: string
-          id: string
-          p256dh: string
-          updated_at: string
-          user_agent: string | null
-          user_id: string
-        }
-        Insert: {
-          auth: string
-          created_at?: string
-          endpoint: string
-          id?: string
-          p256dh: string
-          updated_at?: string
-          user_agent?: string | null
-          user_id: string
-        }
-        Update: {
-          auth?: string
-          created_at?: string
-          endpoint?: string
-          id?: string
-          p256dh?: string
-          updated_at?: string
-          user_agent?: string | null
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "push_subscriptions_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       keywords: {
         Row: {
           created_at: string
@@ -540,6 +499,7 @@ export type Database = {
           id: string
           last_scrape_error: string | null
           last_scraped_at: string | null
+          last_searchbox_at: string | null
           name: string
           onboarding_completed_at: string | null
           onboarding_status: Database["public"]["Enums"]["project_onboarding_status"]
@@ -562,6 +522,7 @@ export type Database = {
           id?: string
           last_scrape_error?: string | null
           last_scraped_at?: string | null
+          last_searchbox_at?: string | null
           name: string
           onboarding_completed_at?: string | null
           onboarding_status?: Database["public"]["Enums"]["project_onboarding_status"]
@@ -584,6 +545,7 @@ export type Database = {
           id?: string
           last_scrape_error?: string | null
           last_scraped_at?: string | null
+          last_searchbox_at?: string | null
           name?: string
           onboarding_completed_at?: string | null
           onboarding_status?: Database["public"]["Enums"]["project_onboarding_status"]
@@ -606,6 +568,127 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: false
             referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          updated_at: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          updated_at?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "push_subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      searchbox_results: {
+        Row: {
+          author: string | null
+          body: string | null
+          classification_reason: string | null
+          created_at: string
+          first_seen_at: string
+          google_keyword: string
+          google_rank: number
+          id: string
+          intent_score: number | null
+          last_seen_at: string
+          permalink: string
+          project_id: string
+          reddit_created_utc: string | null
+          reddit_num_comments: number | null
+          reddit_post_id: string
+          reddit_score: number | null
+          status: Database["public"]["Enums"]["searchbox_result_status"]
+          subreddit: string
+          title: string
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          author?: string | null
+          body?: string | null
+          classification_reason?: string | null
+          created_at?: string
+          first_seen_at?: string
+          google_keyword: string
+          google_rank: number
+          id?: string
+          intent_score?: number | null
+          last_seen_at?: string
+          permalink: string
+          project_id: string
+          reddit_created_utc?: string | null
+          reddit_num_comments?: number | null
+          reddit_post_id: string
+          reddit_score?: number | null
+          status?: Database["public"]["Enums"]["searchbox_result_status"]
+          subreddit: string
+          title: string
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          author?: string | null
+          body?: string | null
+          classification_reason?: string | null
+          created_at?: string
+          first_seen_at?: string
+          google_keyword?: string
+          google_rank?: number
+          id?: string
+          intent_score?: number | null
+          last_seen_at?: string
+          permalink?: string
+          project_id?: string
+          reddit_created_utc?: string | null
+          reddit_num_comments?: number | null
+          reddit_post_id?: string
+          reddit_score?: number | null
+          status?: Database["public"]["Enums"]["searchbox_result_status"]
+          subreddit?: string
+          title?: string
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "searchbox_results_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
             referencedColumns: ["id"]
           },
         ]
@@ -718,6 +801,7 @@ export type Database = {
           id: string
           last_scrape_error: string | null
           last_scraped_at: string | null
+          last_searchbox_at: string | null
           name: string
           onboarding_completed_at: string | null
           onboarding_status: Database["public"]["Enums"]["project_onboarding_status"]
@@ -751,7 +835,13 @@ export type Database = {
       is_project_member: { Args: { _project_id: string }; Returns: boolean }
     }
     Enums: {
-      api_service: "openai" | "anthropic" | "reddit" | "apify" | "inngest"
+      api_service:
+        | "openai"
+        | "anthropic"
+        | "reddit"
+        | "apify"
+        | "inngest"
+        | "serpapi"
       intent_category: "informational" | "comparative" | "transactional"
       keyword_type: "custom" | "ai_suggested" | "competitor"
       lead_sentiment: "positive" | "negative" | "neutral"
@@ -774,6 +864,7 @@ export type Database = {
       reply_generation_status: "idle" | "generating" | "ready" | "failed"
       reply_style: "engaging" | "direct" | "balanced" | "custom"
       scrape_run_status: "started" | "completed" | "failed" | "skipped"
+      searchbox_result_status: "new" | "replied" | "dismissed"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -901,7 +992,14 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      api_service: ["openai", "anthropic", "reddit", "apify", "inngest"],
+      api_service: [
+        "openai",
+        "anthropic",
+        "reddit",
+        "apify",
+        "inngest",
+        "serpapi",
+      ],
       intent_category: ["informational", "comparative", "transactional"],
       keyword_type: ["custom", "ai_suggested", "competitor"],
       lead_sentiment: ["positive", "negative", "neutral"],
@@ -916,8 +1014,11 @@ export const Constants = {
         "completed",
       ],
       project_status: ["active", "archived", "suspended"],
+      reply_generation_status: ["idle", "generating", "ready", "failed"],
       reply_style: ["engaging", "direct", "balanced", "custom"],
       scrape_run_status: ["started", "completed", "failed", "skipped"],
+      searchbox_result_status: ["new", "replied", "dismissed"],
     },
   },
 } as const
+

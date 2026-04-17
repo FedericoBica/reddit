@@ -19,6 +19,8 @@ type MentionsPageProps = {
     projectId?: string;
     subreddit?: string;
     mentionTarget?: string;
+    sentiment?: string;
+    sort?: string;
   }>;
 };
 
@@ -45,7 +47,11 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
   const competitors = keywords.filter((keyword) => keyword.type === "competitor" && keyword.is_active);
   const selectedTargetId = resolveSelectedTarget(params?.mentionTarget, competitors);
   const targetLeads = filterLeadsByMentionTarget(allLeads, selectedTargetId, competitors);
-  const subredditStats = computeSubredditStats(targetLeads);
+  const selectedSentiment = parseSentimentFilter(params?.sentiment);
+  const selectedSort = parseMentionSort(params?.sort);
+  const sentimentStats = computeSentimentStats(targetLeads);
+  const visibleTargetLeads = filterLeadsBySentiment(targetLeads, selectedSentiment);
+  const subredditStats = computeSubredditStats(visibleTargetLeads);
   const mentionTargetOptions = buildMentionTargetOptions({
     projectId: currentProject.id,
     currentProjectName: currentProject.name,
@@ -55,9 +61,10 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
 
   // Selected subreddit filter
   const selectedSub = params?.subreddit ?? null;
-  const filteredLeads = selectedSub
-    ? targetLeads.filter((l) => l.subreddit === selectedSub)
-    : [];
+  const filteredLeads = sortMentionLeads(
+    selectedSub ? visibleTargetLeads.filter((l) => l.subreddit === selectedSub) : visibleTargetLeads,
+    selectedSort,
+  );
 
   return (
     <DashboardShell
@@ -95,33 +102,64 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
         </header>
 
         <div className="content-flow">
-          <div style={{ marginBottom: 18, maxWidth: 320 }}>
-            <MentionTargetSwitcher options={mentionTargetOptions} />
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "flex-start",
+              gap: 16,
+              flexWrap: "wrap",
+              marginBottom: 18,
+            }}
+          >
+            <div style={{ maxWidth: 320, flex: "1 1 260px" }}>
+              <MentionTargetSwitcher options={mentionTargetOptions} />
+            </div>
+            <SortByControl
+              projectId={currentProject.id}
+              mentionTarget={selectedTargetId}
+              subreddit={selectedSub}
+              sentiment={selectedSentiment}
+              selectedSort={selectedSort}
+            />
           </div>
 
-          {subredditStats.length === 0 ? (
+          {targetLeads.length === 0 ? (
             <EmptyMentions />
           ) : (
             <>
+              <SentimentBar
+                projectId={currentProject.id}
+                mentionTarget={selectedTargetId}
+                subreddit={selectedSub}
+                selectedSentiment={selectedSentiment}
+                selectedSort={selectedSort}
+                stats={sentimentStats}
+              />
+
               {/* ── Subreddit cards grid ── */}
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
-                  gap: 14,
-                  marginBottom: 32,
-                }}
-              >
-                {subredditStats.map((sub) => (
-                  <SubredditCard
-                    key={sub.subreddit}
-                    {...sub}
-                    projectId={currentProject.id}
-                    mentionTarget={selectedTargetId}
-                    selected={selectedSub === sub.subreddit}
-                  />
-                ))}
-              </div>
+              {!selectedSub && subredditStats.length > 0 && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fill, minmax(240px, 1fr))",
+                    gap: 14,
+                    marginBottom: 32,
+                  }}
+                >
+                  {subredditStats.map((sub) => (
+                    <SubredditCard
+                      key={sub.subreddit}
+                      {...sub}
+                      projectId={currentProject.id}
+                      mentionTarget={selectedTargetId}
+                      sentiment={selectedSentiment}
+                      sort={selectedSort}
+                      selected={selectedSub === sub.subreddit}
+                    />
+                  ))}
+                </div>
+              )}
 
               {/* ── Leads for selected subreddit ── */}
               {selectedSub && (
@@ -146,11 +184,16 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
                         r/{selectedSub}
                       </h2>
                       <p style={{ fontSize: 13, color: "#6B6B6E", marginTop: 3 }}>
-                        {filteredLeads.length} lead{filteredLeads.length !== 1 ? "s" : ""} · ordenados por intención
+                        {filteredLeads.length} mention{filteredLeads.length !== 1 ? "s" : ""} · {selectedSort === "recent" ? "más recientes primero" : "más relevantes primero"}
                       </p>
                     </div>
                     <Link
-                      href={`/mentions?projectId=${currentProject.id}&mentionTarget=${encodeURIComponent(selectedTargetId)}`}
+                      href={buildMentionsHref({
+                        projectId: currentProject.id,
+                        mentionTarget: selectedTargetId,
+                        sentiment: selectedSentiment,
+                        sort: selectedSort,
+                      })}
                       style={{
                         fontSize: 13,
                         fontWeight: 700,
@@ -162,7 +205,7 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
                     </Link>
                   </div>
 
-                  <div className="lead-list">
+                  <div className="opportunity-list" style={{ overflowY: "visible", padding: 0 }}>
                     {filteredLeads.map((lead) => (
                       <MentionLeadRow
                         key={lead.id}
@@ -174,8 +217,17 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
                 </div>
               )}
 
+              {subredditStats.length === 0 && (
+                <div className="empty-state">
+                  <p className="section-title">No hay mentions con este sentiment</p>
+                  <p className="section-copy" style={{ maxWidth: 420, margin: "10px auto 0" }}>
+                    Probá con otro filtro de sentiment o volvé a All para ver todas las menciones.
+                  </p>
+                </div>
+              )}
+
               {/* ── Full breakdown table ── */}
-              {!selectedSub && (
+              {!selectedSub && subredditStats.length > 0 && (
                 <div className="panel">
                   <div
                     style={{
@@ -193,6 +245,8 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
                         {...sub}
                         projectId={currentProject.id}
                         mentionTarget={selectedTargetId}
+                        sentiment={selectedSentiment}
+                        sort={selectedSort}
                       />
                     ))}
                   </div>
@@ -208,6 +262,174 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
 
 // ── Sub-components ─────────────────────────────────────────────
 
+function SentimentBar({
+  projectId,
+  mentionTarget,
+  subreddit,
+  selectedSentiment,
+  selectedSort,
+  stats,
+}: {
+  projectId: string;
+  mentionTarget: string;
+  subreddit: string | null;
+  selectedSentiment: SentimentFilter;
+  selectedSort: MentionSort;
+  stats: SentimentStats;
+}) {
+  const total = Math.max(1, stats.all);
+
+  return (
+    <section
+      className="panel"
+      style={{
+        padding: 14,
+        marginBottom: 18,
+      }}
+      aria-label="Sentiment of all mentions"
+    >
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 12,
+          marginBottom: 12,
+        }}
+      >
+        <div>
+          <p className="section-title">Sentiment of all mentions</p>
+          <p className="section-copy" style={{ marginTop: 3 }}>
+            {stats.all} mentions clasificadas por tono detectado.
+          </p>
+        </div>
+        <Link
+          href={buildMentionsHref({
+            projectId,
+            mentionTarget,
+            subreddit,
+            sentiment: "all",
+            sort: selectedSort,
+          })}
+          className={`filter-pill${selectedSentiment === "all" ? " filter-pill-active" : ""}`}
+        >
+          All
+        </Link>
+      </div>
+
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+          gap: 8,
+        }}
+      >
+        {SENTIMENT_FILTERS.filter((item) => item.value !== "all").map((item) => {
+          const count = stats[item.value];
+          const active = selectedSentiment === item.value;
+
+          return (
+            <Link
+              key={item.value}
+              href={buildMentionsHref({
+                projectId,
+                mentionTarget,
+                subreddit,
+                sentiment: item.value,
+                sort: selectedSort,
+              })}
+              style={{
+                minWidth: 0,
+                padding: "10px 10px 9px",
+                border: active ? `1px solid ${item.color}` : "1px solid #F0F0EE",
+                borderRadius: 8,
+                background: active ? item.bg : "#FFFFFF",
+                textDecoration: "none",
+                color: "inherit",
+              }}
+            >
+              <div
+                style={{
+                  height: 5,
+                  borderRadius: 999,
+                  background: "#F0F0EE",
+                  overflow: "hidden",
+                  marginBottom: 8,
+                }}
+              >
+                <div
+                  style={{
+                    width: `${Math.round((count / total) * 100)}%`,
+                    height: "100%",
+                    background: item.color,
+                  }}
+                />
+              </div>
+              <p
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  color: active ? item.color : "#1C1C1E",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {item.label}
+              </p>
+              <p style={{ fontSize: 10, color: "#8E8E93", marginTop: 2, fontWeight: 700 }}>
+                {count} · {Math.round((count / total) * 100)}%
+              </p>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function SortByControl({
+  projectId,
+  mentionTarget,
+  subreddit,
+  sentiment,
+  selectedSort,
+}: {
+  projectId: string;
+  mentionTarget: string;
+  subreddit: string | null;
+  sentiment: SentimentFilter;
+  selectedSort: MentionSort;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 8,
+        flexWrap: "wrap",
+      }}
+    >
+      <span style={{ fontSize: 12, color: "#8E8E93", fontWeight: 800 }}>Sort by</span>
+      {SORT_OPTIONS.map((option) => (
+        <Link
+          key={option.value}
+          href={buildMentionsHref({
+            projectId,
+            mentionTarget,
+            subreddit,
+            sentiment,
+            sort: option.value,
+          })}
+          className={`filter-pill${selectedSort === option.value ? " filter-pill-active" : ""}`}
+        >
+          {option.label}
+        </Link>
+      ))}
+    </div>
+  );
+}
+
 function SubredditCard({
   subreddit,
   count,
@@ -216,11 +438,19 @@ function SubredditCard({
   latestLead,
   projectId,
   mentionTarget,
+  sentiment,
+  sort,
   selected,
-}: SubredditStat & { projectId: string; mentionTarget: string; selected: boolean }) {
+}: SubredditStat & {
+  projectId: string;
+  mentionTarget: string;
+  sentiment: SentimentFilter;
+  sort: MentionSort;
+  selected: boolean;
+}) {
   return (
     <Link
-      href={`/mentions?projectId=${projectId}&mentionTarget=${encodeURIComponent(mentionTarget)}&subreddit=${encodeURIComponent(subreddit)}`}
+      href={buildMentionsHref({ projectId, mentionTarget, subreddit, sentiment, sort })}
       style={{
         display: "block",
         background: selected ? "#FFFDFB" : "#FFFFFF",
@@ -319,10 +549,18 @@ function SubredditTableRow({
   wonCount,
   projectId,
   mentionTarget,
-}: SubredditStat & { rank: number; projectId: string; mentionTarget: string }) {
+  sentiment,
+  sort,
+}: SubredditStat & {
+  rank: number;
+  projectId: string;
+  mentionTarget: string;
+  sentiment: SentimentFilter;
+  sort: MentionSort;
+}) {
   return (
     <Link
-      href={`/mentions?projectId=${projectId}&mentionTarget=${encodeURIComponent(mentionTarget)}&subreddit=${encodeURIComponent(subreddit)}`}
+      href={buildMentionsHref({ projectId, mentionTarget, subreddit, sentiment, sort })}
       style={{
         display: "grid",
         gridTemplateColumns: "32px 1fr 80px 80px 80px 80px",
@@ -372,84 +610,80 @@ function MentionLeadRow({
   projectId: string;
 }) {
   const score = lead.intent_score ?? 0;
-  const scoreBg = score >= 80 ? "#E07000" : score >= 60 ? "#FF9F40" : "#8E8E93";
 
   return (
     <Link
       href={`/leads/${lead.id}?projectId=${projectId}`}
-      className="lead-card"
+      className="opportunity-card"
     >
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <p
-          style={{
-            fontSize: 14,
-            fontWeight: 700,
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
-            marginBottom: 4,
-          }}
-        >
-          {lead.title}
-        </p>
-        <p style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>
-          {lead.created_at ? formatDate(lead.created_at) : ""}
-          {lead.author ? ` · u/${lead.author}` : ""}
-          {lead.num_comments != null ? ` · ${lead.num_comments} comentarios` : ""}
-        </p>
-        {lead.classification_reason && (
-          <p
-            style={{
-              fontSize: 11,
-              color: "#6B6B6E",
-              marginTop: 5,
-              lineHeight: 1.45,
-              overflow: "hidden",
-              display: "-webkit-box",
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: "vertical",
-            }}
-          >
-            {lead.classification_reason.slice(0, 130)}
-          </p>
-        )}
+      <div className="opportunity-meta">
+        <span className="opportunity-dot" />
+        <span>r/{lead.subreddit}</span>
+        <span>{lead.created_at ? formatRelative(lead.created_at) : ""}</span>
+        <span>{lead.author ? `u/${lead.author}` : "autor desconocido"}</span>
+        <span>{lead.num_comments ?? 0} comentarios</span>
+        <SentimentPill sentiment={getMentionSentimentBucket(lead)} />
       </div>
-
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "flex-end",
-          gap: 6,
-          flexShrink: 0,
-        }}
-      >
+      <h2 className="opportunity-heading">{lead.title}</h2>
+      <p className="opportunity-reason">
+        Intent score: {lead.intent_score ?? "-"} ·{" "}
+        {lead.classification_reason?.slice(0, 132) ??
+          "Mention detectada por keywords y señales de intención."}
+      </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <span
+          className="badge"
           style={{
-            background: scoreBg,
-            color: "#FFF",
-            fontSize: 14,
-            fontWeight: 900,
-            padding: "4px 11px",
-            borderRadius: 7,
-          }}
-        >
-          {lead.intent_score ?? "–"}
-        </span>
-        <span
-          style={{
-            fontSize: 10,
-            fontWeight: 800,
-            padding: "2px 7px",
-            borderRadius: 5,
             background: "#FFF3E8",
             color: "#E07000",
           }}
         >
           {translateStatus(lead.status)}
         </span>
+        <ScorePill score={score} />
       </div>
     </Link>
+  );
+}
+
+function ScorePill({ score }: { score: number }) {
+  const background = score >= 80 ? "#E07000" : score >= 60 ? "#FF9F40" : "#8E8E93";
+
+  return (
+    <span
+      style={{
+        background,
+        color: "#FFF",
+        fontSize: 13,
+        fontWeight: 900,
+        padding: "4px 10px",
+        borderRadius: 7,
+        minWidth: 36,
+        textAlign: "center",
+        letterSpacing: "-0.02em",
+      }}
+    >
+      {score || "-"}
+    </span>
+  );
+}
+
+function SentimentPill({ sentiment }: { sentiment: Exclude<SentimentFilter, "all"> }) {
+  const config = SENTIMENT_FILTERS.find((item) => item.value === sentiment) ?? SENTIMENT_FILTERS[3];
+
+  return (
+    <span
+      style={{
+        color: config.color,
+        background: config.bg,
+        borderRadius: 5,
+        padding: "2px 6px",
+        fontSize: 10,
+        fontWeight: 800,
+      }}
+    >
+      {config.label}
+    </span>
   );
 }
 
@@ -467,6 +701,37 @@ function EmptyMentions() {
 
 // ── Analytics helpers ─────────────────────────────────────────
 
+type SentimentFilter =
+  | "all"
+  | "negative"
+  | "mostly-negative"
+  | "neutral"
+  | "mostly-positive"
+  | "positive";
+
+type MentionSort = "recent" | "relevant";
+
+type SentimentStats = Record<SentimentFilter, number>;
+
+const SENTIMENT_FILTERS: Array<{
+  value: SentimentFilter;
+  label: string;
+  color: string;
+  bg: string;
+}> = [
+  { value: "all", label: "All", color: "#6B6B6E", bg: "#F3F4F6" },
+  { value: "negative", label: "Negative", color: "#DC2626", bg: "#FEF2F2" },
+  { value: "mostly-negative", label: "Mostly negative", color: "#F97316", bg: "#FFF7ED" },
+  { value: "neutral", label: "Neutral", color: "#6B6B6E", bg: "#F8F8F7" },
+  { value: "mostly-positive", label: "Mostly positive", color: "#65A30D", bg: "#F7FEE7" },
+  { value: "positive", label: "Positive", color: "#059669", bg: "#ECFDF5" },
+];
+
+const SORT_OPTIONS: Array<{ value: MentionSort; label: string }> = [
+  { value: "recent", label: "Most recent" },
+  { value: "relevant", label: "Most relevant" },
+];
+
 type SubredditStat = {
   subreddit: string;
   count: number;
@@ -475,6 +740,90 @@ type SubredditStat = {
   wonCount: number;
   latestLead: string | null;
 };
+
+function parseSentimentFilter(value: string | undefined): SentimentFilter {
+  return SENTIMENT_FILTERS.some((item) => item.value === value)
+    ? (value as SentimentFilter)
+    : "all";
+}
+
+function parseMentionSort(value: string | undefined): MentionSort {
+  return value === "recent" ? "recent" : "relevant";
+}
+
+function buildMentionsHref({
+  projectId,
+  mentionTarget,
+  subreddit,
+  sentiment,
+  sort,
+}: {
+  projectId: string;
+  mentionTarget: string;
+  subreddit?: string | null;
+  sentiment?: SentimentFilter;
+  sort?: MentionSort;
+}) {
+  const params = new URLSearchParams({
+    projectId,
+    mentionTarget,
+  });
+
+  if (subreddit) params.set("subreddit", subreddit);
+  if (sentiment && sentiment !== "all") params.set("sentiment", sentiment);
+  if (sort && sort !== "relevant") params.set("sort", sort);
+
+  return `/mentions?${params.toString()}`;
+}
+
+function getMentionSentimentBucket(lead: LeadDTO): Exclude<SentimentFilter, "all"> {
+  const score = lead.intent_score ?? 0;
+
+  if (lead.sentiment === "negative") {
+    return score >= 70 ? "negative" : "mostly-negative";
+  }
+
+  if (lead.sentiment === "positive") {
+    return score >= 70 ? "positive" : "mostly-positive";
+  }
+
+  return "neutral";
+}
+
+function filterLeadsBySentiment(leads: LeadDTO[], sentiment: SentimentFilter) {
+  if (sentiment === "all") {
+    return leads;
+  }
+
+  return leads.filter((lead) => getMentionSentimentBucket(lead) === sentiment);
+}
+
+function sortMentionLeads(leads: LeadDTO[], sort: MentionSort) {
+  return [...leads].sort((a, b) => {
+    if (sort === "recent") {
+      return new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime();
+    }
+
+    return (b.intent_score ?? 0) - (a.intent_score ?? 0);
+  });
+}
+
+function computeSentimentStats(leads: LeadDTO[]): SentimentStats {
+  const stats: SentimentStats = {
+    all: leads.length,
+    negative: 0,
+    "mostly-negative": 0,
+    neutral: 0,
+    "mostly-positive": 0,
+    positive: 0,
+  };
+
+  for (const lead of leads) {
+    stats[getMentionSentimentBucket(lead)]++;
+  }
+
+  return stats;
+}
 
 function resolveSelectedTarget(target: string | undefined, competitors: KeywordDTO[]) {
   if (!target || target === "company") {
@@ -585,15 +934,6 @@ function translateStatus(status: LeadDTO["status"]) {
     irrelevant: "Irrelevante",
   };
   return map[status] ?? status;
-}
-
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("es", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date));
 }
 
 function formatRelative(dateStr: string) {

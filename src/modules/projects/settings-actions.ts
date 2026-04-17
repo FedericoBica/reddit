@@ -2,8 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { updateProject } from "@/db/mutations/projects";
+import type { UpdateProjectInput } from "@/db/schemas/domain";
 import {
   addKeyword,
+  updateKeyword,
   removeKeyword,
   toggleKeyword,
   addSubreddit,
@@ -16,14 +18,15 @@ export async function updateProjectFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  const input: UpdateProjectInput = {};
 
-  await updateProject(projectId, {
-    name: String(formData.get("name") ?? "").trim() || undefined,
-    websiteUrl: String(formData.get("websiteUrl") ?? "").trim() || undefined,
-    valueProposition: String(formData.get("valueProposition") ?? "").trim() || undefined,
-    tone: String(formData.get("tone") ?? "").trim() || undefined,
-    region: String(formData.get("region") ?? "").trim() || undefined,
-  });
+  if (formData.has("name")) input.name = String(formData.get("name") ?? "").trim() || undefined;
+  if (formData.has("websiteUrl")) input.websiteUrl = String(formData.get("websiteUrl") ?? "").trim() || null;
+  if (formData.has("valueProposition")) input.valueProposition = String(formData.get("valueProposition") ?? "").trim() || null;
+  if (formData.has("tone")) input.tone = String(formData.get("tone") ?? "").trim() || null;
+  if (formData.has("region")) input.region = String(formData.get("region") ?? "").trim() || null;
+
+  await updateProject(projectId, input);
 
   revalidatePath("/settings");
   revalidatePath("/dashboard");
@@ -38,6 +41,31 @@ export async function addKeywordFromForm(formData: FormData) {
   if (!term) return;
 
   await addKeyword(projectId, term);
+  revalidatePath("/settings");
+}
+
+export async function addCompetitorFromForm(formData: FormData) {
+  await requireUser("/dashboard");
+
+  const projectId = String(formData.get("projectId") ?? "");
+  const term = String(formData.get("term") ?? "").trim();
+
+  if (!term) return;
+
+  await addKeyword(projectId, term, "competitor");
+  revalidatePath("/settings");
+}
+
+export async function updateKeywordFromForm(formData: FormData) {
+  await requireUser("/dashboard");
+
+  const projectId = String(formData.get("projectId") ?? "");
+  const keywordId = String(formData.get("keywordId") ?? "");
+  const term = String(formData.get("term") ?? "").trim();
+
+  if (!term) return;
+
+  await updateKeyword(projectId, keywordId, term);
   revalidatePath("/settings");
 }
 

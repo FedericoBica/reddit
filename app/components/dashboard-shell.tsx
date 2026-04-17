@@ -1,7 +1,7 @@
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { getTranslations } from "next-intl/server";
-import { Logo, Wordmark } from "./logo";
+import { BrandLink } from "./logo";
 import { ProjectSwitcher } from "./project-switcher";
 import { PushNotificationToggle } from "./push-notification-toggle";
 import { SidebarLinks } from "./sidebar-links";
@@ -101,18 +101,11 @@ async function DashboardShellContent({
             borderBottom: "1px solid #EEEEED",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 6,
-              marginBottom: 12,
-              padding: "0 3px",
-            }}
-          >
-            <Logo size={22} />
-            <Wordmark size={14} />
-          </div>
+          <BrandLink
+            logoSize={22}
+            wordmarkSize={14}
+            style={{ gap: 6, marginBottom: 12, padding: "0 3px" }}
+          />
 
           <ProjectSwitcher
             projects={projects}

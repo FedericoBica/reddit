@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Logo, Wordmark } from "@/app/components/logo";
+import { BrandLink, Logo } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
@@ -24,8 +24,7 @@ export default async function SignupTutorialPage({ searchParams }: TutorialPageP
   return (
     <main className="signup-wizard-shell signup-tutorial-backdrop">
       <header className="signup-wizard-brand">
-        <Logo size={28} />
-        <Wordmark size={18} />
+        <BrandLink logoSize={28} wordmarkSize={18} />
       </header>
 
       <Card className="signup-tutorial-card">

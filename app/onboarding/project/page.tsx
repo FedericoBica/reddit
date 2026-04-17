@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
-import { Logo, Wordmark } from "@/app/components/logo";
+import { BrandLink } from "@/app/components/logo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -65,10 +65,7 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
           backdropFilter: "blur(14px)",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Logo size={28} />
-          <Wordmark size={18} />
-        </div>
+        <BrandLink logoSize={28} wordmarkSize={18} />
         <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
           {project.name}
         </Badge>
