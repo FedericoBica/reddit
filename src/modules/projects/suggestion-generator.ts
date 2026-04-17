@@ -15,8 +15,8 @@ const suggestionResponseSchema = z.object({
         rationale: z.string().trim().min(1).max(240),
       }),
     )
-    .min(3)
-    .max(12),
+    .min(5)
+    .max(20),
   subreddits: z
     .array(
       z.object({
@@ -64,20 +64,9 @@ export async function generateProjectSuggestions(
     {
       model,
       temperature,
-      instructions: [
-        "You generate initial Reddit discovery configuration for a B2B SaaS lead monitoring product.",
-        "Return practical, non-generic keywords and subreddit names only. Do not include r/ prefixes.",
-        "Prefer buyer-intent, pain-point, and alternative/comparison keywords over broad category words.",
-        "Respect the project's region and primary language when useful, but include global communities if relevant.",
-      ].join("\n"),
-      input: [
-        `Project name: ${project.name}`,
-        `Website URL: ${project.website_url ?? "not provided"}`,
-        `Value proposition: ${project.value_proposition ?? "not provided"}`,
-        `Region: ${project.region ?? "global / not provided"}`,
-        `Primary language: ${project.primary_language}`,
-      ].join("\n"),
-      max_output_tokens: 1_200,
+      instructions: buildSystemPrompt(),
+      input: buildUserPrompt(project),
+      max_output_tokens: 1_800,
       text: {
         format: zodTextFormat(suggestionResponseSchema, "project_onboarding_suggestions"),
       },
@@ -122,6 +111,75 @@ function normalizeKeywords(
       seen.add(key);
       return true;
     });
+}
+
+function buildSystemPrompt(): string {
+  return [
+    "You are an expert B2B SaaS growth strategist specializing in Reddit lead generation and social listening.",
+    "Your task is to generate highly targeted Reddit discovery configurations for a specific company.",
+    "The goal is to find Reddit posts where potential BUYERS are actively discussing pain points,",
+    "seeking alternatives, evaluating tools, or expressing frustration — moments where this company's product could be the solution.",
+    "",
+    "## Output Philosophy",
+    "NEVER output generic, broad, or obvious keywords. Every keyword must be:",
+    "- Specific: tied to the actual problem space, not the product category at large",
+    "- Buyer-intent: signals someone actively looking, frustrated, or evaluating options",
+    "- Contextual: derived from the actual business description",
+    "- How a frustrated user ACTUALLY types in Reddit search, not how a marketer writes",
+    "",
+    "## Keyword Categories — generate 3-4 per category, 15-20 total",
+    "",
+    "1. Pain-Point Keywords: phrases people use when venting about a problem this product solves.",
+    "   Natural language fragments, not polished copy. Examples: 'tired of manually tracking', 'spreadsheet is a nightmare for', 'can't scale our'",
+    "",
+    "2. Buyer-Intent Keywords: phrases signaling active evaluation or purchase intent.",
+    "   Examples: 'best tool for X', 'looking for software that', 'anyone use X for Y', 'recommend a [category] tool'",
+    "",
+    "3. Competitor Comparison Keywords: direct competitor mentions that signal in-market prospects.",
+    "   Examples: '[Competitor] vs', '[Competitor] alternative', 'switched from [Competitor]', '[Competitor] too expensive'",
+    "",
+    "4. Job-Role / Workflow Keywords: how the target buyer describes their daily work in Reddit posts.",
+    "   Think about their job title frustrations, team workflows, the specific tasks this product automates.",
+    "",
+    "5. Negative Sentiment Keywords: phrases signaling a bad experience with the status quo.",
+    "   Examples: '[Competitor] is terrible', 'hate using [tool]', 'looking to replace [tool]'",
+    "",
+    "## Subreddit Selection",
+    "Select subreddits where the TARGET BUYER actually discusses work problems.",
+    "Prioritize: professional/role-specific subreddits, industry-specific subreddits, tool comparison subreddits (e.g. softwarerecommendations), competitor brand subreddits if relevant.",
+    "Avoid overly broad subreddits like r/technology or r/business.",
+    "Do NOT include r/ prefixes. Generate 5-10 subreddits.",
+    "",
+    "## Rules",
+    "- Mix short 2-word phrases with longer conversational fragments",
+    "- Include competitor names when they can be inferred from the business description",
+    "- Vary keyword length and style across the 5 categories",
+    "- Prioritize quality over quantity: 15 sharp keywords beat 20 generic ones",
+  ].join("\n");
+}
+
+function buildUserPrompt(project: ProjectDTO): string {
+  const lines: string[] = [];
+
+  lines.push("## Company to generate keywords for");
+  lines.push(`Name: ${project.name}`);
+  lines.push(`Website: ${project.website_url ?? "not provided"}`);
+  lines.push(`Region: ${project.region ?? "Global"}`);
+  lines.push(`Primary language: ${project.primary_language}`);
+
+  if (project.value_proposition) {
+    lines.push("");
+    lines.push("## Business description (AI-analyzed from their website)");
+    lines.push(project.value_proposition);
+    lines.push("");
+    lines.push(
+      "Use this description to infer: what problem they solve, who their ICP is, " +
+      "what language their customers use, what workflows or tools they replace, " +
+      "and which competitors they likely compete against.",
+    );
+  }
+
+  return lines.join("\n");
 }
 
 function normalizeSubreddits(
