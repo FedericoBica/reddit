@@ -1,3 +1,5 @@
+"use server";
+
 import "server-only";
 
 import { revalidatePath } from "next/cache";
@@ -14,7 +16,8 @@ export async function updateUserBillingPlan(formData: FormData) {
   if (!userId || !plan) return;
 
   const supabase = createSupabaseAdminClient();
-  await supabase.from("users").update({ billing_plan: plan }).eq("id", userId);
+  const { error } = await supabase.from("users").update({ billing_plan: plan }).eq("id", userId);
+  if (error) throw new Error(`Failed to update user billing plan: ${error.message}`);
 
   revalidatePath("/admin/users");
 }

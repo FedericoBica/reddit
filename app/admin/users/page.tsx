@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
 import { listAdminUsers } from "@/db/queries/admin";
 import { updateUserBillingPlan } from "@/modules/admin/actions";
+import { parseBillingPlan } from "@/modules/billing/limits";
 
 export const metadata: Metadata = { title: "Admin — Usuarios" };
 
@@ -61,98 +62,102 @@ export default async function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((user, i) => (
-                <tr
-                  key={user.id}
-                  style={{ borderBottom: i < users.length - 1 ? "1px solid #F5F5F3" : "none" }}
-                >
-                  <td style={{ padding: "12px 16px" }}>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>
-                      {user.email}
-                    </div>
-                    {user.full_name && (
-                      <div style={{ fontSize: 11, color: "#8E8E93", marginTop: 2 }}>
-                        {user.full_name}
+              {users.map((user, i) => {
+                const billingPlan = parseBillingPlan(user.billing_plan) ?? "startup";
+
+                return (
+                  <tr
+                    key={user.id}
+                    style={{ borderBottom: i < users.length - 1 ? "1px solid #F5F5F3" : "none" }}
+                  >
+                    <td style={{ padding: "12px 16px" }}>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>
+                        {user.email}
                       </div>
-                    )}
-                    {user.is_admin && (
+                      {user.full_name && (
+                        <div style={{ fontSize: 11, color: "#8E8E93", marginTop: 2 }}>
+                          {user.full_name}
+                        </div>
+                      )}
+                      {user.is_admin && (
+                        <span
+                          style={{
+                            fontSize: 9,
+                            fontWeight: 700,
+                            color: "#fff",
+                            background: "#E07000",
+                            padding: "1px 5px",
+                            borderRadius: 3,
+                            letterSpacing: "0.05em",
+                            textTransform: "uppercase",
+                            marginTop: 4,
+                            display: "inline-block",
+                          }}
+                        >
+                          admin
+                        </span>
+                      )}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
                       <span
                         style={{
-                          fontSize: 9,
-                          fontWeight: 700,
-                          color: "#fff",
-                          background: "#E07000",
-                          padding: "1px 5px",
-                          borderRadius: 3,
-                          letterSpacing: "0.05em",
-                          textTransform: "uppercase",
-                          marginTop: 4,
-                          display: "inline-block",
-                        }}
-                      >
-                        admin
-                      </span>
-                    )}
-                  </td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <span
-                      style={{
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: PLAN_COLORS[user.billing_plan] ?? "#6B6B6E",
-                      }}
-                    >
-                      {PLAN_LABELS[user.billing_plan] ?? user.billing_plan}
-                    </span>
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: 13, color: "#1C1C1E", fontWeight: 600 }}>
-                    {user.projects_count}
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: 13, color: "#1C1C1E", fontWeight: 600 }}>
-                    {user.leads_count}
-                  </td>
-                  <td style={{ padding: "12px 16px", fontSize: 12, color: "#8E8E93" }}>
-                    {new Date(user.created_at).toLocaleDateString()}
-                  </td>
-                  <td style={{ padding: "12px 16px" }}>
-                    <form action={updateUserBillingPlan} style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <input type="hidden" name="userId" value={user.id} />
-                      <select
-                        name="plan"
-                        defaultValue={user.billing_plan}
-                        style={{
                           fontSize: 12,
-                          border: "1px solid #E5E5E3",
-                          borderRadius: 6,
-                          padding: "4px 8px",
-                          background: "#fff",
-                          color: "#1C1C1E",
-                          cursor: "pointer",
-                        }}
-                      >
-                        <option value="startup">Startup</option>
-                        <option value="growth">Growth</option>
-                        <option value="professional">Professional</option>
-                      </select>
-                      <button
-                        type="submit"
-                        style={{
-                          fontSize: 11,
                           fontWeight: 700,
-                          color: "#fff",
-                          background: "#1C1C1E",
-                          border: "none",
-                          borderRadius: 6,
-                          padding: "5px 10px",
-                          cursor: "pointer",
+                          color: PLAN_COLORS[billingPlan] ?? "#6B6B6E",
                         }}
                       >
-                        {t("save")}
-                      </button>
-                    </form>
-                  </td>
-                </tr>
-              ))}
+                        {PLAN_LABELS[billingPlan] ?? billingPlan}
+                      </span>
+                    </td>
+                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#1C1C1E", fontWeight: 600 }}>
+                      {user.projects_count}
+                    </td>
+                    <td style={{ padding: "12px 16px", fontSize: 13, color: "#1C1C1E", fontWeight: 600 }}>
+                      {user.leads_count}
+                    </td>
+                    <td style={{ padding: "12px 16px", fontSize: 12, color: "#8E8E93" }}>
+                      {new Date(user.created_at).toLocaleDateString()}
+                    </td>
+                    <td style={{ padding: "12px 16px" }}>
+                      <form action={updateUserBillingPlan} style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                        <input type="hidden" name="userId" value={user.id} />
+                        <select
+                          name="plan"
+                          defaultValue={billingPlan}
+                          style={{
+                            fontSize: 12,
+                            border: "1px solid #E5E5E3",
+                            borderRadius: 6,
+                            padding: "4px 8px",
+                            background: "#fff",
+                            color: "#1C1C1E",
+                            cursor: "pointer",
+                          }}
+                        >
+                          <option value="startup">Startup</option>
+                          <option value="growth">Growth</option>
+                          <option value="professional">Professional</option>
+                        </select>
+                        <button
+                          type="submit"
+                          style={{
+                            fontSize: 11,
+                            fontWeight: 700,
+                            color: "#fff",
+                            background: "#1C1C1E",
+                            border: "none",
+                            borderRadius: 6,
+                            padding: "5px 10px",
+                            cursor: "pointer",
+                          }}
+                        >
+                          {t("save")}
+                        </button>
+                      </form>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
 

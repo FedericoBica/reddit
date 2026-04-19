@@ -86,38 +86,37 @@ export async function listAdminUsers(): Promise<AdminUser[]> {
 
   const userIds = users.map((u) => u.id);
 
-  // Fetch all projects for these users
-  const { data: projects } = await supabase
+  const { data: projects, error: projectsError } = await supabase
     .from("projects")
     .select("id, owner_id")
     .in("owner_id", userIds);
 
-  const projectsByOwner: Record<string, number> = {};
-  const projectOwnerMap: Record<string, string> = {};
+  if (projectsError) throw new Error(`Failed to list user projects: ${projectsError.message}`);
+
+  const projectIdsByOwner = new Map<string, string[]>();
   for (const p of projects ?? []) {
-    projectsByOwner[p.owner_id] = (projectsByOwner[p.owner_id] ?? 0) + 1;
-    projectOwnerMap[p.id] = p.owner_id;
+    projectIdsByOwner.set(p.owner_id, [...(projectIdsByOwner.get(p.owner_id) ?? []), p.id]);
   }
 
-  // Count leads per project, then map to owner
-  const projectIds = Object.keys(projectOwnerMap);
-  const leadsByOwner: Record<string, number> = {};
+  const leadCountEntries = await Promise.all(
+    users.map(async (user) => {
+      const projectIds = projectIdsByOwner.get(user.id) ?? [];
+      if (projectIds.length === 0) return [user.id, 0] as const;
 
-  if (projectIds.length > 0) {
-    const { data: leadCounts } = await supabase
-      .from("leads")
-      .select("project_id")
-      .in("project_id", projectIds);
+      const { count, error: leadsError } = await supabase
+        .from("leads")
+        .select("*", { count: "exact", head: true })
+        .in("project_id", projectIds);
 
-    for (const l of leadCounts ?? []) {
-      const ownerId = projectOwnerMap[l.project_id];
-      if (ownerId) leadsByOwner[ownerId] = (leadsByOwner[ownerId] ?? 0) + 1;
-    }
-  }
+      if (leadsError) throw new Error(`Failed to count user leads: ${leadsError.message}`);
+      return [user.id, count ?? 0] as const;
+    }),
+  );
+  const leadsByOwner = Object.fromEntries(leadCountEntries);
 
   return users.map((u) => ({
     ...u,
-    projects_count: projectsByOwner[u.id] ?? 0,
+    projects_count: projectIdsByOwner.get(u.id)?.length ?? 0,
     leads_count: leadsByOwner[u.id] ?? 0,
   }));
 }
