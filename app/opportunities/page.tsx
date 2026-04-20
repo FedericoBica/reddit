@@ -6,6 +6,7 @@ import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listFreshProjectLeads, listProjectLeads } from "@/db/queries/leads";
 import type { LeadDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
+import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { resolveCurrentProject } from "@/modules/projects/current";
 
 export const metadata: Metadata = {
@@ -25,9 +26,11 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
   const { currentProject, projects } = projectState;
 
+  const plan = await getCurrentBillingPlan();
+  const windowHours = plan.keywordSearchTimeWindow === "week" ? 168 : 24;
 
   const [freshLeads, allLeads] = await Promise.all([
-    listFreshProjectLeads(currentProject.id, 2, 80),
+    listFreshProjectLeads(currentProject.id, windowHours, 100),
     listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
   ]);
 
@@ -48,7 +51,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
             <p className="page-kicker">New Opportunities</p>
             <h1 className="page-title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <FlashIcon />
-              Fresh posts — last 2 hours
+              Fresh posts — last {windowHours >= 168 ? "7 days" : "24 hours"}
             </h1>
             <p className="page-copy">
               Posts recientes que matchearon tus keywords. Actualiza automáticamente cada 60 segundos.
@@ -84,7 +87,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
         <div className="content-flow">
           {freshLeads.length === 0 ? (
-            <EmptyFeed projectName={currentProject.name} lastScrapedAt={currentProject.last_scraped_at} />
+            <EmptyFeed projectName={currentProject.name} lastScrapedAt={currentProject.last_scraped_at} windowHours={windowHours} />
           ) : (
             <div style={{ display: "grid", gap: 10 }}>
               {freshLeads.map((lead) => (
@@ -260,7 +263,7 @@ function FreshLeadRow({ lead, projectId }: { lead: LeadDTO; projectId: string })
   );
 }
 
-function EmptyFeed({ projectName, lastScrapedAt }: { projectName: string; lastScrapedAt: string | null }) {
+function EmptyFeed({ projectName, lastScrapedAt, windowHours }: { projectName: string; lastScrapedAt: string | null; windowHours: number }) {
   return (
     <div
       style={{
@@ -289,7 +292,7 @@ function EmptyFeed({ projectName, lastScrapedAt }: { projectName: string; lastSc
         No hay posts frescos
       </p>
       <p style={{ fontSize: 13, color: "#6B6B6E", maxWidth: 360, margin: "0 auto" }}>
-        {projectName} no tiene leads nuevos en las últimas 2 horas.{" "}
+        {projectName} no tiene leads en {windowHours >= 168 ? "los últimos 7 días" : "las últimas 24 horas"}.{" "}
         {lastScrapedAt
           ? `Último scan ${formatRelative(lastScrapedAt)}.`
           : "El scraper aún no corrió."}

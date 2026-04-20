@@ -26,7 +26,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
   const runId = options.runId ?? crypto.randomUUID();
   const maxProjects = readPositiveIntEnv("SCRAPE_MAX_PROJECTS_PER_RUN", 10);
   const maxPosts = readPositiveIntEnv("SCRAPE_MAX_POSTS_PER_KEYWORD", 25);
-  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 70);
+  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 60);
   const candidates = await listProjectsDueForScraping(maxProjects);
   const now = Date.now();
 
@@ -246,7 +246,7 @@ export async function runProjectBackfill(
   options: { provider?: RedditDiscoveryProvider } = {},
 ) {
   const provider = options.provider ?? createRedditDiscoveryProvider();
-  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 70);
+  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 60);
   const target = await getProjectForScraping(projectId);
 
   if (!target) {

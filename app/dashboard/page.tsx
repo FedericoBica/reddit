@@ -71,6 +71,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
   }
 
   const isGenerating = selectedLead?.reply_generation_status === "generating";
+  const isNew = !currentProject.last_searchbox_at;
 
   const FILTERS = [
     { label: "All", value: undefined },
@@ -89,7 +90,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
     >
-      {isGenerating && <AutoRefresh intervalMs={4000} />}
+      {(isGenerating || isNew) && <AutoRefresh intervalMs={isNew ? 15000 : 4000} />}
       <section className="searchbox-workspace">
         <header className="searchbox-header">
           <div>
@@ -155,7 +156,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
                   />
                 ))
               ) : (
-                <EmptyState isNew={!currentProject.last_searchbox_at} />
+                <EmptyState isNew={isNew} />
               )}
             </div>
 
@@ -172,7 +173,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
             lead={selectedLead}
             replies={replies}
             projectId={currentProject.id}
-            isNew={!currentProject.last_searchbox_at}
+            isNew={isNew}
           />
         </div>
       </section>
