@@ -241,24 +241,30 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
 const BACKFILL_TIME_WINDOW = "week" as const;
 const BACKFILL_MAX_POSTS = 15;
 
-export async function runProjectBackfill(
+export type BackfillFetchResult =
+  | { status: "skipped"; reason: string }
+  | {
+      status: "fetched";
+      projectId: string;
+      scrapeRunId: string;
+      runId: string;
+      posts: import("@/modules/discovery/reddit/types").RedditPost[];
+      keywords: { id: string; term: string }[];
+      project: import("@/db/queries/scraping").ScrapeTarget["project"];
+      scrapeFailCount: number;
+    };
+
+export async function fetchBackfillPosts(
   projectId: string,
   options: { provider?: RedditDiscoveryProvider } = {},
-) {
+): Promise<BackfillFetchResult> {
   const provider = options.provider ?? createRedditDiscoveryProvider();
-  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 60);
   const target = await getProjectForScraping(projectId);
 
-  if (!target) {
-    return { projectId, status: "skipped", reason: "Project not found or inactive" };
-  }
-
-  if (target.keywords.length === 0) {
-    return { projectId, status: "skipped", reason: "No keywords configured" };
-  }
-
+  if (!target) return { status: "skipped", reason: "Project not found or inactive" };
+  if (target.keywords.length === 0) return { status: "skipped", reason: "No keywords configured" };
   if (!provider.searchPostsBatch && !provider.searchPosts) {
-    return { projectId, status: "skipped", reason: "Provider does not support keyword search" };
+    return { status: "skipped", reason: "Provider does not support keyword search" };
   }
 
   const runId = crypto.randomUUID();
@@ -269,106 +275,121 @@ export async function runProjectBackfill(
     metadata: { backfill: true, time_window: BACKFILL_TIME_WINDOW },
   });
 
+  const queries = target.keywords.map((k) => k.term);
+  const allPosts = provider.searchPostsBatch
+    ? await provider.searchPostsBatch({
+        queries,
+        sort: "new",
+        time: BACKFILL_TIME_WINDOW,
+        limitPerQuery: BACKFILL_MAX_POSTS,
+      })
+    : await Promise.all(
+        target.keywords.map((k) =>
+          provider.searchPosts!({
+            query: k.term,
+            sort: "new",
+            time: BACKFILL_TIME_WINDOW,
+            limit: BACKFILL_MAX_POSTS,
+          }),
+        ),
+      ).then((results) => results.flat());
+
+  const seen = new Set<string>();
+  const posts = allPosts.filter((p) => {
+    if (seen.has(p.id)) return false;
+    seen.add(p.id);
+    return true;
+  });
+
+  return {
+    status: "fetched",
+    projectId,
+    scrapeRunId: scrapeRun.id,
+    runId,
+    posts,
+    keywords: target.keywords,
+    project: target.project,
+    scrapeFailCount: target.project.scrape_fail_count,
+  };
+}
+
+export async function classifyAndSaveBackfillPosts(
+  input: Extract<BackfillFetchResult, { status: "fetched" }>,
+): Promise<{ projectId: string; status: string; postsSeen: number; leadsCreated: number; duplicatesSkipped: number }> {
+  const { projectId, scrapeRunId, runId, posts, keywords, project, scrapeFailCount } = input;
+  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 60);
+  const queries = keywords.map((k) => k.term);
+
+  let leadsCreated = 0;
+  let duplicatesSkipped = 0;
+  let classificationsCount = 0;
+  let classifierInputTokens = 0;
+  let classifierOutputTokens = 0;
+  let classifierModel: string | null = null;
+
   try {
-    let postsSeen = 0;
-    let leadsCreated = 0;
-    let duplicatesSkipped = 0;
-    let requestsCount = 0;
-    let classificationsCount = 0;
-    let classifierInputTokens = 0;
-    let classifierOutputTokens = 0;
-    let classifierModel: string | null = null;
-    const seenPostIds = new Set<string>();
+    const CONCURRENCY = 10;
+    for (let i = 0; i < posts.length; i += CONCURRENCY) {
+      const batch = posts.slice(i, i + CONCURRENCY);
+      await Promise.all(
+        batch.map(async (post) => {
+          const matched = findMatchedKeywords(post, keywords);
+          const keywordsMatched =
+            matched.length > 0
+              ? matched
+              : queries
+                  .filter(
+                    (q) =>
+                      post.title.toLowerCase().includes(q.toLowerCase()) ||
+                      (post.body ?? "").toLowerCase().includes(q.toLowerCase()),
+                  )
+                  .slice(0, 1);
 
-    const queries = target.keywords.map((k) => k.term);
-    const allPosts = provider.searchPostsBatch
-      ? await provider.searchPostsBatch({
-          queries,
-          sort: "new",
-          time: BACKFILL_TIME_WINDOW,
-          limitPerQuery: BACKFILL_MAX_POSTS,
-        })
-      : await Promise.all(
-          target.keywords.map((k) =>
-            provider.searchPosts!({
-              query: k.term,
-              sort: "new",
-              time: BACKFILL_TIME_WINDOW,
-              limit: BACKFILL_MAX_POSTS,
-            }),
-          ),
-        ).then((results) => results.flat());
+          const classification = await classifyLeadCandidate({ project, post, keywordsMatched });
 
-    requestsCount += 1;
+          classificationsCount += 1;
+          classifierModel = classification.usage.model;
+          classifierInputTokens += classification.usage.inputTokens ?? 0;
+          classifierOutputTokens += classification.usage.outputTokens ?? 0;
 
-    for (const post of allPosts) {
-        if (seenPostIds.has(post.id)) continue;
-        seenPostIds.add(post.id);
-        postsSeen += 1;
+          if (classification.intentScore < leadIntentThreshold) return;
 
-        const keywordsMatched =
-          findMatchedKeywords(post, target.keywords).length > 0
-            ? findMatchedKeywords(post, target.keywords)
-            : queries
-                .filter(
-                  (q) =>
-                    post.title.toLowerCase().includes(q.toLowerCase()) ||
-                    (post.body ?? "").toLowerCase().includes(q.toLowerCase()),
-                )
-                .slice(0, 1);
+          const result = await createLeadForProjectWorker({
+            projectId,
+            redditPostId: post.id,
+            redditFullname: post.fullname,
+            title: post.title,
+            body: post.body,
+            subreddit: post.subreddit,
+            author: post.author,
+            permalink: post.permalink,
+            url: post.url,
+            createdUtc: post.createdUtc,
+            score: post.score,
+            numComments: post.numComments,
+            intentScore: classification.intentScore,
+            regionScore: classification.regionScore,
+            sentiment: classification.sentiment,
+            classificationReason: classification.classificationReason,
+            classifierPromptVersion: classification.promptVersion,
+            keywordsMatched,
+            rawData: post.rawData,
+          });
 
-        const classification = await classifyLeadCandidate({
-          project: target.project,
-          post,
-          keywordsMatched,
-        });
-
-        classificationsCount += 1;
-        classifierModel = classification.usage.model;
-        classifierInputTokens += classification.usage.inputTokens ?? 0;
-        classifierOutputTokens += classification.usage.outputTokens ?? 0;
-
-        if (classification.intentScore < leadIntentThreshold) continue;
-
-        const result = await createLeadForProjectWorker({
-          projectId,
-          redditPostId: post.id,
-          redditFullname: post.fullname,
-          title: post.title,
-          body: post.body,
-          subreddit: post.subreddit,
-          author: post.author,
-          permalink: post.permalink,
-          url: post.url,
-          createdUtc: post.createdUtc,
-          score: post.score,
-          numComments: post.numComments,
-          intentScore: classification.intentScore,
-          regionScore: classification.regionScore,
-          sentiment: classification.sentiment,
-          classificationReason: classification.classificationReason,
-          classifierPromptVersion: classification.promptVersion,
-          keywordsMatched,
-          rawData: post.rawData,
-        });
-
-        if (result.duplicate) {
-          duplicatesSkipped += 1;
-        } else {
-          leadsCreated += 1;
-
-          if (result.lead && (result.lead.intent_score ?? 0) > 80) {
-            await inngest.send({
-              name: "leads/high_intent.created",
-              data: {
-                projectId,
-                leadId: result.lead.id,
-                intentScore: result.lead.intent_score,
-              },
-            });
+          if (result.duplicate) {
+            duplicatesSkipped += 1;
+          } else {
+            leadsCreated += 1;
+            if (result.lead && (result.lead.intent_score ?? 0) > 80) {
+              await inngest.send({
+                name: "leads/high_intent.created",
+                data: { projectId, leadId: result.lead.id, intentScore: result.lead.intent_score },
+              });
+            }
           }
-        }
-      }
+        }),
+      );
+    }
 
     if (classificationsCount > 0) {
       try {
@@ -379,39 +400,48 @@ export async function runProjectBackfill(
           inputTokens: classifierInputTokens,
           outputTokens: classifierOutputTokens,
           requestsCount: classificationsCount,
-          metadata: { run_id: runId, posts_seen: postsSeen, leads_created: leadsCreated },
+          metadata: { run_id: runId, posts_seen: posts.length, leads_created: leadsCreated },
         });
-      } catch (usageLogError) {
-        console.error("Failed to log backfill classification usage", usageLogError);
+      } catch {
+        // non-critical
       }
     }
 
     await logRedditUsageForProject({
       projectId,
       operation: "backfill_keyword_search",
-      requestsCount,
-      metadata: { run_id: runId, posts_seen: postsSeen, leads_created: leadsCreated },
+      requestsCount: 1,
+      metadata: { run_id: runId, posts_seen: posts.length, leads_created: leadsCreated },
     });
 
     await completeProjectScrapeRun({
       projectId,
-      scrapeRunId: scrapeRun.id,
-      postsSeen,
+      scrapeRunId,
+      postsSeen: posts.length,
       leadsCreated,
       duplicatesSkipped,
     });
 
-    return { projectId, status: "completed", postsSeen, leadsCreated, duplicatesSkipped };
+    return { projectId, status: "completed", postsSeen: posts.length, leadsCreated, duplicatesSkipped };
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unknown backfill error";
     await failProjectScrapeRun({
       projectId,
-      scrapeRunId: scrapeRun.id,
-      currentFailCount: target.project.scrape_fail_count,
+      scrapeRunId,
+      currentFailCount: scrapeFailCount,
       errorMessage: message,
     });
-    return { projectId, status: "failed", reason: message };
+    return { projectId, status: "failed", postsSeen: posts.length, leadsCreated, duplicatesSkipped };
   }
+}
+
+export async function runProjectBackfill(
+  projectId: string,
+  options: { provider?: RedditDiscoveryProvider } = {},
+) {
+  const fetchResult = await fetchBackfillPosts(projectId, options);
+  if (fetchResult.status === "skipped") return { projectId, ...fetchResult };
+  return classifyAndSaveBackfillPosts(fetchResult);
 }
 
 function readPositiveIntEnv(name: string, fallback: number) {

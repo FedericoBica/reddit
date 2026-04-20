@@ -93,7 +93,7 @@ export class ApifyRedditProvider implements RedditDiscoveryProvider {
 
   private async runActor(body: Record<string, unknown>): Promise<ApifyRedditItem[]> {
     const actorId = process.env.APIFY_REDDIT_ACTOR_ID ?? "harshmaur/reddit-scraper";
-    const timeoutSecs = readPositiveIntEnv("APIFY_REDDIT_TIMEOUT_SECS", 90);
+    const timeoutSecs = readPositiveIntEnv("APIFY_REDDIT_TIMEOUT_SECS", 50);
     const url = new URL(
       `https://api.apify.com/v2/acts/${encodeURIComponent(actorId)}/run-sync-get-dataset-items`,
     );
