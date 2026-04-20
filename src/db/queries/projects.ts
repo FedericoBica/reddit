@@ -50,9 +50,13 @@ const subredditSuggestionColumns = `
 
 export async function listProjectsForCurrentUser(): Promise<ProjectDTO[]> {
   const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
   const { data, error } = await supabase
     .from("projects")
     .select(projectColumns)
+    .eq("owner_id", user.id)
     .order("created_at", { ascending: true });
 
   if (error) {
@@ -64,10 +68,14 @@ export async function listProjectsForCurrentUser(): Promise<ProjectDTO[]> {
 
 export async function getProjectById(projectId: string): Promise<ProjectDTO | null> {
   const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+
   const { data, error } = await supabase
     .from("projects")
     .select(projectColumns)
     .eq("id", projectId)
+    .eq("owner_id", user.id)
     .maybeSingle();
 
   if (error) {
