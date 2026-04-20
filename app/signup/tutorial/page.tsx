@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { BrandLink, Logo } from "@/app/components/logo";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { BrandLink } from "@/app/components/logo";
 import { getCurrentUser } from "@/modules/auth/server";
+import { TutorialCard } from "./tutorial-card";
 
 export const metadata: Metadata = {
   title: "Bienvenida",
@@ -27,29 +26,7 @@ export default async function SignupTutorialPage({ searchParams }: TutorialPageP
         <BrandLink logoSize={28} wordmarkSize={18} />
       </header>
 
-      <Card className="signup-tutorial-card">
-        <CardContent className="p-0">
-          <div className="signup-tutorial-hero">
-            <h1>Welcome to ReddProwl</h1>
-            <p>
-              ReddProwl scans Reddit to find high-converting conversations for
-              you. Your Searchbox will show posts ranked by intent.
-            </p>
-          </div>
-          <div className="signup-tutorial-body">
-            <div className="signup-tutorial-graphic">
-              <Logo size={44} />
-            </div>
-            <p>
-              Start by confirming keywords and subreddits. Then every lead will
-              include context, intent score, Battlecards and reply generation.
-            </p>
-            <Button asChild className="h-10 rounded-[8px] font-extrabold">
-              <a href={`/onboarding/project?projectId=${projectId}`}>Next</a>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
+      <TutorialCard projectId={projectId} />
     </main>
   );
 }

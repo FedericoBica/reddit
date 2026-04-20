@@ -725,8 +725,8 @@ function SeoAiSearch() {
           </div>
         </div>
         <div>
-          <span className="chip">AI SEO and Parasite SEO</span>
-          <h2 className="h-section">Rank on Google <em>and</em> influence AI search with Reddit.</h2>
+          <span className="chip">🎯 AI SEO & Parasite SEO</span>
+          <h2 className="h-section">Rank on Google and influence AI search <em>with Reddit</em>.</h2>
           <p className="sub">
             Piggyback on Reddit&apos;s domain authority to rank on Google and become the source AI search tools cite.
           </p>

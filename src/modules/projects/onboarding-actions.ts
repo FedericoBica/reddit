@@ -10,6 +10,7 @@ import {
   setProjectOnboardingStatus,
 } from "@/db/mutations/projects";
 import { getProjectById } from "@/db/queries/projects";
+import { inngest } from "@/inngest/client";
 import { requireUser } from "@/modules/auth/server";
 import { setCurrentProject } from "@/modules/projects/current";
 import { generateProjectSuggestions } from "@/modules/projects/suggestion-generator";
@@ -83,6 +84,11 @@ export async function completeProjectOnboarding(formData: FormData) {
     acceptedSubredditSuggestionIds: toStringArray(formData.getAll("subredditSuggestionIds")),
     customKeywords: splitLines(formData.get("customKeywords")),
     customSubreddits: splitLines(formData.get("customSubreddits")),
+  });
+
+  await inngest.send({
+    name: "project/backfill.requested",
+    data: { projectId: project.id },
   });
 
   await setCurrentProject(project.id);

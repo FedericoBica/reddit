@@ -3,8 +3,18 @@
 import { cookies } from "next/headers";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { logOpenAIUsage } from "@/db/mutations/api-usage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createProject } from "@/db/mutations/projects";
+import {
+  createProject,
+  replaceProjectSuggestions,
+  saveProjectOnboarding,
+  setProjectOnboardingStatus,
+} from "@/db/mutations/projects";
+import {
+  listProjectKeywordSuggestions,
+  listProjectSubredditSuggestions,
+} from "@/db/queries/projects";
 import { createSupabaseServerClient as createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/modules/auth/server";
 import { setCurrentBillingPlan } from "@/modules/billing/current";
@@ -12,6 +22,7 @@ import { parseBillingPlan, type BillingPlan } from "@/modules/billing/limits";
 import { inngest } from "@/inngest/client";
 import { analyzeCompanyWithAI } from "@/modules/onboarding/company-analyzer";
 import { setCurrentProject } from "@/modules/projects/current";
+import { generateProjectSuggestions } from "@/modules/projects/suggestion-generator";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
 
 const SIGNUP_COMPANY_WEBSITE_COOKIE = "signup_company_website";
@@ -125,8 +136,76 @@ export async function resetCompanyWebsiteAnalysis() {
   redirect("/signup/company");
 }
 
-export async function createProjectFromCompanyProfile(_formData: FormData) {
-  redirect("/dashboard");
+export async function createProjectFromCompanyProfile(formData: FormData) {
+  const user = await requireUser("/signup/company");
+  const website = String(formData.get("website") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (!website || !description) {
+    redirect(
+      `/signup/company?error=${encodeURIComponent("Revisá el website y la descripción.")}`,
+    );
+  }
+
+  let hostname = "";
+  try {
+    hostname = new URL(website).hostname.replace(/^www\./i, "");
+  } catch {
+    hostname = website.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0];
+  }
+
+  const project = await createProject({
+    name: hostname || "ReddProwl project",
+    websiteUrl: website,
+    valueProposition: description,
+    primaryLanguage: "en",
+    currencyCode: "USD",
+  });
+
+  await setCurrentProject(project.id);
+  await clearSignupCompanyDraft();
+
+  try {
+    const suggestions = await generateProjectSuggestions(project);
+    await replaceProjectSuggestions({
+      projectId: project.id,
+      keywords: suggestions.keywords,
+      subreddits: suggestions.subreddits,
+    });
+
+    try {
+      await logSignupSuggestionUsage({
+        projectId: project.id,
+        userId: user.id,
+        model: suggestions.usage.model,
+        inputTokens: suggestions.usage.inputTokens,
+        outputTokens: suggestions.usage.outputTokens,
+        keywordCount: suggestions.keywords.length,
+        subredditCount: suggestions.subreddits.length,
+      });
+    } catch (usageLogError) {
+      console.error("Failed to log signup suggestion usage", usageLogError);
+    }
+
+    const [keywordSuggestions, subredditSuggestions] = await Promise.all([
+      listProjectKeywordSuggestions(project.id),
+      listProjectSubredditSuggestions(project.id),
+    ]);
+
+    await saveProjectOnboarding({
+      projectId: project.id,
+      acceptedKeywordSuggestionIds: keywordSuggestions.map((keyword) => keyword.id),
+      acceptedSubredditSuggestionIds: subredditSuggestions.map((subreddit) => subreddit.id),
+      customKeywords: [],
+      customSubreddits: [],
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unknown suggestion generation error";
+    console.error("Failed to auto-complete signup onboarding", error);
+    await setProjectOnboardingStatus(project.id, "completed", message);
+  }
+
+  redirect(`/signup/competitors?projectId=${project.id}`);
 }
 
 async function setSignupCompanyDraft(website: string, description: string) {
@@ -159,6 +238,29 @@ async function clearSignupCompanyDraft() {
 
 function b64(value: string) {
   return Buffer.from(value, "utf8").toString("base64url");
+}
+
+async function logSignupSuggestionUsage(input: {
+  projectId: string;
+  userId: string;
+  model: string;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  keywordCount: number;
+  subredditCount: number;
+}) {
+  await logOpenAIUsage({
+    projectId: input.projectId,
+    userId: input.userId,
+    operation: "project_onboarding_suggestions",
+    model: input.model,
+    inputTokens: input.inputTokens,
+    outputTokens: input.outputTokens,
+    metadata: {
+      keyword_count: input.keywordCount,
+      subreddit_count: input.subredditCount,
+    },
+  });
 }
 
 export async function saveCompetitorsFromSignup(formData: FormData) {

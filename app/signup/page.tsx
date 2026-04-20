@@ -5,11 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getCurrentUser } from "@/modules/auth/server";
-import {
-  requestSignUpCode,
-  verifySignUpCode,
-} from "@/modules/auth/actions";
-import { signUpWithGoogle } from "@/modules/onboarding/signup-actions";
+import { signUpWithGoogle, signUpWithPassword } from "@/modules/onboarding/signup-actions";
 
 export const metadata: Metadata = {
   title: "Crear cuenta",
@@ -19,7 +15,7 @@ type SignUpPageProps = {
   searchParams?: Promise<{
     email?: string;
     error?: string;
-    sent?: string;
+    notice?: string;
   }>;
 };
 
@@ -27,7 +23,6 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   const user = await getCurrentUser();
   const params = await searchParams;
   const email = String(params?.email ?? "").trim().toLowerCase();
-  const isCodeStep = params?.sent === "1" && email.length > 0;
 
   if (user) {
     redirect("/dashboard");
@@ -45,12 +40,10 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
             <StepDots active={0} total={5} />
             <p className="page-kicker">Signup</p>
             <h1 className="signup-wizard-title" id="signup-title">
-              {isCodeStep ? "Ingresá el código" : "Unlock Reddit's hidden customer goldmine"}
+              Unlock Reddit&apos;s hidden customer goldmine
             </h1>
             <p className="signup-wizard-copy" id="signup-description">
-              {isCodeStep
-                ? `Te enviamos un código de 6 dígitos a ${email}.`
-                : "Join businesses finding high-quality leads from Reddit in minutes."}
+              Join businesses finding high-quality leads from Reddit in minutes.
             </p>
 
             {params?.error && (
@@ -64,90 +57,84 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
               </div>
             )}
 
-            {isCodeStep ? (
-              <form action={verifySignUpCode} className="signup-form">
-                <input type="hidden" name="email" value={email} />
-                <label className="field-group" htmlFor="signup-code">
-                  <span className="field-label">Código de acceso</span>
+            {params?.notice && (
+              <div aria-live="polite" className="signup-notice" role="status">
+                {params.notice}
+              </div>
+            )}
+
+            <>
+              <form
+                action={signUpWithGoogle}
+                aria-describedby={params?.error ? "signup-error" : undefined}
+                className="signup-form"
+              >
+                <Button
+                  aria-label="Sign up with Google"
+                  className="h-11 rounded-[8px] border-[#E5E5EA] bg-white font-extrabold text-[#1C1C1E] hover:bg-[#F7F7F5]"
+                  type="submit"
+                  variant="outline"
+                >
+                  <GoogleIcon />
+                  Sign up with Google
+                </Button>
+              </form>
+
+              <div className="signup-auth-divider">
+                <span>or use email</span>
+              </div>
+
+              <form
+                action={signUpWithPassword}
+                aria-describedby={params?.error ? "signup-error" : undefined}
+                aria-labelledby="signup-title"
+                className="signup-form"
+              >
+                <label className="field-group" htmlFor="signup-email">
+                  <span className="field-label">Email</span>
                   <Input
-                    className="h-11 rounded-[8px] bg-white px-3 text-sm tracking-widest"
-                    id="signup-code"
-                    name="token"
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="123456"
-                    maxLength={6}
-                    autoComplete="one-time-code"
-                    autoFocus
+                    aria-invalid={Boolean(params?.error)}
+                    className="h-11 rounded-[8px] bg-white px-3 text-sm"
+                    id="signup-email"
+                    name="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    defaultValue={email}
+                    autoComplete="email"
                     required
                   />
-                  <span className="field-hint">
-                    Revisá tu inbox (y spam). El código expira en 10 minutos.
-                  </span>
+                </label>
+                <label className="field-group" htmlFor="signup-password">
+                  <span className="field-label">Password</span>
+                  <Input
+                    className="h-11 rounded-[8px] bg-white px-3 text-sm"
+                    id="signup-password"
+                    name="password"
+                    type="password"
+                    placeholder="At least 8 characters"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                  />
+                </label>
+                <label className="field-group" htmlFor="signup-confirm-password">
+                  <span className="field-label">Confirm password</span>
+                  <Input
+                    className="h-11 rounded-[8px] bg-white px-3 text-sm"
+                    id="signup-confirm-password"
+                    name="confirmPassword"
+                    type="password"
+                    placeholder="Repeat your password"
+                    autoComplete="new-password"
+                    minLength={8}
+                    required
+                  />
                 </label>
                 <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                  Crear cuenta
+                  Next
                 </Button>
-                <p className="section-copy" style={{ marginTop: 10 }}>
-                  <a
-                    href={`/signup?email=${encodeURIComponent(email)}`}
-                    style={{ color: "#E07000", fontWeight: 700, textDecoration: "none" }}
-                  >
-                    ← Cambiar email
-                  </a>
-                </p>
               </form>
-            ) : (
-              <>
-                <form
-                  action={signUpWithGoogle}
-                  aria-describedby={params?.error ? "signup-error" : undefined}
-                  className="signup-form"
-                >
-                  <Button
-                    aria-label="Sign up with Google"
-                    className="h-11 rounded-[8px] border-[#E5E5EA] bg-white font-extrabold text-[#1C1C1E] hover:bg-[#F7F7F5]"
-                    type="submit"
-                    variant="outline"
-                  >
-                    <GoogleIcon />
-                    Sign up with Google
-                  </Button>
-                </form>
-
-                <div className="signup-auth-divider">
-                  <span>or use email</span>
-                </div>
-
-                <form
-                  action={requestSignUpCode}
-                  aria-describedby={params?.error ? "signup-error" : undefined}
-                  aria-labelledby="signup-title"
-                  className="signup-form"
-                >
-                  <label className="field-group" htmlFor="signup-email">
-                    <span className="field-label">Email</span>
-                    <Input
-                      aria-invalid={Boolean(params?.error)}
-                      className="h-11 rounded-[8px] bg-white px-3 text-sm"
-                      id="signup-email"
-                      name="email"
-                      type="email"
-                      placeholder="your@email.com"
-                      defaultValue={email}
-                      autoComplete="email"
-                      required
-                    />
-                  </label>
-                  <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                    Send code
-                  </Button>
-                  <span className="field-hint">
-                    Te enviamos un código de 6 dígitos. No necesitás contraseña.
-                  </span>
-                </form>
-              </>
-            )}
+            </>
 
             <p className="section-copy" style={{ marginTop: 18 }}>
               ¿Ya tenés cuenta?{" "}

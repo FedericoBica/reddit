@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BrandLink } from "@/app/components/logo";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { getCurrentUser } from "@/modules/auth/server";
 import { saveCompetitorsFromSignup } from "@/modules/onboarding/signup-actions";
+import { CompetitorsForm } from "./competitors-form";
 
 export const metadata: Metadata = {
   title: "Competidores",
@@ -34,7 +33,7 @@ export default async function SignupCompetitorsPage({ searchParams }: Competitor
           <section className="signup-wizard-main">
             <StepDots active={2} total={5} />
             <p className="page-kicker">Competitors</p>
-            <h1 className="signup-wizard-title">And now, who are your competitors?</h1>
+            <h1 className="signup-wizard-title">How are your competitors?</h1>
             <p className="signup-wizard-copy">
               We&apos;ll use this to monitor mentions, detect comparisons and
               prepare Battlecards.
@@ -42,27 +41,7 @@ export default async function SignupCompetitorsPage({ searchParams }: Competitor
 
             {params?.error && <div className="signup-error">{params.error}</div>}
 
-            <form action={saveCompetitorsFromSignup} className="signup-form">
-              <input type="hidden" name="projectId" value={projectId} />
-              {[1, 2, 3].map((index) => (
-                <label className="field-group" key={index}>
-                  <span className="field-label">{index}. Competitor</span>
-                  <Input
-                    className="h-11 rounded-[8px] bg-white px-3 text-sm"
-                    name="competitorUrl"
-                    type="url"
-                    placeholder="https://competitor.com"
-                    required={index === 1}
-                  />
-                </label>
-              ))}
-              <span className="field-hint">
-                Add at least one. The more, the better. URLs must be accessible.
-              </span>
-              <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                Next
-              </Button>
-            </form>
+            <CompetitorsForm action={saveCompetitorsFromSignup} projectId={projectId} />
           </section>
 
           <aside className="signup-wizard-visual">

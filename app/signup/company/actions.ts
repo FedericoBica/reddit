@@ -1,10 +1,21 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createProject } from "@/db/mutations/projects";
+import { logOpenAIUsage } from "@/db/mutations/api-usage";
+import {
+  createProject,
+  replaceProjectSuggestions,
+  saveProjectOnboarding,
+  setProjectOnboardingStatus,
+} from "@/db/mutations/projects";
+import {
+  listProjectKeywordSuggestions,
+  listProjectSubredditSuggestions,
+} from "@/db/queries/projects";
 import { requireUser } from "@/modules/auth/server";
 import { analyzeCompanyWithAI } from "@/modules/onboarding/company-analyzer";
 import { setCurrentProject } from "@/modules/projects/current";
+import { generateProjectSuggestions } from "@/modules/projects/suggestion-generator";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
 import { cookies } from "next/headers";
 
@@ -37,14 +48,14 @@ export async function analyzeCompanyWebsite(formData: FormData) {
   redirect("/signup/company?analyzed=1");
 }
 
-export async function resetCompanyWebsiteAnalysis(_formData: FormData) {
+export async function resetCompanyWebsiteAnalysis() {
   await requireUser("/signup/company");
   await clearSignupCompanyDraft();
   redirect("/signup/company");
 }
 
 export async function createProjectFromCompanyProfile(formData: FormData) {
-  await requireUser("/signup/company");
+  const user = await requireUser("/signup/company");
 
   const website = String(formData.get("website") ?? "");
   const description = String(formData.get("description") ?? "").trim();
@@ -75,6 +86,53 @@ export async function createProjectFromCompanyProfile(formData: FormData) {
       currencyCode: "USD",
     });
     projectId = project.id;
+    await setCurrentProject(project.id);
+
+    try {
+      const suggestions = await generateProjectSuggestions(project);
+      await replaceProjectSuggestions({
+        projectId: project.id,
+        keywords: suggestions.keywords,
+        subreddits: suggestions.subreddits,
+      });
+
+      try {
+        await logOpenAIUsage({
+          projectId: project.id,
+          userId: user.id,
+          operation: "project_onboarding_suggestions",
+          model: suggestions.usage.model,
+          inputTokens: suggestions.usage.inputTokens,
+          outputTokens: suggestions.usage.outputTokens,
+          metadata: {
+            keyword_count: suggestions.keywords.length,
+            subreddit_count: suggestions.subreddits.length,
+          },
+        });
+      } catch (usageLogError) {
+        console.error("Failed to log signup suggestion usage", usageLogError);
+      }
+
+      const [keywordSuggestions, subredditSuggestions] = await Promise.all([
+        listProjectKeywordSuggestions(project.id),
+        listProjectSubredditSuggestions(project.id),
+      ]);
+
+      await saveProjectOnboarding({
+        projectId: project.id,
+        acceptedKeywordSuggestionIds: keywordSuggestions.map((keyword) => keyword.id),
+        acceptedSubredditSuggestionIds: subredditSuggestions.map((subreddit) => subreddit.id),
+        customKeywords: [],
+        customSubreddits: [],
+      });
+    } catch (suggestionError) {
+      console.error("Failed to auto-complete signup onboarding", suggestionError);
+      await setProjectOnboardingStatus(
+        project.id,
+        "completed",
+        suggestionError instanceof Error ? suggestionError.message : null,
+      );
+    }
   } catch (error) {
     errorMessage = error instanceof Error ? error.message : "No pudimos crear el proyecto.";
   }
@@ -93,7 +151,6 @@ export async function createProjectFromCompanyProfile(formData: FormData) {
   } catch {
     /* ignore */
   }
-  await setCurrentProject(projectId);
   redirect(`/signup/competitors?projectId=${projectId}`);
 }
 
