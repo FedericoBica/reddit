@@ -42,7 +42,7 @@ export async function signUpWithPassword(formData: FormData) {
     );
   }
 
-  if (password !== confirmPassword) {
+  if (confirmPassword && password !== confirmPassword) {
     redirect(
       `/signup?email=${encodeURIComponent(email)}&error=${encodeURIComponent(
         "Las contraseñas no coinciden.",

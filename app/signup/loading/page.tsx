@@ -29,20 +29,35 @@ export default async function SignupLoadingPage({ searchParams }: LoadingPagePro
       </header>
 
       <Card className="signup-loading-card">
-        <CardContent className="p-8">
-          <div className="signup-loader" />
-          <h1 className="signup-wizard-title" style={{ textAlign: "center" }}>
-            Learning about you and your competitors
-          </h1>
-          <p className="signup-wizard-copy" style={{ textAlign: "center", margin: "14px auto 0" }}>
-            We&apos;re preparing your searchbox and looking for relevant posts.
-          </p>
-          <LoadingProgress projectId={projectId} />
-          <Button asChild className="mt-7 h-11 rounded-[8px] font-extrabold">
-            <a href={`/signup/tutorial?projectId=${projectId}`}>Continue</a>
-          </Button>
+        <CardContent className="signup-wizard-content">
+          <section className="signup-wizard-main signup-loading-main">
+            <div className="signup-loader" />
+            <h1 className="signup-wizard-title">
+              Learning about you and your competitors
+            </h1>
+            <LoadingProgress projectId={projectId} />
+            <Button asChild className="h-11 rounded-[8px] font-extrabold">
+              <a href={`/signup/tutorial?projectId=${projectId}`}>Continue</a>
+            </Button>
+          </section>
+
+          <aside className="signup-wizard-visual">
+            <FloatingPost title="Looking for a better CRM" score="94" />
+            <FloatingPost title="Best tool for social leads?" score="91" />
+            <FloatingPost title="Alternative to manual prospecting" score="89" />
+          </aside>
         </CardContent>
       </Card>
     </main>
+  );
+}
+
+function FloatingPost({ title, score }: { title: string; score: string }) {
+  return (
+    <div className="signup-floating-post">
+      <span>Relevant post</span>
+      <strong>{title}</strong>
+      <em>Relevance {score}/100</em>
+    </div>
   );
 }

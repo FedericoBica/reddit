@@ -37,14 +37,14 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
               Let ReddProwl help you get more customers
             </h1>
             <p className="signup-wizard-copy">
-              Reddit is full of high-intent conversations where people ask for
-              tools, compare vendors and describe urgent pain.
+              Reddit is full of people asking for tools, comparing vendors and
+              describing urgent pain.
             </p>
 
             <div className="signup-value-list">
               <ValueItem title="Find buyers early" text="Catch recommendation requests before competitors do." />
-              <ValueItem title="Reply with context" text="Generate human replies based on the post and your positioning." />
-              <ValueItem title="Protect your account" text="Use cooldowns, limits and careful language to avoid spam patterns." />
+              <ValueItem title="Reply with context" text="Use the post and your positioning." />
+              <ValueItem title="Protect your account" text="Avoid spam patterns." />
             </div>
 
             <form action={continueToPlan}>

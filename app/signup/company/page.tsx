@@ -43,37 +43,8 @@ export default async function SignupCompanyPage({ searchParams }: CompanyPagePro
 
       <Card className="signup-wizard-card">
         <CardContent className="signup-wizard-content">
-          {params?.error && !analyzed ? (
-            <section className="signup-wizard-main">
-              <StepDots active={1} total={5} />
-              <p className="page-kicker">Company</p>
-              <h1 className="signup-wizard-title">Tell us about your company</h1>
-              <p className="signup-wizard-copy">
-                We&apos;ll use it to learn about your product and start building
-                search signals in the background.
-              </p>
-              <div className="signup-error">{params.error}</div>
-              <form action={analyzeCompanyWebsite} className="signup-form">
-                <label className="field-group">
-                  <span className="field-label">Company website</span>
-                  <input
-                    className="flex h-11 w-full rounded-[8px] border border-input bg-white px-3 text-sm outline-none"
-                    name="website"
-                    type="url"
-                    placeholder="https://example.com"
-                    required
-                  />
-                  <span className="field-hint">
-                    The URL must be valid and publicly accessible.
-                  </span>
-                </label>
-                <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                  Next
-                </Button>
-              </form>
-            </section>
-          ) : !analyzed ? (
-            <CompanyWebsiteAnalyzer action={analyzeCompanyWebsite} />
+          {!analyzed ? (
+            <CompanyWebsiteAnalyzer action={analyzeCompanyWebsite} error={params?.error} />
           ) : (
             <>
               <section className="signup-wizard-main">
@@ -84,25 +55,22 @@ export default async function SignupCompanyPage({ searchParams }: CompanyPagePro
                   Review the description before we set up your competitor scan.
                 </p>
                 {params?.error && <div className="signup-error">{params.error}</div>}
-              <form action={createProjectFromCompanyProfile} className="signup-form">
-                <input type="hidden" name="website" value={website} />
-                <label className="field-group">
-                  <span className="field-label">Company description</span>
-                  <Textarea
-                    className="min-h-[156px] rounded-[8px] bg-white px-3 py-3 text-sm"
-                    name="description"
-                    defaultValue={description}
-                    maxLength={800}
-                    required
-                  />
-                  <span className="field-hint">
-                    AI generated. Edit it if needed before continuing.
-                  </span>
-                </label>
-                <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                  Next
-                </Button>
-              </form>
+                <form action={createProjectFromCompanyProfile} className="signup-form">
+                  <input type="hidden" name="website" value={website} />
+                  <label className="field-group">
+                    <span className="field-label">Company description</span>
+                    <Textarea
+                      className="min-h-[132px] rounded-[8px] bg-white px-3 py-3 text-sm"
+                      name="description"
+                      defaultValue={description}
+                      maxLength={800}
+                      required
+                    />
+                  </label>
+                  <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
+                    Next
+                  </Button>
+                </form>
               </section>
 
               <aside className="signup-wizard-visual">

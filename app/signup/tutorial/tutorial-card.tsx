@@ -31,8 +31,8 @@ export function TutorialCard({ projectId }: TutorialCardProps) {
   const isLast = step === steps.length - 1;
 
   return (
-    <div className="signup-tutorial-card">
-      <div className="signup-tutorial-hero">
+    <>
+      <section className="signup-wizard-main">
         <div className="signup-tutorial-progress" aria-label={`Step ${step + 1} of ${steps.length}`}>
           {steps.map((item, index) => (
             <span
@@ -41,19 +41,10 @@ export function TutorialCard({ projectId }: TutorialCardProps) {
             />
           ))}
         </div>
-        <h1>{current.title}</h1>
-        <p>{current.copy}</p>
-      </div>
-      <div className="signup-tutorial-body">
-        <div className="signup-tutorial-graphic">
-          <Logo size={44} />
-          <div className="signup-tutorial-feed" aria-hidden="true">
-            <span />
-            <span />
-            <span />
-          </div>
-        </div>
-        <p>{current.detail}</p>
+        <p className="page-kicker">Tutorial</p>
+        <h1 className="signup-wizard-title">{current.title}</h1>
+        <p className="signup-wizard-copy">{current.copy}</p>
+        <p className="signup-wizard-copy">{current.detail}</p>
         {isLast ? (
           <Button asChild className="h-10 rounded-[8px] font-extrabold">
             <a href={`/dashboard?projectId=${projectId}`}>Next</a>
@@ -67,7 +58,18 @@ export function TutorialCard({ projectId }: TutorialCardProps) {
             Next
           </Button>
         )}
-      </div>
-    </div>
+      </section>
+
+      <aside className="signup-wizard-visual">
+        <div className="signup-tutorial-graphic">
+          <Logo size={44} />
+          <div className="signup-tutorial-feed" aria-hidden="true">
+            <span />
+            <span />
+            <span />
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

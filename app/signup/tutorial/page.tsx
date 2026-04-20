@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { BrandLink } from "@/app/components/logo";
+import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
 import { TutorialCard } from "./tutorial-card";
 
@@ -26,7 +27,11 @@ export default async function SignupTutorialPage({ searchParams }: TutorialPageP
         <BrandLink logoSize={28} wordmarkSize={18} />
       </header>
 
-      <TutorialCard projectId={projectId} />
+      <Card className="signup-wizard-card">
+        <CardContent className="signup-wizard-content">
+          <TutorialCard projectId={projectId} />
+        </CardContent>
+      </Card>
     </main>
   );
 }

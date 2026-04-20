@@ -19,7 +19,7 @@ export function CompetitorsForm({ action, projectId }: CompetitorsFormProps) {
       <input type="hidden" name="projectId" value={projectId} />
       {[0, 1, 2].map((index) => (
         <label className="field-group signup-url-field" key={index}>
-          <span className="field-label">{index + 1}. Competitor website</span>
+          <span className="field-label">Competitor {index + 1}</span>
           <Input
             className="h-11 rounded-[8px] bg-white px-3 text-sm"
             name="competitorUrl"
@@ -42,7 +42,7 @@ export function CompetitorsForm({ action, projectId }: CompetitorsFormProps) {
         </label>
       ))}
       <span className="field-hint">
-        Add at least one. The more, the better. We verify accessibility when you continue.
+        Add at least one. The more, the better.
       </span>
       <CompetitorSubmitButton />
     </form>

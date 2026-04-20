@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 
 type CompanyWebsiteAnalyzerProps = {
   action: (formData: FormData) => void | Promise<void>;
+  error?: string;
 };
 
 const analysisSteps = [
@@ -15,7 +16,7 @@ const analysisSteps = [
   "Generating company description",
 ];
 
-export function CompanyWebsiteAnalyzer({ action }: CompanyWebsiteAnalyzerProps) {
+export function CompanyWebsiteAnalyzer({ action, error }: CompanyWebsiteAnalyzerProps) {
   const [submitted, setSubmitted] = useState(false);
 
   return (
@@ -25,9 +26,10 @@ export function CompanyWebsiteAnalyzer({ action }: CompanyWebsiteAnalyzerProps) 
         <p className="page-kicker">Company</p>
         <h1 className="signup-wizard-title">Tell us about your company</h1>
         <p className="signup-wizard-copy">
-          We&apos;ll use it to learn about your product and start building the
-          search signals in the background.
+          We&apos;ll analyze your website and prepare the company description.
         </p>
+
+        {error && <div className="signup-error">{error}</div>}
 
         <form
           action={action}
@@ -43,16 +45,13 @@ export function CompanyWebsiteAnalyzer({ action }: CompanyWebsiteAnalyzerProps) 
               placeholder="https://example.com"
               required
             />
-            <span className="field-hint">
-              The URL must be valid and publicly accessible.
-            </span>
           </label>
           <AnalyzeButton />
         </form>
       </section>
 
       <aside className="signup-wizard-visual">
-        <div className="signup-analysis-list">
+        <div className="signup-analysis-list signup-analysis-list-compact">
           {analysisSteps.map((step, index) => (
             <AnalysisStep
               active={submitted}
@@ -108,7 +107,7 @@ function AnalysisStep({
       <span />
       <div>
         <strong>{title}</strong>
-        <p>{active ? "Working on this now." : "Ready when you add your URL."}</p>
+        <p>{active ? "Working on this now." : "Ready"}</p>
       </div>
     </div>
   );

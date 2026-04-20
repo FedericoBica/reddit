@@ -35,8 +35,7 @@ export default async function SignupCompetitorsPage({ searchParams }: Competitor
             <p className="page-kicker">Competitors</p>
             <h1 className="signup-wizard-title">How are your competitors?</h1>
             <p className="signup-wizard-copy">
-              We&apos;ll use this to monitor mentions, detect comparisons and
-              prepare Battlecards.
+              Add competitor websites so ReddProwl can detect comparisons.
             </p>
 
             {params?.error && <div className="signup-error">{params.error}</div>}
