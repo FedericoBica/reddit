@@ -155,7 +155,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
                   />
                 ))
               ) : (
-                <EmptyState />
+                <EmptyState isNew={!currentProject.last_searchbox_at} />
               )}
             </div>
 
@@ -172,6 +172,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
             lead={selectedLead}
             replies={replies}
             projectId={currentProject.id}
+            isNew={!currentProject.last_searchbox_at}
           />
         </div>
       </section>
@@ -229,17 +230,19 @@ function ResultDetail({
   lead,
   replies,
   projectId,
+  isNew,
 }: {
   result: SearchboxResultDTO | null;
   lead: LeadDTO | null;
   replies: LeadReplyDTO[];
   projectId: string;
+  isNew?: boolean;
 }) {
   if (!result) {
     return (
       <section className="detail-pane">
         <div className="detail-content">
-          <EmptyState />
+          <EmptyState isNew={isNew} />
         </div>
       </section>
     );
@@ -426,7 +429,17 @@ function EngagementStat({ icon, value, label }: { icon: string; value: string; l
   );
 }
 
-function EmptyState() {
+function EmptyState({ isNew }: { isNew?: boolean }) {
+  if (isNew) {
+    return (
+      <div className="empty-state">
+        <p className="section-title" style={{ fontSize: 15 }}>Escaneando Reddit ahora…</p>
+        <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
+          Estamos buscando posts con buyer intent para tus keywords. Los resultados aparecen en minutos — refrescá la página en un momento.
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="empty-state">
       <p className="section-title">Sin resultados todavía</p>

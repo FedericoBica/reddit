@@ -2,11 +2,18 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { logOpenAIUsage } from "@/db/mutations/api-usage";
 import {
   createProject,
+  replaceProjectSuggestions,
+  saveProjectOnboarding,
   setProjectOnboardingStatus,
 } from "@/db/mutations/projects";
-import { listProjectsForCurrentUser } from "@/db/queries/projects";
+import {
+  listProjectKeywordSuggestions,
+  listProjectSubredditSuggestions,
+  listProjectsForCurrentUser,
+} from "@/db/queries/projects";
 import { inngest } from "@/inngest/client";
 import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { canCreateProject } from "@/modules/billing/limits";
@@ -14,6 +21,7 @@ import { requireUser } from "@/modules/auth/server";
 import { analyzeCompanyWithAI } from "@/modules/onboarding/company-analyzer";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
 import { setCurrentProject } from "@/modules/projects/current";
+import { generateProjectSuggestions } from "@/modules/projects/suggestion-generator";
 import type { ProjectDTO } from "@/db/schemas/domain";
 
 const NEW_PROJECT_WEBSITE_COOKIE = "new_project_website";
@@ -94,7 +102,7 @@ export async function createAdditionalProjectFromProfile(formData: FormData) {
     currencyCode: "USD",
   });
 
-  await autoCompleteOnboarding(project, user.id);
+  await setupProjectKeywordsAndTrigger(project, user.id);
   await clearNewProjectDraft();
   await setCurrentProject(project.id);
   redirect(`/dashboard?projectId=${project.id}`);
@@ -122,20 +130,66 @@ async function createProjectFromForm(formData: FormData, userId: string) {
     currencyCode: "USD",
   });
 
-  await autoCompleteOnboarding(project, userId);
+  await setupProjectKeywordsAndTrigger(project, userId);
   await setCurrentProject(project.id);
   redirect(`/dashboard?projectId=${project.id}`);
 }
 
-async function autoCompleteOnboarding(project: ProjectDTO, userId: string) {
-  // Mark completed immediately so the dashboard loads without redirecting to onboarding
-  await setProjectOnboardingStatus(project.id, "completed", null);
+/**
+ * Generates AI keyword/subreddit suggestions synchronously (same as signup flow),
+ * saves them, marks onboarding complete, then fires Inngest events for the heavy
+ * work (backfill + searchbox). This avoids depending on unsynced Inngest functions
+ * for keyword generation while keeping scraping async.
+ */
+async function setupProjectKeywordsAndTrigger(project: ProjectDTO, userId: string) {
+  try {
+    const suggestions = await generateProjectSuggestions(project);
 
-  // Generate suggestions + trigger backfill in the background via Inngest
-  await inngest.send({
-    name: "project/setup.requested",
-    data: { projectId: project.id, userId },
-  });
+    await replaceProjectSuggestions({
+      projectId: project.id,
+      keywords: suggestions.keywords,
+      subreddits: suggestions.subreddits,
+    });
+
+    try {
+      await logOpenAIUsage({
+        projectId: project.id,
+        userId,
+        operation: "project_onboarding_suggestions",
+        model: suggestions.usage.model,
+        inputTokens: suggestions.usage.inputTokens,
+        outputTokens: suggestions.usage.outputTokens,
+        metadata: {
+          keyword_count: suggestions.keywords.length,
+          subreddit_count: suggestions.subreddits.length,
+        },
+      });
+    } catch {
+      // non-critical
+    }
+
+    const [keywordSuggestions, subredditSuggestions] = await Promise.all([
+      listProjectKeywordSuggestions(project.id),
+      listProjectSubredditSuggestions(project.id),
+    ]);
+
+    await saveProjectOnboarding({
+      projectId: project.id,
+      acceptedKeywordSuggestionIds: keywordSuggestions.map((k) => k.id),
+      acceptedSubredditSuggestionIds: subredditSuggestions.map((s) => s.id),
+      customKeywords: [],
+      customSubreddits: [],
+    });
+  } catch {
+    // Keywords failed — mark completed anyway so dashboard loads, keywords can be added from settings
+    await setProjectOnboardingStatus(project.id, "completed", null);
+  }
+
+  // Backfill (last 30 days of Reddit posts) + Searchbox (Google-ranked Reddit posts)
+  await inngest.send([
+    { name: "project/backfill.requested", data: { projectId: project.id } },
+    { name: "project/searchbox.requested", data: { projectId: project.id } },
+  ]);
 }
 
 async function setNewProjectDraft(website: string, description: string) {
