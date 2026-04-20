@@ -2,17 +2,10 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { logOpenAIUsage } from "@/db/mutations/api-usage";
 import {
   createProject,
-  replaceProjectSuggestions,
-  saveProjectOnboarding,
   setProjectOnboardingStatus,
 } from "@/db/mutations/projects";
-import {
-  listProjectKeywordSuggestions,
-  listProjectSubredditSuggestions,
-} from "@/db/queries/projects";
 import { listProjectsForCurrentUser } from "@/db/queries/projects";
 import { inngest } from "@/inngest/client";
 import { getCurrentBillingPlan } from "@/modules/billing/current";
@@ -21,7 +14,6 @@ import { requireUser } from "@/modules/auth/server";
 import { analyzeCompanyWithAI } from "@/modules/onboarding/company-analyzer";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
 import { setCurrentProject } from "@/modules/projects/current";
-import { generateProjectSuggestions } from "@/modules/projects/suggestion-generator";
 import type { ProjectDTO } from "@/db/schemas/domain";
 
 const NEW_PROJECT_WEBSITE_COOKIE = "new_project_website";
@@ -136,50 +128,13 @@ async function createProjectFromForm(formData: FormData, userId: string) {
 }
 
 async function autoCompleteOnboarding(project: ProjectDTO, userId: string) {
-  try {
-    const suggestions = await generateProjectSuggestions(project);
-    await replaceProjectSuggestions({
-      projectId: project.id,
-      keywords: suggestions.keywords,
-      subreddits: suggestions.subreddits,
-    });
+  // Mark completed immediately so the dashboard loads without redirecting to onboarding
+  await setProjectOnboardingStatus(project.id, "completed", null);
 
-    try {
-      await logOpenAIUsage({
-        projectId: project.id,
-        userId,
-        operation: "project_onboarding_suggestions",
-        model: suggestions.usage.model,
-        inputTokens: suggestions.usage.inputTokens,
-        outputTokens: suggestions.usage.outputTokens,
-        metadata: {
-          keyword_count: suggestions.keywords.length,
-          subreddit_count: suggestions.subreddits.length,
-        },
-      });
-    } catch {
-      // non-critical
-    }
-
-    const [keywordSuggestions, subredditSuggestions] = await Promise.all([
-      listProjectKeywordSuggestions(project.id),
-      listProjectSubredditSuggestions(project.id),
-    ]);
-
-    await saveProjectOnboarding({
-      projectId: project.id,
-      acceptedKeywordSuggestionIds: keywordSuggestions.map((k) => k.id),
-      acceptedSubredditSuggestionIds: subredditSuggestions.map((s) => s.id),
-      customKeywords: [],
-      customSubreddits: [],
-    });
-  } catch {
-    await setProjectOnboardingStatus(project.id, "completed", null);
-  }
-
+  // Generate suggestions + trigger backfill in the background via Inngest
   await inngest.send({
-    name: "project/backfill.requested",
-    data: { projectId: project.id },
+    name: "project/setup.requested",
+    data: { projectId: project.id, userId },
   });
 }
 

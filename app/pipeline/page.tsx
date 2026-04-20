@@ -45,9 +45,6 @@ export default async function PipelinePage({ searchParams }: PipelinePageProps) 
 
   const { currentProject, projects } = projectState;
 
-  if (currentProject.onboarding_status !== "completed") {
-    redirect(`/onboarding/project?projectId=${currentProject.id}`);
-  }
 
   const [allLeads, recentLeads] = await Promise.all([
     listAllProjectLeads(currentProject.id, 500),

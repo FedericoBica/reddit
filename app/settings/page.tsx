@@ -35,9 +35,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
   const { currentProject, projects } = projectState;
 
-  if (currentProject.onboarding_status !== "completed") {
-    redirect(`/onboarding/project?projectId=${currentProject.id}`);
-  }
 
   const [currentLocale, t, keywords, subreddits, billingPlan] = await Promise.all([
     getLocale(),

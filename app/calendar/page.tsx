@@ -103,9 +103,6 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
   const { currentProject, projects } = projectState;
 
-  if (currentProject.onboarding_status !== "completed") {
-    redirect(`/onboarding/project?projectId=${currentProject.id}`);
-  }
 
   // Parse month param: "2026-04" or default to current
   const now = new Date();

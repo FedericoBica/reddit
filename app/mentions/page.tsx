@@ -33,9 +33,6 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
 
   const { currentProject, projects } = projectState;
 
-  if (currentProject.onboarding_status !== "completed") {
-    redirect(`/onboarding/project?projectId=${currentProject.id}`);
-  }
 
   const [allLeads, recentLeads, keywords] = await Promise.all([
     listAllProjectLeads(currentProject.id, 500),

@@ -107,9 +107,6 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
 
   const { currentProject, projects } = projectState;
 
-  if (currentProject.onboarding_status !== "completed") {
-    redirect(`/onboarding/project?projectId=${currentProject.id}`);
-  }
 
   const [leads, subredditSuggestions, t] = await Promise.all([
     listAllProjectLeads(currentProject.id, 300),

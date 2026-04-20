@@ -23,9 +23,6 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
 
   const { currentProject, projects } = projectState;
 
-  if (currentProject.onboarding_status !== "completed") {
-    redirect(`/onboarding/project?projectId=${currentProject.id}`);
-  }
 
   const allLeads = await listAllProjectLeads(currentProject.id, 500);
 

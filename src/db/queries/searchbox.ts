@@ -18,6 +18,34 @@ export type SearchboxScrapeTarget = {
   keywords: { id: string; term: string }[];
 };
 
+export async function getProjectForSearchbox(projectId: string): Promise<SearchboxScrapeTarget | null> {
+  const supabase = createSupabaseAdminClient();
+
+  const { data: project, error: projectError } = await supabase
+    .from("projects")
+    .select("id, name, website_url, value_proposition, tone, region, primary_language, owner_id")
+    .eq("id", projectId)
+    .eq("status", "active")
+    .eq("onboarding_status", "completed")
+    .single();
+
+  if (projectError || !project) return null;
+
+  const { data: keywords, error: keywordsError } = await supabase
+    .from("keywords")
+    .select("id, project_id, term")
+    .eq("project_id", projectId)
+    .eq("is_active", true)
+    .order("created_at", { ascending: true });
+
+  if (keywordsError || !keywords?.length) return null;
+
+  return {
+    project,
+    keywords: keywords.map((k) => ({ id: k.id, term: k.term })),
+  };
+}
+
 export async function listProjectsDueForSearchbox(): Promise<SearchboxScrapeTarget[]> {
   const supabase = createSupabaseAdminClient();
 

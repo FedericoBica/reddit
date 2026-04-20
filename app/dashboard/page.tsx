@@ -36,10 +36,6 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
 
   const { currentProject, projects } = projectState;
 
-  if (currentProject.onboarding_status !== "completed") {
-    redirect(`/onboarding/project?projectId=${currentProject.id}`);
-  }
-
   const filterStatus = parseStatus(params?.status);
   const sort = params?.sort === "recent" ? "recent" : "relevance";
 

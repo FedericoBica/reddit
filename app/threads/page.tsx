@@ -32,9 +32,6 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
 
   const { currentProject, projects } = projectState;
 
-  if (currentProject.onboarding_status !== "completed") {
-    redirect(`/onboarding/project?projectId=${currentProject.id}`);
-  }
 
   const [threads, allLeads] = await Promise.all([
     listProjectLeadsWithReplies(currentProject.id, 50),

@@ -25,9 +25,6 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
   const { currentProject, projects } = projectState;
 
-  if (currentProject.onboarding_status !== "completed") {
-    redirect(`/onboarding/project?projectId=${currentProject.id}`);
-  }
 
   const [freshLeads, allLeads] = await Promise.all([
     listFreshProjectLeads(currentProject.id, 2, 80),
