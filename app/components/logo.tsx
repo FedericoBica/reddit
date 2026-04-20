@@ -1,46 +1,23 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { CSSProperties } from "react";
 
 export function Logo({ size = 28 }: { size?: number }) {
   return (
-    <svg
+    <Image
+      src="/icono-colors.png"
       width={size}
       height={size}
-      viewBox="0 0 80 80"
-      fill="none"
+      alt=""
       aria-hidden="true"
-      style={{ flexShrink: 0 }}
-    >
-      <path
-        d="M40 12 C52 22, 58 35, 58 48"
-        stroke="#E07000"
-        strokeWidth="2"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.15"
-      />
-      <path
-        d="M40 12 C60 26, 68 42, 66 58"
-        stroke="#E07000"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.08"
-      />
-      <path
-        d="M40 12 C48 18, 52 28, 52 40"
-        stroke="#E07000"
-        strokeWidth="2"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.25"
-      />
-      <path
-        d="M40 16 L54 36 L46 36 L46 62 L34 62 L34 36 L26 36 Z"
-        fill="#E07000"
-      />
-      <circle cx="56" cy="30" r="3" fill="#E07000" opacity="0.7" />
-    </svg>
+      style={{
+        width: size,
+        height: size,
+        flexShrink: 0,
+        objectFit: "contain",
+        display: "block",
+      }}
+    />
   );
 }
 
@@ -55,7 +32,7 @@ export function Wordmark({ size = 18 }: { size?: number }) {
           letterSpacing: "-0.03em",
         }}
       >
-        Redd
+        Red
       </span>
       <span
         style={{
