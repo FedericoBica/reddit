@@ -20,10 +20,11 @@ import { requireUser } from "@/modules/auth/server";
 import { setCurrentBillingPlan } from "@/modules/billing/current";
 import { parseBillingPlan, type BillingPlan } from "@/modules/billing/limits";
 import { inngest } from "@/inngest/client";
-import { analyzeCompanyWithAI } from "@/modules/onboarding/company-analyzer";
+import { analyzeCompanyWithAI, fetchWebsiteText } from "@/modules/onboarding/company-analyzer";
 import { setCurrentProject } from "@/modules/projects/current";
-import { generateProjectSuggestions } from "@/modules/projects/suggestion-generator";
+import { generateProjectSuggestions, type CompetitorContext } from "@/modules/projects/suggestion-generator";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
+import { getProjectById } from "@/db/queries/projects";
 
 const SIGNUP_COMPANY_WEBSITE_COOKIE = "signup_company_website";
 const SIGNUP_COMPANY_DESCRIPTION_COOKIE = "signup_company_description";
@@ -165,46 +166,6 @@ export async function createProjectFromCompanyProfile(formData: FormData) {
   await setCurrentProject(project.id);
   await clearSignupCompanyDraft();
 
-  try {
-    const suggestions = await generateProjectSuggestions(project);
-    await replaceProjectSuggestions({
-      projectId: project.id,
-      keywords: suggestions.keywords,
-      subreddits: suggestions.subreddits,
-    });
-
-    try {
-      await logSignupSuggestionUsage({
-        projectId: project.id,
-        userId: user.id,
-        model: suggestions.usage.model,
-        inputTokens: suggestions.usage.inputTokens,
-        outputTokens: suggestions.usage.outputTokens,
-        keywordCount: suggestions.keywords.length,
-        subredditCount: suggestions.subreddits.length,
-      });
-    } catch (usageLogError) {
-      console.error("Failed to log signup suggestion usage", usageLogError);
-    }
-
-    const [keywordSuggestions, subredditSuggestions] = await Promise.all([
-      listProjectKeywordSuggestions(project.id),
-      listProjectSubredditSuggestions(project.id),
-    ]);
-
-    await saveProjectOnboarding({
-      projectId: project.id,
-      acceptedKeywordSuggestionIds: keywordSuggestions.map((keyword) => keyword.id),
-      acceptedSubredditSuggestionIds: subredditSuggestions.map((subreddit) => subreddit.id),
-      customKeywords: [],
-      customSubreddits: [],
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown suggestion generation error";
-    console.error("Failed to auto-complete signup onboarding", error);
-    await setProjectOnboardingStatus(project.id, "completed", message);
-  }
-
   redirect(`/signup/competitors?projectId=${project.id}`);
 }
 
@@ -264,7 +225,7 @@ async function logSignupSuggestionUsage(input: {
 }
 
 export async function saveCompetitorsFromSignup(formData: FormData) {
-  await requireUser("/signup/competitors");
+  const user = await requireUser("/signup/competitors");
 
   const projectId = String(formData.get("projectId") ?? "");
   const urls = formData
@@ -280,13 +241,14 @@ export async function saveCompetitorsFromSignup(formData: FormData) {
   }
 
   let competitorError: string | null = null;
+  let validatedCompetitors: { hostname: string; url: string }[] = [];
 
   try {
-    const competitors = await Promise.all(urls.map((url) => validateAccessibleWebsite(url)));
+    validatedCompetitors = await Promise.all(urls.map((url) => validateAccessibleWebsite(url)));
     const supabase = await createClient();
 
     const { error } = await supabase.from("keywords").upsert(
-      competitors.map((competitor) => ({
+      validatedCompetitors.map((competitor) => ({
         project_id: projectId,
         term: competitor.hostname,
         type: "competitor" as const,
@@ -296,9 +258,7 @@ export async function saveCompetitorsFromSignup(formData: FormData) {
       { onConflict: "project_id,term", ignoreDuplicates: false },
     );
 
-    if (error) {
-      throw new Error(error.message);
-    }
+    if (error) throw new Error(error.message);
   } catch (error) {
     competitorError = error instanceof Error ? error.message : "Revisá las URLs de competidores.";
   }
@@ -307,6 +267,62 @@ export async function saveCompetitorsFromSignup(formData: FormData) {
     redirect(
       `/signup/competitors?projectId=${projectId}&error=${encodeURIComponent(competitorError)}`,
     );
+  }
+
+  // Scrape competitor websites + generate suggestions with full competitor context
+  const project = await getProjectById(projectId);
+  if (project) {
+    try {
+      const competitorContexts: CompetitorContext[] = await Promise.all(
+        validatedCompetitors.map(async (c) => ({
+          name: c.hostname.replace(/\.[a-z]{2,}$/i, "").replace(/[.-]/g, " "),
+          websiteUrl: c.url,
+          websiteContent: await fetchWebsiteText(c.url),
+        })),
+      );
+
+      const suggestions = await generateProjectSuggestions(project, competitorContexts);
+      await replaceProjectSuggestions({
+        projectId,
+        keywords: suggestions.keywords,
+        subreddits: suggestions.subreddits,
+      });
+
+      try {
+        await logSignupSuggestionUsage({
+          projectId,
+          userId: user.id,
+          model: suggestions.usage.model,
+          inputTokens: suggestions.usage.inputTokens,
+          outputTokens: suggestions.usage.outputTokens,
+          keywordCount: suggestions.keywords.length,
+          subredditCount: suggestions.subreddits.length,
+        });
+      } catch {
+        // non-critical
+      }
+
+      const [keywordSuggestions, subredditSuggestions] = await Promise.all([
+        listProjectKeywordSuggestions(projectId),
+        listProjectSubredditSuggestions(projectId),
+      ]);
+
+      await saveProjectOnboarding({
+        projectId,
+        acceptedKeywordSuggestionIds: keywordSuggestions.map((k) => k.id),
+        acceptedSubredditSuggestionIds: subredditSuggestions.map((s) => s.id),
+        customKeywords: [],
+        customSubreddits: [],
+      });
+    } catch (err) {
+      console.error("Failed to generate suggestions with competitors", err);
+      await setProjectOnboardingStatus(projectId, "completed", null);
+    }
+
+    await inngest.send([
+      { name: "project/backfill.requested", data: { projectId } },
+      { name: "project/searchbox.requested", data: { projectId } },
+    ]);
   }
 
   redirect(`/signup/value?projectId=${projectId}`);

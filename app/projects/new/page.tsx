@@ -13,6 +13,7 @@ import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { requireUser } from "@/modules/auth/server";
 import {
   analyzeNewProjectWebsite,
+  confirmNewProjectDescription,
   createAdditionalProjectFromProfile,
   resetNewProjectAnalysis,
 } from "@/modules/projects/actions";
@@ -24,7 +25,7 @@ export const metadata: Metadata = {
 };
 
 type NewProjectPageProps = {
-  searchParams?: Promise<{ projectId?: string; error?: string }>;
+  searchParams?: Promise<{ projectId?: string; error?: string; analyzed?: string; step?: string }>;
 };
 
 export default async function NewProjectPage({ searchParams }: NewProjectPageProps) {
@@ -48,6 +49,7 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
   const website = decodeCookieValue(cookieStore.get("new_project_website")?.value);
   const description = decodeCookieValue(cookieStore.get("new_project_description")?.value);
   const analyzed = Boolean(website && description);
+  const isCompetitorsStep = analyzed && params?.step === "competitors";
 
   return (
     <main className="signup-wizard-shell">
@@ -67,6 +69,14 @@ export default async function NewProjectPage({ searchParams }: NewProjectPagePro
             />
           ) : !analyzed ? (
             <AnalyzeStep error={params?.error} currentProjectId={currentProject.id} tCommon={tCommon} />
+          ) : isCompetitorsStep ? (
+            <CompetitorsStep
+              website={website}
+              description={description}
+              error={params?.error}
+              currentProjectId={currentProject.id}
+              tCommon={tCommon}
+            />
           ) : (
             <ReviewStep
               website={website}
@@ -171,7 +181,7 @@ function ReviewStep({
 
         {error && <div className="signup-error">{error}</div>}
 
-        <form action={createAdditionalProjectFromProfile} className="signup-form">
+        <form action={confirmNewProjectDescription} className="signup-form">
           <input type="hidden" name="website" value={website} />
           <label className="field-group">
             <span className="field-label">Company description</span>
@@ -186,7 +196,7 @@ function ReviewStep({
               Website: <strong style={{ color: "#1C1C1E" }}>{website}</strong>
             </span>
           </label>
-          <NewProjectSubmitButton />
+          <NewProjectSubmitButton label="Continue →" />
         </form>
 
         <form action={resetNewProjectAnalysis} style={{ marginTop: 12 }}>
@@ -228,6 +238,76 @@ function ReviewStep({
               <strong>Configure Reddit keywords</strong>
               <p>Next step after saving.</p>
             </div>
+          </div>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function CompetitorsStep({
+  website,
+  description,
+  error,
+  currentProjectId,
+  tCommon,
+}: {
+  website: string;
+  description: string;
+  error?: string;
+  currentProjectId: string;
+  tCommon: Awaited<ReturnType<typeof getTranslations>>;
+}) {
+  return (
+    <>
+      <section className="signup-wizard-main">
+        <p className="page-kicker">New project — Step 3/3</p>
+        <h1 className="signup-wizard-title">Add your competitors</h1>
+        <p className="signup-wizard-copy">
+          Competitor websites help generate highly specific keywords — buyer comparison posts are the highest-intent signals on Reddit.
+        </p>
+
+        {error && <div className="signup-error">{error}</div>}
+
+        <form action={createAdditionalProjectFromProfile} className="signup-form">
+          <input type="hidden" name="website" value={website} />
+          <input type="hidden" name="description" value={description} />
+
+          {[1, 2, 3].map((i) => (
+            <label key={i} className="field-group">
+              <span className="field-label">Competitor {i}{i === 1 ? "" : " (optional)"}</span>
+              <Input
+                className="h-11 rounded-[8px] bg-white px-3 text-sm"
+                name="competitorUrl"
+                type="url"
+                placeholder="https://competitor.com"
+                required={i === 1}
+              />
+            </label>
+          ))}
+
+          <NewProjectSubmitButton label="Create project" />
+        </form>
+
+        <Link
+          href={`/dashboard?projectId=${currentProjectId}`}
+          style={{ display: "inline-flex", color: "#6B6B6E", fontSize: 13, textDecoration: "none", marginTop: 16 }}
+        >
+          ← {tCommon("backToDashboard")}
+        </Link>
+      </section>
+
+      <aside className="signup-wizard-visual">
+        <div className="signup-preview-card">
+          <p className="page-kicker">Competitor keywords</p>
+          <h3>Find buyers comparing you to competitors.</h3>
+          <div className="signup-mini-post">
+            <strong>[Competitor] alternative for [your use case]</strong>
+            <span>High intent</span>
+          </div>
+          <div className="signup-mini-post" style={{ marginTop: 8 }}>
+            <strong>switched from [Competitor] to</strong>
+            <span>Churn signal</span>
           </div>
         </div>
       </aside>

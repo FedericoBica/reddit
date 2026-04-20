@@ -12,11 +12,11 @@ export function NewProjectAnalyzeButton() {
   );
 }
 
-export function NewProjectSubmitButton() {
+export function NewProjectSubmitButton({ label = "Create project" }: { label?: string }) {
   const { pending } = useFormStatus();
   return (
     <Button className="h-11 rounded-[8px] font-extrabold" disabled={pending} type="submit">
-      {pending ? "Creating project..." : "Create project"}
+      {pending ? "Creating project..." : label}
     </Button>
   );
 }

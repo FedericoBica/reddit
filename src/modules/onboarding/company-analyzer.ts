@@ -95,7 +95,7 @@ function fallbackAnalysis(website: ValidatedWebsite): CompanyAnalysis {
 }
 
 /** Returns extracted text, or empty string if the site is unreachable / JS-only. */
-async function fetchWebsiteText(url: string): Promise<string> {
+export async function fetchWebsiteText(url: string): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), WEBSITE_TEXT_TIMEOUT_MS);
 

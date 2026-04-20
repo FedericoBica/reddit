@@ -18,14 +18,15 @@ import { inngest } from "@/inngest/client";
 import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { canCreateProject } from "@/modules/billing/limits";
 import { requireUser } from "@/modules/auth/server";
-import { analyzeCompanyWithAI } from "@/modules/onboarding/company-analyzer";
+import { analyzeCompanyWithAI, fetchWebsiteText } from "@/modules/onboarding/company-analyzer";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
 import { setCurrentProject } from "@/modules/projects/current";
-import { generateProjectSuggestions } from "@/modules/projects/suggestion-generator";
+import { generateProjectSuggestions, type CompetitorContext } from "@/modules/projects/suggestion-generator";
 import type { ProjectDTO } from "@/db/schemas/domain";
 
 const NEW_PROJECT_WEBSITE_COOKIE = "new_project_website";
 const NEW_PROJECT_DESCRIPTION_COOKIE = "new_project_description";
+const NEW_PROJECT_COMPETITORS_COOKIE = "new_project_competitors";
 
 export async function createFirstProject(formData: FormData) {
   const user = await requireUser("/bootstrap");
@@ -70,6 +71,21 @@ export async function analyzeNewProjectWebsite(formData: FormData) {
   redirect("/projects/new?analyzed=1");
 }
 
+export async function confirmNewProjectDescription(formData: FormData) {
+  await requireUser("/projects/new");
+  const description = String(formData.get("description") ?? "").trim();
+  const website = String(formData.get("website") ?? "").trim();
+  if (description) {
+    const cookieStore = await cookies();
+    cookieStore.set(NEW_PROJECT_DESCRIPTION_COOKIE, b64url(description.slice(0, 1_200)), {
+      httpOnly: true, sameSite: "lax" as const,
+      secure: process.env.NODE_ENV === "production",
+      path: "/projects", maxAge: 60 * 30,
+    });
+  }
+  redirect(`/projects/new?analyzed=1&step=competitors${website ? `&website=${encodeURIComponent(website)}` : ""}`);
+}
+
 export async function createAdditionalProjectFromProfile(formData: FormData) {
   const user = await requireUser("/projects/new");
 
@@ -84,11 +100,14 @@ export async function createAdditionalProjectFromProfile(formData: FormData) {
 
   const website = String(formData.get("website") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
+  const competitorUrls = formData
+    .getAll("competitorUrl")
+    .map((v) => String(v).trim())
+    .filter(Boolean)
+    .slice(0, 3);
 
   if (!website || !description) {
-    redirect(
-      `/projects/new?error=${encodeURIComponent("Revisá el website y la descripción.")}`,
-    );
+    redirect(`/projects/new?error=${encodeURIComponent("Revisá el website y la descripción.")}`);
   }
 
   let hostname = "";
@@ -106,7 +125,26 @@ export async function createAdditionalProjectFromProfile(formData: FormData) {
     currencyCode: "USD",
   });
 
-  await setupProjectKeywordsAndTrigger(project, user.id);
+  // Scrape competitors in parallel (non-blocking — failures just reduce context quality)
+  let competitorContexts: CompetitorContext[] = [];
+  if (competitorUrls.length > 0) {
+    try {
+      const validated = await Promise.all(
+        competitorUrls.map((url) => validateAccessibleWebsite(url).catch(() => null)),
+      );
+      competitorContexts = await Promise.all(
+        validated.filter(Boolean).map(async (c) => ({
+          name: c!.hostname.replace(/\.[a-z]{2,}$/i, "").replace(/[.-]/g, " "),
+          websiteUrl: c!.url,
+          websiteContent: await fetchWebsiteText(c!.url),
+        })),
+      );
+    } catch {
+      // non-critical — generate without competitors
+    }
+  }
+
+  await setupProjectKeywordsAndTrigger(project, user.id, competitorContexts);
   await clearNewProjectDraft();
   await setCurrentProject(project.id);
   redirect(`/dashboard?projectId=${project.id}`);
@@ -145,9 +183,9 @@ async function createProjectFromForm(formData: FormData, userId: string) {
  * work (backfill + searchbox). This avoids depending on unsynced Inngest functions
  * for keyword generation while keeping scraping async.
  */
-async function setupProjectKeywordsAndTrigger(project: ProjectDTO, userId: string) {
+async function setupProjectKeywordsAndTrigger(project: ProjectDTO, userId: string, competitors: CompetitorContext[] = []) {
   try {
-    const suggestions = await generateProjectSuggestions(project);
+    const suggestions = await generateProjectSuggestions(project, competitors);
 
     await replaceProjectSuggestions({
       projectId: project.id,
