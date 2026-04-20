@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { BrandLink } from "@/app/components/logo";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { listProjectsForCurrentUser } from "@/db/queries/projects";
 import { requireUser } from "@/modules/auth/server";
 import { createFirstProject } from "@/modules/projects/actions";
+import { BootstrapSubmitButton } from "@/app/projects/new/new-project-buttons";
 
 export const metadata: Metadata = {
   title: "Setup",
@@ -125,9 +125,7 @@ export default async function BootstrapPage() {
               </label>
             </div>
 
-            <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-              {t("form.submit")}
-            </Button>
+            <BootstrapSubmitButton label={t("form.submit")} />
           </form>
         </div>
       </section>

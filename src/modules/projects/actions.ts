@@ -29,6 +29,10 @@ const NEW_PROJECT_DESCRIPTION_COOKIE = "new_project_description";
 
 export async function createFirstProject(formData: FormData) {
   const user = await requireUser("/bootstrap");
+  const existing = await listProjectsForCurrentUser();
+  if (existing.length > 0) {
+    redirect("/dashboard");
+  }
   await createProjectFromForm(formData, user.id);
 }
 

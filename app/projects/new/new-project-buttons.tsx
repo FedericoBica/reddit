@@ -20,3 +20,12 @@ export function NewProjectSubmitButton() {
     </Button>
   );
 }
+
+export function BootstrapSubmitButton({ label }: { label: string }) {
+  const { pending } = useFormStatus();
+  return (
+    <Button className="h-11 rounded-[8px] font-extrabold" disabled={pending} type="submit">
+      {pending ? "Setting up..." : label}
+    </Button>
+  );
+}
