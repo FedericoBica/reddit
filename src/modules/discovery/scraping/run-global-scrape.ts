@@ -238,8 +238,8 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
   };
 }
 
-const BACKFILL_TIME_WINDOW = "month" as const;
-const BACKFILL_MAX_POSTS = 50;
+const BACKFILL_TIME_WINDOW = "week" as const;
+const BACKFILL_MAX_POSTS = 15;
 
 export async function runProjectBackfill(
   projectId: string,
