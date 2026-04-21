@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AutoRefresh } from "@/app/components/auto-refresh";
-import { ReplyTabs } from "@/app/components/reply-tabs";
+import { ReplyEditor } from "@/app/components/reply-editor";
+import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ export const metadata: Metadata = {
 };
 
 type OpportunitiesPageProps = {
-  searchParams?: Promise<{ projectId?: string; leadId?: string; status?: string }>;
+  searchParams?: Promise<{ projectId?: string; leadId?: string; filter?: string }>;
 };
 
 export default async function OpportunitiesPage({ searchParams }: OpportunitiesPageProps) {
@@ -37,7 +38,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
   const plan = await getCurrentBillingPlan();
   const windowHours = plan.keywordSearchTimeWindow === "week" ? 168 : 24;
 
-  const filterStatus = parseStatus(params?.status);
+  const activeFilter = parseFilter(params?.filter);
 
   const [freshLeads, allLeads] = await Promise.all([
     listFreshProjectLeads(currentProject.id, windowHours, 100),
@@ -46,12 +47,15 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
   const newFreshCount = freshLeads.filter((l) => l.status === "new").length;
+  const highIntentCount = freshLeads.filter((l) => (l.intent_score ?? 0) >= 70).length;
 
-  const filteredLeads = filterStatus
-    ? freshLeads.filter((l) => l.status === filterStatus)
-    : freshLeads;
+  const filteredLeads =
+    activeFilter === "high_intent"
+      ? freshLeads.filter((l) => (l.intent_score ?? 0) >= 70)
+      : activeFilter
+        ? freshLeads.filter((l) => l.status === activeFilter)
+        : freshLeads;
 
-  // Determine selected lead
   const requestedId = params?.leadId;
   const selectedLead = requestedId
     ? ((await getLeadById(currentProject.id, requestedId)) ?? filteredLeads[0] ?? null)
@@ -65,13 +69,14 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
   const FILTERS = [
     { label: "All", value: undefined },
+    { label: "High Intent", value: "high_intent" },
     { label: "New", value: "new" },
     { label: "Replied", value: "replied" },
     { label: "Irrelevant", value: "irrelevant" },
   ] as const;
 
   const baseHref = (extra?: string) =>
-    `/opportunities?projectId=${currentProject.id}${filterStatus ? `&status=${filterStatus}` : ""}${extra ?? ""}`;
+    `/opportunities?projectId=${currentProject.id}${activeFilter ? `&filter=${activeFilter}` : ""}${extra ?? ""}`;
 
   return (
     <DashboardShell
@@ -90,11 +95,17 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
               New Opportunities
             </h1>
             <p className="searchbox-description">
-              Posts recientes que matchearon tus keywords —{" "}
-              {windowHours >= 168 ? "últimos 7 días" : "últimas 24 horas"}.
+              Reddit posts that matched your keywords —{" "}
+              {windowHours >= 168 ? "last 7 days" : "last 24 hours"}.
+              Replying to these posts gets your product in front of buyers actively looking for a solution.
             </p>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            {highIntentCount > 0 && (
+              <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
+                {highIntentCount} high intent
+              </Badge>
+            )}
             {newFreshCount > 0 && (
               <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
                 {newFreshCount} new
@@ -107,24 +118,23 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
         </header>
 
         <div className="searchbox-body">
-          {/* Left column — lead list */}
           <section className="opportunity-column" aria-label="Fresh leads">
             <div className="opportunity-toolbar">
               <div className="filter-row" style={{ marginBottom: 0 }}>
                 {FILTERS.map((f) => {
-                  const active = filterStatus === f.value || (!filterStatus && !f.value);
+                  const isActive = activeFilter === f.value || (!activeFilter && !f.value);
                   const href = f.value
-                    ? `/opportunities?projectId=${currentProject.id}&status=${f.value}`
+                    ? `/opportunities?projectId=${currentProject.id}&filter=${f.value}`
                     : `/opportunities?projectId=${currentProject.id}`;
                   return (
-                    <Link key={f.label} href={href} className={`filter-pill${active ? " filter-pill-active" : ""}`}>
+                    <Link key={f.label} href={href} className={`filter-pill${isActive ? " filter-pill-active" : ""}`}>
                       {f.label}
                     </Link>
                   );
                 })}
               </div>
               <div className="opportunity-count">
-                <span>{filteredLeads.length} results</span>
+                <span>{filteredLeads.length} posts found</span>
               </div>
             </div>
 
@@ -134,7 +144,6 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
                   <LeadCard
                     key={lead.id}
                     lead={lead}
-                    projectId={currentProject.id}
                     active={lead.id === selectedLead?.id}
                     href={baseHref(`&leadId=${lead.id}`)}
                   />
@@ -146,12 +155,11 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
             <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", color: "#AEAEB2", fontSize: 11, fontWeight: 700 }}>
               {currentProject.last_scraped_at
-                ? `Último scan ${formatDate(currentProject.last_scraped_at)}`
-                : "Scan pendiente"}
+                ? `Last scan ${formatDate(currentProject.last_scraped_at)}`
+                : "Scan pending"}
             </div>
           </section>
 
-          {/* Right column — lead detail */}
           <LeadDetail
             lead={selectedLead}
             replies={replies}
@@ -167,49 +175,56 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
 function LeadCard({
   lead,
-  projectId,
   active,
   href,
 }: {
   lead: LeadDTO;
-  projectId: string;
   active: boolean;
   href: string;
 }) {
-  const score = lead.intent_score ?? 0;
   const ageMs = lead.created_at ? Date.now() - new Date(lead.created_at).getTime() : null;
   const ageMinutes = ageMs !== null ? Math.floor(ageMs / 60_000) : null;
+  const postUrl = `https://reddit.com${lead.permalink}`;
+  const truncatedUrl = postUrl.length > 52 ? postUrl.slice(0, 49) + "…" : postUrl;
 
   return (
     <Link href={href} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
-      <div className="opportunity-meta">
-        <span
-          className="opportunity-dot"
-          style={{
-            background:
-              lead.status === "new" ? "#E07000" :
-              lead.status === "replied" ? "#16A34A" : "#AEAEB2",
-          }}
-        />
-        <span>r/{lead.subreddit}</span>
-        {ageMinutes !== null && <span>{formatAge(ageMinutes)}</span>}
-        {lead.num_comments != null && <span>{lead.num_comments} comentarios</span>}
-      </div>
-      <h2 className="opportunity-heading">{lead.title}</h2>
-      <p className="opportunity-reason">
-        {lead.keywords_matched?.[0] ?? ""}{lead.keywords_matched?.length > 1 ? ` +${lead.keywords_matched.length - 1}` : ""}{" "}
-        {lead.classification_reason ? `· ${lead.classification_reason.slice(0, 100)}` : ""}
-      </p>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 6 }}>
-        <StatusPill status={lead.status} />
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {(lead.score ?? 0) > 0 && (
-            <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>
-              ▲ {lead.score}
-            </span>
-          )}
-          <ScorePill score={lead.intent_score} />
+      <div className="opportunity-meta" style={{ justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
+          <span
+            className="opportunity-dot"
+            style={{
+              background:
+                lead.status === "new" ? "#E07000" :
+                lead.status === "replied" ? "#16A34A" : "#AEAEB2",
+            }}
+          />
+          <span>r/{lead.subreddit}</span>
+          {ageMinutes !== null && <span>{formatAge(ageMinutes)}</span>}
+          {lead.num_comments != null && <span>{lead.num_comments} comments</span>}
         </div>
+        <ScorePill score={lead.intent_score} />
+      </div>
+
+      <h2 className="opportunity-heading">{lead.title}</h2>
+
+      <p style={{ fontSize: 10, color: "#AEAEB2", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        {truncatedUrl}
+      </p>
+
+      {lead.intent_type && <IntentTypePill type={lead.intent_type} />}
+
+      {lead.classification_reason && (
+        <p className="opportunity-reason">
+          {lead.classification_reason.slice(0, 110)}
+        </p>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+        <StatusPill status={lead.status} />
+        {(lead.score ?? 0) > 0 && (
+          <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>▲ {lead.score}</span>
+        )}
       </div>
     </Link>
   );
@@ -231,9 +246,9 @@ function LeadDetail({
       <section className="detail-pane">
         <div className="detail-content">
           <div className="empty-state">
-            <p className="section-title">Sin leads todavía</p>
+            <p className="section-title">No leads yet</p>
             <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
-              Los posts que matcheen tus keywords aparecen aquí. El scraper corre automáticamente.
+              Posts that match your keywords will appear here. The scraper runs automatically.
             </p>
           </div>
         </div>
@@ -244,40 +259,60 @@ function LeadDetail({
   const isGenerating = lead.reply_generation_status === "generating";
   const hasFailed = lead.reply_generation_error;
   const returnTo = `/opportunities?projectId=${projectId}&leadId=${lead.id}`;
-
-  const STATUS_OPTIONS: { value: LeadDTO["status"]; label: string }[] = [
-    { value: "new", label: "New" },
-    { value: "replied", label: "Replied" },
-    { value: "irrelevant", label: "Irrelevant" },
-  ];
+  const redditUrl = `https://reddit.com${lead.permalink}`;
 
   return (
     <section className="detail-pane" aria-label="Lead detail">
+      {/* Topbar */}
       <div className="detail-topbar">
         <div className="opportunity-meta">
-          <span className="opportunity-dot" />
+          <span className="opportunity-dot" style={{
+            background: lead.status === "new" ? "#E07000" : lead.status === "replied" ? "#16A34A" : "#AEAEB2",
+          }} />
           <span>r/{lead.subreddit}</span>
           {lead.created_utc && <span>{formatDate(lead.created_utc)}</span>}
           {lead.author && <span>u/{lead.author}</span>}
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <ScorePill score={lead.intent_score} />
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <form action={updateLeadStatusFromForm}>
+            <input type="hidden" name="projectId" value={projectId} />
+            <input type="hidden" name="leadId" value={lead.id} />
+            <input type="hidden" name="status" value="irrelevant" />
+            <input type="hidden" name="returnTo" value={returnTo} />
+            <button className="btn-reject" type="submit">Reject Post</button>
+          </form>
+          <form action={updateLeadStatusFromForm}>
+            <input type="hidden" name="projectId" value={projectId} />
+            <input type="hidden" name="leadId" value={lead.id} />
+            <input type="hidden" name="status" value="replied" />
+            <input type="hidden" name="returnTo" value={returnTo} />
+            <button className="btn-replied" type="submit">
+              <CheckIcon />
+              Mark as Replied
+            </button>
+          </form>
         </div>
       </div>
 
+      {/* Detail content */}
       <div className="detail-content">
         <h2 style={{ fontSize: 22, lineHeight: 1.2, letterSpacing: "-0.03em", fontWeight: 900, color: "#1C1C1E" }}>
           {lead.title}
         </h2>
 
-        <div style={{ display: "flex", gap: 16, marginTop: 14, flexWrap: "wrap" }}>
-          {(lead.score ?? 0) > 0 && (
-            <EngagementStat icon="▲" value={String(lead.score)} label="upvotes" />
+        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
+          {lead.intent_type && <IntentTypePill type={lead.intent_type} />}
+          <span className="intent-badge" style={{
+            background: (lead.intent_score ?? 0) >= 80 ? "#E07000" : (lead.intent_score ?? 0) >= 60 ? "#FF9F40" : "#E5E5EA",
+            color: (lead.intent_score ?? 0) >= 60 ? "#FFF" : "#6B6B6E",
+          }}>
+            🎯 Intent Score: {lead.intent_score ?? "–"}
+          </span>
+          {lead.keywords_matched?.length > 0 && (
+            <span style={{ fontSize: 11, color: "#6B6B6E", fontWeight: 700 }}>
+              Keywords: {lead.keywords_matched.slice(0, 3).join(", ")}{lead.keywords_matched.length > 3 ? ` +${lead.keywords_matched.length - 3}` : ""}
+            </span>
           )}
-          {lead.num_comments != null && (
-            <EngagementStat icon="💬" value={String(lead.num_comments)} label="comentarios" />
-          )}
-          <EngagementStat icon="🎯" value={String(lead.intent_score ?? "–")} label="intent score" />
         </div>
 
         {lead.classification_reason && (
@@ -287,41 +322,26 @@ function LeadDetail({
         )}
       </div>
 
+      {/* Post body */}
       <article className="lead-post">
         <p className="reddit-body" style={{ fontSize: 13 }}>
-          {lead.body?.trim() || "Sin cuerpo disponible. Abrí el post en Reddit para ver el contexto completo."}
+          {lead.body?.trim() || "No body available. Open the post on Reddit to see the full context."}
         </p>
-        <div style={{ display: "flex", gap: 14, alignItems: "center", marginTop: 14 }}>
-          <a
-            href={`https://reddit.com${lead.permalink}`}
-            target="_blank"
-            rel="noreferrer"
-            style={{ color: "#E07000", fontSize: 12, fontWeight: 800, textDecoration: "none" }}
-          >
-            Ver en Reddit →
+
+        <RedditComments permalink={lead.permalink} />
+
+        <div className="post-stats-bar">
+          {(lead.score ?? 0) > 0 && <span>▲ {lead.score} upvotes</span>}
+          {lead.num_comments != null && <span>💬 {lead.num_comments} comments</span>}
+          <a href={redditUrl} target="_blank" rel="noreferrer" className="post-stats-link">
+            View Post on Reddit →
           </a>
         </div>
       </article>
 
+      {/* Reply section */}
       <div className="lead-comment-box">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-          <p className="section-title" style={{ fontSize: 14 }}>Reply Generator</p>
-          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <form action={updateLeadStatusFromForm} style={{ display: "flex", gap: 6 }}>
-              <input type="hidden" name="projectId" value={projectId} />
-              <input type="hidden" name="leadId" value={lead.id} />
-              <input type="hidden" name="returnTo" value={returnTo} />
-              <select className="select" name="status" defaultValue={lead.status} style={{ fontSize: 12, height: 32, padding: "0 8px" }}>
-                {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
-                ))}
-              </select>
-              <Button variant="outline" className="h-8 rounded-[8px] font-extrabold text-xs" type="submit">
-                Actualizar
-              </Button>
-            </form>
-          </div>
-        </div>
+        <p className="section-title" style={{ fontSize: 14, marginBottom: 12 }}>Write a comment:</p>
 
         {hasFailed && (
           <div style={{ padding: "10px 12px", borderRadius: 8, background: "#FEF2F2", border: "1px solid #FEE2E2", color: "#991B1B", fontSize: 12, marginBottom: 12 }}>
@@ -331,69 +351,52 @@ function LeadDetail({
 
         {isGenerating ? (
           <div style={{ padding: "14px 0", color: "#6B6B6E", fontSize: 13, fontWeight: 600 }}>
-            Generando respuestas…
+            Generating replies…
           </div>
-        ) : replies.length > 0 ? (
-          <ReplyTabs
+        ) : (
+          <ReplyEditor
             replies={replies}
             permalink={lead.permalink}
             projectId={projectId}
             leadId={lead.id}
             returnTo={returnTo}
-            regenerateForm={
+            generateForm={
               <form action={generateLeadRepliesFromForm}>
                 <input type="hidden" name="projectId" value={projectId} />
                 <input type="hidden" name="leadId" value={lead.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
-                <Button variant="outline" className="h-8 rounded-[8px] font-extrabold text-xs" type="submit">
-                  Regenerar
+                <Button
+                  className="h-8 rounded-[8px] px-3 font-extrabold text-xs"
+                  variant={replies.length > 0 ? "outline" : "default"}
+                  style={replies.length === 0 ? { background: "#E07000" } : undefined}
+                  type="submit"
+                >
+                  {replies.length > 0 ? "Regenerate" : "Generate Reply Suggestions"}
                 </Button>
               </form>
             }
           />
-        ) : (
-          <>
-            <div className="comment-surface" style={{ marginBottom: 10 }}>
-              Generá una respuesta humana y contextual. ReddProwl prepara variantes por tono antes de abrir Reddit.
-            </div>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-              <form action={generateLeadRepliesFromForm}>
-                <input type="hidden" name="projectId" value={projectId} />
-                <input type="hidden" name="leadId" value={lead.id} />
-                <input type="hidden" name="returnTo" value={returnTo} />
-                <Button className="h-8 rounded-[8px] px-3 font-extrabold" type="submit">
-                  Generar respuesta
-                </Button>
-              </form>
-            </div>
-          </>
         )}
       </div>
     </section>
   );
 }
 
-// ── Empty & helper components ─────────────────────────────────
+// ── Shared small components ───────────────────────────────────
 
-function EmptyFeed({ windowHours, lastScrapedAt }: { windowHours: number; lastScrapedAt: string | null }) {
+function IntentTypePill({ type }: { type: string }) {
+  const config: Record<string, { label: string; color: string; bg: string }> = {
+    competitor_comparison: { label: "Competitor", color: "#7C3AED", bg: "#F5F3FF" },
+    active_buying:         { label: "Active Buying", color: "#E07000", bg: "#FFF3E8" },
+    pain_expression:       { label: "Pain Point", color: "#DC2626", bg: "#FEF2F2" },
+    existing_user:         { label: "Existing User", color: "#16A34A", bg: "#F0FDF4" },
+    low_intent:            { label: "Low Intent", color: "#AEAEB2", bg: "#F5F5F3" },
+  };
+  const c = config[type] ?? config.low_intent;
   return (
-    <div className="empty-state">
-      <p className="section-title">No hay posts frescos</p>
-      <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
-        No hay leads en {windowHours >= 168 ? "los últimos 7 días" : "las últimas 24 horas"}.{" "}
-        {lastScrapedAt ? `Último scan ${formatDate(lastScrapedAt)}.` : "El scraper aún no corrió."}
-      </p>
-    </div>
-  );
-}
-
-function EngagementStat({ icon, value, label }: { icon: string; value: string; label: string }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", minWidth: 52, padding: "8px 10px", background: "#F5F5F3", borderRadius: 8 }}>
-      <span style={{ fontSize: 14 }}>{icon}</span>
-      <span style={{ fontSize: 14, fontWeight: 900, color: "#1C1C1E", lineHeight: 1.2, marginTop: 2 }}>{value}</span>
-      <span style={{ fontSize: 9, fontWeight: 700, color: "#AEAEB2", textTransform: "uppercase", letterSpacing: "0.04em" }}>{label}</span>
-    </div>
+    <span style={{ display: "inline-flex", padding: "3px 9px", borderRadius: 6, fontSize: 10, fontWeight: 800, background: c.bg, color: c.color, letterSpacing: "0.01em" }}>
+      {c.label}
+    </span>
   );
 }
 
@@ -404,7 +407,7 @@ function ScorePill({ score }: { score: number | null }) {
   else if (val >= 60) { bg = "#FF9F40"; color = "#FFF"; }
 
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 34, padding: "3px 8px", borderRadius: 7, fontSize: 12, fontWeight: 900, background: bg, color }}>
+    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 34, padding: "3px 10px", borderRadius: 7, fontSize: 12, fontWeight: 900, background: bg, color }}>
       {score ?? "–"}
     </span>
   );
@@ -424,6 +427,26 @@ function StatusPill({ status }: { status: LeadDTO["status"] }) {
   );
 }
 
+function EmptyFeed({ windowHours, lastScrapedAt }: { windowHours: number; lastScrapedAt: string | null }) {
+  return (
+    <div className="empty-state">
+      <p className="section-title">No fresh posts</p>
+      <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
+        No leads in {windowHours >= 168 ? "the last 7 days" : "the last 24 hours"}.{" "}
+        {lastScrapedAt ? `Last scan ${formatDate(lastScrapedAt)}.` : "Scraper hasn't run yet."}
+      </p>
+    </div>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+      <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 function FlashIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -432,17 +455,18 @@ function FlashIcon() {
   );
 }
 
-function parseStatus(s?: string): LeadDTO["status"] | undefined {
-  if (s === "new" || s === "replied" || s === "irrelevant") return s;
+function parseFilter(f?: string): "high_intent" | LeadDTO["status"] | undefined {
+  if (f === "high_intent") return "high_intent";
+  if (f === "new" || f === "replied" || f === "irrelevant") return f;
   return undefined;
 }
 
 function formatDate(date: string) {
-  return new Intl.DateTimeFormat("es", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(date));
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(date));
 }
 
 function formatAge(minutes: number): string {
-  if (minutes < 1) return "justo ahora";
+  if (minutes < 1) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
