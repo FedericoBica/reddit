@@ -7,9 +7,11 @@ import { useTranslations } from "next-intl";
 export function SidebarLinks({
   currentProjectId,
   newLeadsCount = 0,
+  newSearchboxCount = 0,
 }: {
   currentProjectId: string;
   newLeadsCount?: number;
+  newSearchboxCount?: number;
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
@@ -55,18 +57,13 @@ export function SidebarLinks({
           >
             <Icon className="sidebar-icon" />
             <span style={{ flex: 1 }}>{item.label}</span>
-            {item.href === "/dashboard" && newLeadsCount > 0 && (
-              <span
-                style={{
-                  background: "#E07000",
-                  color: "#FFF",
-                  fontSize: 9,
-                  fontWeight: 700,
-                  padding: "2px 6px",
-                  borderRadius: 5,
-                  lineHeight: 1.4,
-                }}
-              >
+            {item.href === "/dashboard" && newSearchboxCount > 0 && (
+              <span style={{ background: "#E07000", color: "#FFF", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5, lineHeight: 1.4 }}>
+                {newSearchboxCount}
+              </span>
+            )}
+            {item.href === "/opportunities" && newLeadsCount > 0 && (
+              <span style={{ background: "#E07000", color: "#FFF", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5, lineHeight: 1.4 }}>
                 {newLeadsCount}
               </span>
             )}

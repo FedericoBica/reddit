@@ -11,7 +11,7 @@ import {
 } from "@/db/mutations/scraping";
 import { getProjectForScraping, listProjectsDueForScraping } from "@/db/queries/scraping";
 import { classifyLeadCandidate } from "@/modules/discovery/classification/lead-classifier";
-import { findMatchedKeywords } from "@/modules/discovery/classification/keyword-match";
+import { findMatchedKeywords, type KeywordMatchTarget } from "@/modules/discovery/classification/keyword-match";
 import { createRedditDiscoveryProvider } from "@/modules/discovery/reddit/provider";
 import type { RedditDiscoveryProvider } from "@/modules/discovery/reddit/types";
 import { getBillingPlanForUser } from "@/modules/billing/current";
@@ -78,6 +78,10 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
       let classifierModel: string | null = null;
       const seenPostIds = new Set<string>();
 
+      const keywordTargets: KeywordMatchTarget[] = target.keywords.map((k) => ({
+        term: k.term,
+        weight: k.intentCategory === "comparative" ? "high" : "normal",
+      }));
       const queries = target.keywords.map((k) => k.term);
       const posts = provider.searchPostsBatch
         ? await provider.searchPostsBatch({
@@ -102,14 +106,15 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
         seenPostIds.add(post.id);
         postsSeen += 1;
 
-        const keywordsMatched =
-          findMatchedKeywords(post, target.keywords).length > 0
-            ? findMatchedKeywords(post, target.keywords)
-            : queries
+        const matched = findMatchedKeywords(post, keywordTargets);
+        const keywordsMatched: KeywordMatchTarget[] =
+          matched.length > 0
+            ? matched
+            : keywordTargets
                 .filter(
-                  (q) =>
-                    post.title.toLowerCase().includes(q.toLowerCase()) ||
-                    (post.body ?? "").toLowerCase().includes(q.toLowerCase()),
+                  (k) =>
+                    post.title.toLowerCase().includes(k.term.toLowerCase()) ||
+                    (post.body ?? "").toLowerCase().includes(k.term.toLowerCase()),
                 )
                 .slice(0, 1);
 
@@ -142,11 +147,12 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
           score: post.score,
           numComments: post.numComments,
           intentScore: classification.intentScore,
+          intentType: classification.intentType,
           regionScore: classification.regionScore,
           sentiment: classification.sentiment,
           classificationReason: classification.classificationReason,
           classifierPromptVersion: classification.promptVersion,
-          keywordsMatched,
+          keywordsMatched: keywordsMatched.map((k) => k.term),
           rawData: post.rawData,
         });
 
@@ -249,7 +255,7 @@ export type BackfillFetchResult =
       scrapeRunId: string;
       runId: string;
       posts: import("@/modules/discovery/reddit/types").RedditPost[];
-      keywords: { id: string; term: string }[];
+      keywords: import("@/db/queries/scraping").ScrapeTarget["keywords"];
       project: import("@/db/queries/scraping").ScrapeTarget["project"];
       scrapeFailCount: number;
     };
@@ -319,6 +325,10 @@ export async function classifyAndSaveBackfillPosts(
   const { projectId, scrapeRunId, runId, posts, keywords, project, scrapeFailCount } = input;
   const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 60);
   const queries = keywords.map((k) => k.term);
+  const keywordTargets: KeywordMatchTarget[] = keywords.map((k) => ({
+    term: k.term,
+    weight: k.intentCategory === "comparative" ? "high" : "normal",
+  }));
 
   let leadsCreated = 0;
   let duplicatesSkipped = 0;
@@ -333,15 +343,15 @@ export async function classifyAndSaveBackfillPosts(
       const batch = posts.slice(i, i + CONCURRENCY);
       await Promise.all(
         batch.map(async (post) => {
-          const matched = findMatchedKeywords(post, keywords);
-          const keywordsMatched =
+          const matched = findMatchedKeywords(post, keywordTargets);
+          const keywordsMatched: KeywordMatchTarget[] =
             matched.length > 0
               ? matched
-              : queries
+              : keywordTargets
                   .filter(
-                    (q) =>
-                      post.title.toLowerCase().includes(q.toLowerCase()) ||
-                      (post.body ?? "").toLowerCase().includes(q.toLowerCase()),
+                    (k) =>
+                      post.title.toLowerCase().includes(k.term.toLowerCase()) ||
+                      (post.body ?? "").toLowerCase().includes(k.term.toLowerCase()),
                   )
                   .slice(0, 1);
 
@@ -372,7 +382,7 @@ export async function classifyAndSaveBackfillPosts(
             sentiment: classification.sentiment,
             classificationReason: classification.classificationReason,
             classifierPromptVersion: classification.promptVersion,
-            keywordsMatched,
+            keywordsMatched: keywordsMatched.map((k) => k.term),
             rawData: post.rawData,
           });
 

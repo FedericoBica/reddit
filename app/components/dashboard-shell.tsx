@@ -15,12 +15,14 @@ export function DashboardShell({
   projects,
   currentProject,
   newLeadsCount,
+  newSearchboxCount,
   children,
 }: {
   user: User;
   projects: ProjectDTO[];
   currentProject: ProjectDTO;
   newLeadsCount?: number;
+  newSearchboxCount?: number;
   children: React.ReactNode;
 }) {
   const billingLimitPromise = getCurrentBillingPlan();
@@ -32,6 +34,7 @@ export function DashboardShell({
       projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
+      newSearchboxCount={newSearchboxCount}
       billingLimitPromise={billingLimitPromise}
       isAdminPromise={isAdminPromise}
     >
@@ -55,6 +58,7 @@ async function DashboardShellContent({
   projects,
   currentProject,
   newLeadsCount,
+  newSearchboxCount,
   billingLimitPromise,
   isAdminPromise,
   children,
@@ -63,6 +67,7 @@ async function DashboardShellContent({
   projects: ProjectDTO[];
   currentProject: ProjectDTO;
   newLeadsCount?: number;
+  newSearchboxCount?: number;
   billingLimitPromise: ReturnType<typeof getCurrentBillingPlan>;
   isAdminPromise: Promise<boolean>;
   children: React.ReactNode;
@@ -118,6 +123,7 @@ async function DashboardShellContent({
         <SidebarLinks
           currentProjectId={currentProject.id}
           newLeadsCount={newLeadsCount}
+          newSearchboxCount={newSearchboxCount}
         />
 
         {/* Footer */}

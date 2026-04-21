@@ -211,6 +211,7 @@ export type Database = {
           created_utc: string | null
           id: string
           intent_score: number | null
+          intent_type: string | null
           keywords_matched: string[]
           lost_reason: string | null
           num_comments: number | null
@@ -246,6 +247,7 @@ export type Database = {
           created_utc?: string | null
           id?: string
           intent_score?: number | null
+          intent_type?: string | null
           keywords_matched?: string[]
           lost_reason?: string | null
           num_comments?: number | null
@@ -281,6 +283,7 @@ export type Database = {
           created_utc?: string | null
           id?: string
           intent_score?: number | null
+          intent_type?: string | null
           keywords_matched?: string[]
           lost_reason?: string | null
           num_comments?: number | null

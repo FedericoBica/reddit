@@ -48,7 +48,7 @@ async function scrapeSearchboxForTarget(target: SearchboxScrapeTarget) {
   }
 
   // Flatten unique candidates
-  const candidates: { keyword: { id: string; term: string }; serpResult: (typeof serpResultsByKeyword)[0]["results"][0] }[] = [];
+  const candidates: { keyword: SearchboxScrapeTarget["keywords"][0]; serpResult: (typeof serpResultsByKeyword)[0]["results"][0] }[] = [];
   for (const { keyword, results } of serpResultsByKeyword) {
     for (const serpResult of results) {
       if (resultsFound + candidates.length >= MAX_RESULTS_PER_PROJECT) break;
@@ -83,7 +83,10 @@ async function scrapeSearchboxForTarget(target: SearchboxScrapeTarget) {
         const classification = await classifyLeadCandidate({
           project: target.project,
           post,
-          keywordsMatched: [keyword.term],
+          keywordsMatched: [{
+            term: keyword.term,
+            weight: keyword.intentCategory === "comparative" ? "high" : "normal",
+          }],
         });
 
         classificationsCount += 1;

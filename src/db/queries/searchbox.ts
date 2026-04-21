@@ -15,7 +15,7 @@ export type SearchboxScrapeTarget = {
     primary_language: string;
     owner_id: string;
   };
-  keywords: { id: string; term: string }[];
+  keywords: { id: string; term: string; intentCategory: string | null }[];
 };
 
 export async function getProjectForSearchbox(projectId: string): Promise<SearchboxScrapeTarget | null> {
@@ -33,7 +33,7 @@ export async function getProjectForSearchbox(projectId: string): Promise<Searchb
 
   const { data: keywords, error: keywordsError } = await supabase
     .from("keywords")
-    .select("id, project_id, term")
+    .select("id, project_id, term, intent_category")
     .eq("project_id", projectId)
     .eq("is_active", true)
     .order("created_at", { ascending: true });
@@ -42,7 +42,7 @@ export async function getProjectForSearchbox(projectId: string): Promise<Searchb
 
   return {
     project,
-    keywords: keywords.map((k) => ({ id: k.id, term: k.term })),
+    keywords: keywords.map((k) => ({ id: k.id, term: k.term, intentCategory: k.intent_category ?? null })),
   };
 }
 
@@ -52,7 +52,7 @@ export async function listProjectsDueForSearchbox(): Promise<SearchboxScrapeTarg
   // Only fetch projects that actually have active keywords to avoid queue starvation
   const { data: keywords, error: keywordsError } = await supabase
     .from("keywords")
-    .select("id, project_id, term")
+    .select("id, project_id, term, intent_category")
     .eq("is_active", true)
     .order("created_at", { ascending: true });
 
@@ -82,7 +82,7 @@ export async function listProjectsDueForSearchbox(): Promise<SearchboxScrapeTarg
     project,
     keywords: (keywords ?? [])
       .filter((k) => projectIds.includes(k.project_id) && k.project_id === project.id)
-      .map((k) => ({ id: k.id, term: k.term })),
+      .map((k) => ({ id: k.id, term: k.term, intentCategory: k.intent_category ?? null })),
   }));
 }
 

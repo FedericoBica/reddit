@@ -92,6 +92,7 @@ export const createLeadSchema = z.object({
   score: z.number().int().optional().nullable(),
   numComments: z.number().int().optional().nullable(),
   intentScore: z.number().int().min(0).max(100).optional().nullable(),
+  intentType: z.enum(["competitor_comparison", "active_buying", "pain_expression", "existing_user", "low_intent"]).optional().nullable(),
   regionScore: z.number().int().min(0).max(10).optional().nullable(),
   sentiment: z.enum(["positive", "negative", "neutral"]).optional().nullable(),
   classificationReason: z.string().max(2_000).optional().nullable(),

@@ -89,6 +89,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
       projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
+      newSearchboxCount={newResultsCount}
     >
       {(isGenerating || isNew) && <AutoRefresh intervalMs={isNew ? 15000 : 4000} />}
       <section className="searchbox-workspace">
