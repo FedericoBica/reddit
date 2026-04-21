@@ -244,8 +244,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
   };
 }
 
-const BACKFILL_TIME_WINDOW = "week" as const;
-const BACKFILL_MAX_POSTS = 15;
+const BACKFILL_MAX_POSTS = 100;
 
 export type BackfillFetchResult =
   | { status: "skipped"; reason: string }
@@ -278,23 +277,23 @@ export async function fetchBackfillPosts(
     projectId,
     runId,
     subredditsCount: 0,
-    metadata: { backfill: true, time_window: BACKFILL_TIME_WINDOW },
+    metadata: { backfill: true, time_window: "all" },
   });
 
   const queries = target.keywords.map((k) => k.term);
   const allPosts = provider.searchPostsBatch
     ? await provider.searchPostsBatch({
         queries,
-        sort: "new",
-        time: BACKFILL_TIME_WINDOW,
+        sort: "relevance",
+        time: "all",
         limitPerQuery: BACKFILL_MAX_POSTS,
       })
     : await Promise.all(
         target.keywords.map((k) =>
           provider.searchPosts!({
             query: k.term,
-            sort: "new",
-            time: BACKFILL_TIME_WINDOW,
+            sort: "relevance",
+            time: "all",
             limit: BACKFILL_MAX_POSTS,
           }),
         ),
