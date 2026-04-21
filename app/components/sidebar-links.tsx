@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
 
 export function SidebarLinks({
   currentProjectId,
@@ -15,6 +16,8 @@ export function SidebarLinks({
 }) {
   const pathname = usePathname();
   const t = useTranslations("nav");
+  const inArchive = pathname.startsWith("/archive");
+  const [archiveOpen, setArchiveOpen] = useState(inArchive);
 
   const NAV = [
     { href: "/dashboard",     label: t("searchbox"),  icon: InboxIcon    },
@@ -28,6 +31,8 @@ export function SidebarLinks({
     if (href === "/dashboard") return pathname === "/dashboard" || pathname.startsWith("/leads/");
     return pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
   };
+
+  const isOpen = archiveOpen || inArchive;
 
   return (
     <nav
@@ -70,6 +75,57 @@ export function SidebarLinks({
           </Link>
         );
       })}
+
+      {/* Archive group */}
+      <button
+        type="button"
+        onClick={() => setArchiveOpen((v) => !v)}
+        className="sidebar-link"
+        style={{
+          width: "100%",
+          background: "transparent",
+          border: "none",
+          fontWeight: inArchive ? 700 : 500,
+          color: inArchive ? "#1C1C1E" : "#6B6B6E",
+          cursor: "pointer",
+          textAlign: "left",
+        }}
+      >
+        <ArchiveIcon className="sidebar-icon" />
+        <span style={{ flex: 1 }}>Archivo</span>
+        <ChevronIcon open={isOpen} />
+      </button>
+
+      {isOpen && (
+        <>
+          <Link
+            href={`/archive/replied?projectId=${currentProjectId}`}
+            className="sidebar-link"
+            style={{
+              paddingLeft: 34,
+              fontWeight: pathname === "/archive/replied" ? 700 : 500,
+              color: pathname === "/archive/replied" ? "#1C1C1E" : "#6B6B6E",
+              background: pathname === "/archive/replied" ? "#EAEAE8" : "transparent",
+              fontSize: 13,
+            }}
+          >
+            Respondidos
+          </Link>
+          <Link
+            href={`/archive/rejected?projectId=${currentProjectId}`}
+            className="sidebar-link"
+            style={{
+              paddingLeft: 34,
+              fontWeight: pathname === "/archive/rejected" ? 700 : 500,
+              color: pathname === "/archive/rejected" ? "#1C1C1E" : "#6B6B6E",
+              background: pathname === "/archive/rejected" ? "#EAEAE8" : "transparent",
+              fontSize: 13,
+            }}
+          >
+            Rechazados
+          </Link>
+        </>
+      )}
     </nav>
   );
 }
@@ -113,6 +169,27 @@ function GearIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.8" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ArchiveIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M3 6.75A2.75 2.75 0 0 1 5.75 4h12.5A2.75 2.75 0 0 1 21 6.75v.5A2.75 2.75 0 0 1 18.25 10H5.75A2.75 2.75 0 0 1 3 7.25v-.5Z" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M5 10v7.25A2.75 2.75 0 0 0 7.75 20h8.5A2.75 2.75 0 0 0 19 17.25V10" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M10 14h4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"
+      style={{ transition: "transform 160ms ease", transform: open ? "rotate(90deg)" : "rotate(0deg)", flexShrink: 0 }}
+    >
+      <path d="M4 2.5L7.5 6L4 9.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
