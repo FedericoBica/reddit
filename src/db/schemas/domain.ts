@@ -238,6 +238,7 @@ export type LeadDTO = Pick<
   | "score"
   | "num_comments"
   | "intent_score"
+  | "intent_type"
   | "region_score"
   | "sentiment"
   | "classification_reason"

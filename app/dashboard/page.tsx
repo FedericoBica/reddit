@@ -2,17 +2,15 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AutoRefresh } from "@/app/components/auto-refresh";
-import { CopyButton } from "@/app/components/copy-button";
+import { ReplyTabs } from "@/app/components/reply-tabs";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { getLeadById, listProjectLeads } from "@/db/queries/leads";
 import { listLeadReplies } from "@/db/queries/lead-replies";
 import { listSearchboxResults, getSearchboxResult } from "@/db/queries/searchbox";
 import type { SearchboxResultDTO, LeadReplyDTO, LeadDTO } from "@/db/schemas/domain";
 import { generateSearchboxReplyFromForm, updateSearchboxStatusFromForm } from "@/modules/searchbox/actions";
-import { useLeadReplyFromForm } from "@/modules/leads/actions";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
 
@@ -329,70 +327,43 @@ function ResultDetail({
           <div style={{ padding: "14px 0", color: "#6B6B6E", fontSize: 13, fontWeight: 600 }}>
             Generando respuestas…
           </div>
-        ) : replies.length > 0 ? (
-          <div style={{ display: "grid", gap: 10 }}>
-            {replies.map((reply) => (
-              <ReplyCard key={reply.id} reply={reply} lead={lead!} projectId={projectId} />
-            ))}
-            <form action={generateSearchboxReplyFromForm}>
-              <input type="hidden" name="projectId" value={projectId} />
-              <input type="hidden" name="resultId" value={result.id} />
-              <Button variant="outline" className="h-8 rounded-[8px] font-extrabold text-xs" type="submit">
-                Regenerar
-              </Button>
-            </form>
-          </div>
+        ) : replies.length > 0 && lead ? (
+          <ReplyTabs
+            replies={replies}
+            permalink={lead.permalink}
+            projectId={projectId}
+            leadId={lead.id}
+            returnTo={`/dashboard?projectId=${projectId}&resultId=${result.id}`}
+            regenerateForm={
+              <form action={generateSearchboxReplyFromForm}>
+                <input type="hidden" name="projectId" value={projectId} />
+                <input type="hidden" name="resultId" value={result.id} />
+                <Button variant="outline" className="h-8 rounded-[8px] font-extrabold text-xs" type="submit">
+                  Regenerar
+                </Button>
+              </form>
+            }
+          />
         ) : (
-          <div className="comment-surface" style={{ marginBottom: 10 }}>
-            Generá una respuesta humana y contextual. ReddProwl prepara variantes por tono antes de abrir Reddit.
-          </div>
-        )}
-
-        {!isGenerating && replies.length === 0 && (
-          <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
-            <form action={generateSearchboxReplyFromForm}>
-              <input type="hidden" name="projectId" value={projectId} />
-              <input type="hidden" name="resultId" value={result.id} />
-              <Button className="h-8 rounded-[8px] px-3 font-extrabold" type="submit">
-                Generar respuesta
-              </Button>
-            </form>
-          </div>
+          <>
+            <div className="comment-surface" style={{ marginBottom: 10 }}>
+              Generá una respuesta humana y contextual. ReddProwl prepara variantes por tono antes de abrir Reddit.
+            </div>
+            {!isGenerating && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+                <form action={generateSearchboxReplyFromForm}>
+                  <input type="hidden" name="projectId" value={projectId} />
+                  <input type="hidden" name="resultId" value={result.id} />
+                  <Button className="h-8 rounded-[8px] px-3 font-extrabold" type="submit">
+                    Generar respuesta
+                  </Button>
+                </form>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
-  );
-}
-
-function ReplyCard({ reply, lead, projectId }: { reply: LeadReplyDTO; lead: LeadDTO; projectId: string }) {
-  return (
-    <Card className="gap-0 rounded-[10px] border-[#F0F0EE] bg-[#FFFDFB] py-0 ring-0" style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-      <CardContent className="p-4">
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-          <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
-            {reply.style}
-          </Badge>
-          {reply.was_used && (
-            <Badge variant="secondary" className="rounded-[7px] bg-[#D1FAE5] font-extrabold text-[#065F46]">
-              Usada
-            </Badge>
-          )}
-        </div>
-        <p className="reddit-body" style={{ fontSize: 13 }}>{reply.content}</p>
-        <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginTop: 14 }}>
-          <CopyButton text={reply.content} permalink={lead.permalink} />
-          <form action={useLeadReplyFromForm}>
-            <input type="hidden" name="projectId" value={projectId} />
-            <input type="hidden" name="leadId" value={lead.id} />
-            <input type="hidden" name="replyId" value={reply.id} />
-            <input type="hidden" name="returnTo" value={`/dashboard?projectId=${projectId}`} />
-            <Button variant="outline" className="h-8 rounded-[8px] font-extrabold text-xs" type="submit">
-              Marcar como usada
-            </Button>
-          </form>
-        </div>
-      </CardContent>
-    </Card>
   );
 }
 
