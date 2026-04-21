@@ -5,7 +5,6 @@ import { AutoRefresh } from "@/app/components/auto-refresh";
 import { ReplyEditor } from "@/app/components/reply-editor";
 import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getLeadById, listFreshProjectLeads, listProjectLeads } from "@/db/queries/leads";
 import { listLeadReplies } from "@/db/queries/lead-replies";
@@ -17,6 +16,7 @@ import {
 import { requireUser } from "@/modules/auth/server";
 import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { resolveCurrentProject } from "@/modules/projects/current";
+import { toRedditUrl } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "New Opportunities",
@@ -38,28 +38,17 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
   const plan = await getCurrentBillingPlan();
   const windowHours = plan.keywordSearchTimeWindow === "week" ? 168 : 24;
 
-  const activeFilter = parseFilter(params?.filter);
-
   const [freshLeads, allLeads] = await Promise.all([
     listFreshProjectLeads(currentProject.id, windowHours, 100),
     listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
   ]);
 
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
-  const newFreshCount = freshLeads.filter((l) => l.status === "new").length;
-  const highIntentCount = freshLeads.filter((l) => (l.intent_score ?? 0) >= 70).length;
-
-  const filteredLeads =
-    activeFilter === "high_intent"
-      ? freshLeads.filter((l) => (l.intent_score ?? 0) >= 70)
-      : activeFilter
-        ? freshLeads.filter((l) => l.status === activeFilter)
-        : freshLeads;
 
   const requestedId = params?.leadId;
   const selectedLead = requestedId
-    ? ((await getLeadById(currentProject.id, requestedId)) ?? filteredLeads[0] ?? null)
-    : filteredLeads[0] ?? null;
+    ? ((await getLeadById(currentProject.id, requestedId)) ?? freshLeads[0] ?? null)
+    : freshLeads[0] ?? null;
 
   const replies = selectedLead
     ? await listLeadReplies(currentProject.id, selectedLead.id)
@@ -67,16 +56,8 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
   const isGenerating = selectedLead?.reply_generation_status === "generating";
 
-  const FILTERS = [
-    { label: "All", value: undefined },
-    { label: "High Intent", value: "high_intent" },
-    { label: "New", value: "new" },
-    { label: "Replied", value: "replied" },
-    { label: "Irrelevant", value: "irrelevant" },
-  ] as const;
-
   const baseHref = (extra?: string) =>
-    `/opportunities?projectId=${currentProject.id}${activeFilter ? `&filter=${activeFilter}` : ""}${extra ?? ""}`;
+    `/opportunities?projectId=${currentProject.id}${extra ?? ""}`;
 
   return (
     <DashboardShell
@@ -100,47 +81,19 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
               Replying to these posts gets your product in front of buyers actively looking for a solution.
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {highIntentCount > 0 && (
-              <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
-                {highIntentCount} high intent
-              </Badge>
-            )}
-            {newFreshCount > 0 && (
-              <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
-                {newFreshCount} new
-              </Badge>
-            )}
-            <Badge variant="outline" className="rounded-[7px] font-extrabold text-[#6B6B6E]">
-              {freshLeads.length} total
-            </Badge>
-          </div>
         </header>
 
         <div className="searchbox-body">
           <section className="opportunity-column" aria-label="Fresh leads">
             <div className="opportunity-toolbar">
-              <div className="filter-row" style={{ marginBottom: 0 }}>
-                {FILTERS.map((f) => {
-                  const isActive = activeFilter === f.value || (!activeFilter && !f.value);
-                  const href = f.value
-                    ? `/opportunities?projectId=${currentProject.id}&filter=${f.value}`
-                    : `/opportunities?projectId=${currentProject.id}`;
-                  return (
-                    <Link key={f.label} href={href} className={`filter-pill${isActive ? " filter-pill-active" : ""}`}>
-                      {f.label}
-                    </Link>
-                  );
-                })}
-              </div>
               <div className="opportunity-count">
-                <span>{filteredLeads.length} posts found</span>
+                <span>{freshLeads.length} posts found</span>
               </div>
             </div>
 
             <div className="opportunity-list">
-              {filteredLeads.length > 0 ? (
-                filteredLeads.map((lead) => (
+              {freshLeads.length > 0 ? (
+                freshLeads.map((lead) => (
                   <LeadCard
                     key={lead.id}
                     lead={lead}
@@ -184,26 +137,23 @@ function LeadCard({
 }) {
   const ageMs = lead.created_at ? Date.now() - new Date(lead.created_at).getTime() : null;
   const ageMinutes = ageMs !== null ? Math.floor(ageMs / 60_000) : null;
-  const postUrl = `https://reddit.com${lead.permalink}`;
+  const postUrl = toRedditUrl(lead.permalink);
   const truncatedUrl = postUrl.length > 52 ? postUrl.slice(0, 49) + "…" : postUrl;
 
   return (
     <Link href={href} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
-      <div className="opportunity-meta" style={{ justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span
-            className="opportunity-dot"
-            style={{
-              background:
-                lead.status === "new" ? "#E07000" :
-                lead.status === "replied" ? "#16A34A" : "#AEAEB2",
-            }}
-          />
-          <span>r/{lead.subreddit}</span>
-          {ageMinutes !== null && <span>{formatAge(ageMinutes)}</span>}
-          {lead.num_comments != null && <span>{lead.num_comments} comments</span>}
-        </div>
-        <ScorePill score={lead.intent_score} />
+      <div className="opportunity-meta">
+        <span
+          className="opportunity-dot"
+          style={{
+            background:
+              lead.status === "new" ? "#E07000" :
+              lead.status === "replied" ? "#16A34A" : "#AEAEB2",
+          }}
+        />
+        <span>r/{lead.subreddit}</span>
+        {ageMinutes !== null && <span>{formatAge(ageMinutes)}</span>}
+        {lead.num_comments != null && <span>{lead.num_comments} comments</span>}
       </div>
 
       <h2 className="opportunity-heading">{lead.title}</h2>
@@ -212,12 +162,15 @@ function LeadCard({
         {truncatedUrl}
       </p>
 
-      {lead.intent_type && <IntentTypePill type={lead.intent_type} />}
-
       {lead.classification_reason && (
-        <p className="opportunity-reason">
-          {lead.classification_reason.slice(0, 110)}
-        </p>
+        <div style={{ marginTop: 5 }}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: "#16A34A" }}>
+            Relevance: {lead.intent_score ?? "–"}
+          </span>
+          <p style={{ fontSize: 11, color: "#16A34A", fontWeight: 500, lineHeight: 1.4, marginTop: 2 }}>
+            {lead.classification_reason.slice(0, 120)}
+          </p>
+        </div>
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
@@ -259,7 +212,7 @@ function LeadDetail({
   const isGenerating = lead.reply_generation_status === "generating";
   const hasFailed = lead.reply_generation_error;
   const returnTo = `/opportunities?projectId=${projectId}&leadId=${lead.id}`;
-  const redditUrl = `https://reddit.com${lead.permalink}`;
+  const redditUrl = toRedditUrl(lead.permalink);
 
   return (
     <section className="detail-pane" aria-label="Lead detail">
@@ -300,24 +253,9 @@ function LeadDetail({
           {lead.title}
         </h2>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
-          {lead.intent_type && <IntentTypePill type={lead.intent_type} />}
-          <span className="intent-badge" style={{
-            background: (lead.intent_score ?? 0) >= 80 ? "#E07000" : (lead.intent_score ?? 0) >= 60 ? "#FF9F40" : "#E5E5EA",
-            color: (lead.intent_score ?? 0) >= 60 ? "#FFF" : "#6B6B6E",
-          }}>
-            🎯 Intent Score: {lead.intent_score ?? "–"}
-          </span>
-          {lead.keywords_matched?.length > 0 && (
-            <span style={{ fontSize: 11, color: "#6B6B6E", fontWeight: 700 }}>
-              Keywords: {lead.keywords_matched.slice(0, 3).join(", ")}{lead.keywords_matched.length > 3 ? ` +${lead.keywords_matched.length - 3}` : ""}
-            </span>
-          )}
-        </div>
-
-        {lead.classification_reason && (
-          <p style={{ fontSize: 13, color: "#6B6B6E", lineHeight: 1.5, marginTop: 14, padding: "10px 14px", background: "#F5F5F3", borderRadius: 8 }}>
-            {lead.classification_reason}
+        {lead.keywords_matched?.length > 0 && (
+          <p style={{ fontSize: 11, color: "#6B6B6E", fontWeight: 700, marginTop: 10 }}>
+            Keywords: {lead.keywords_matched.slice(0, 3).join(", ")}{lead.keywords_matched.length > 3 ? ` +${lead.keywords_matched.length - 3}` : ""}
           </p>
         )}
       </div>
@@ -400,19 +338,6 @@ function IntentTypePill({ type }: { type: string }) {
   );
 }
 
-function ScorePill({ score }: { score: number | null }) {
-  const val = score ?? 0;
-  let bg = "#E5E5EA", color = "#8E8E93";
-  if (val >= 80) { bg = "#E07000"; color = "#FFF"; }
-  else if (val >= 60) { bg = "#FF9F40"; color = "#FFF"; }
-
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 34, padding: "3px 10px", borderRadius: 7, fontSize: 12, fontWeight: 900, background: bg, color }}>
-      {score ?? "–"}
-    </span>
-  );
-}
-
 function StatusPill({ status }: { status: LeadDTO["status"] }) {
   const styles: Record<string, { bg: string; color: string }> = {
     new:        { bg: "#FFF3E8", color: "#C96500" },
@@ -453,12 +378,6 @@ function FlashIcon() {
       <path d="M13 2L4.5 13.5H11L10 22L20 10H13.5L13 2Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
-}
-
-function parseFilter(f?: string): "high_intent" | LeadDTO["status"] | undefined {
-  if (f === "high_intent") return "high_intent";
-  if (f === "new" || f === "replied" || f === "irrelevant") return f;
-  return undefined;
 }
 
 function formatDate(date: string) {

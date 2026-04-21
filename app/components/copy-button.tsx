@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toRedditUrl } from "@/lib/utils";
 
 export function CopyButton({
   text,
@@ -17,7 +18,7 @@ export function CopyButton({
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
     if (permalink) {
-      window.open(`https://reddit.com${permalink}`, "_blank");
+      window.open(toRedditUrl(permalink), "_blank");
     }
   };
 

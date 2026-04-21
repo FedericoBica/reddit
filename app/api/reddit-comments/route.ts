@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 
-export async function GET(req: NextRequest) {
-  const permalink = req.nextUrl.searchParams.get("permalink");
+function toRedditPath(permalink: string): string {
+  if (!permalink.startsWith("http")) return permalink;
+  try { return new URL(permalink).pathname; } catch { return permalink; }
+}
 
-  if (!permalink || !permalink.startsWith("/r/")) {
+export async function GET(req: NextRequest) {
+  const raw = req.nextUrl.searchParams.get("permalink");
+  if (!raw) return NextResponse.json({ error: "Missing permalink" }, { status: 400 });
+
+  const permalink = toRedditPath(raw);
+  if (!permalink.startsWith("/r/")) {
     return NextResponse.json({ error: "Invalid permalink" }, { status: 400 });
   }
 

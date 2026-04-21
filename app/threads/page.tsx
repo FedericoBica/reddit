@@ -11,6 +11,7 @@ import { listProjectLeads } from "@/db/queries/leads";
 import type { LeadDTO, LeadReplyDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
+import { toRedditUrl } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Threads",
@@ -304,7 +305,7 @@ function ThreadDetail({
               {thread.num_comments ?? 0} comentarios
             </span>
             <a
-              href={`https://reddit.com${thread.permalink}`}
+              href={toRedditUrl(thread.permalink)}
               target="_blank"
               rel="noreferrer"
               style={{ color: "#E07000", fontSize: 12, fontWeight: 800, textDecoration: "none", marginLeft: "auto" }}
@@ -372,7 +373,7 @@ function ThreadDetail({
               className="h-8 rounded-[8px] bg-[#1C1C1E] px-3 font-extrabold text-white hover:bg-[#2D2D30]"
             >
               <a
-                href={`https://reddit.com${thread.permalink}`}
+                href={toRedditUrl(thread.permalink)}
                 target="_blank"
                 rel="noreferrer"
               >

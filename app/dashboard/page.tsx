@@ -5,7 +5,6 @@ import { AutoRefresh } from "@/app/components/auto-refresh";
 import { ReplyEditor } from "@/app/components/reply-editor";
 import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getLeadById, listProjectLeads } from "@/db/queries/leads";
 import { listLeadReplies } from "@/db/queries/lead-replies";
@@ -14,6 +13,7 @@ import type { SearchboxResultDTO, LeadReplyDTO, LeadDTO } from "@/db/schemas/dom
 import { generateSearchboxReplyFromForm, updateSearchboxStatusFromForm } from "@/modules/searchbox/actions";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
+import { toRedditUrl } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Searchbox" };
 
@@ -35,34 +35,20 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
 
   const { currentProject, projects } = projectState;
 
-  const activeFilter = parseFilter(params?.filter);
   const sort = params?.sort === "recent" ? "recent" : "relevance";
-
-  const statusFilter =
-    activeFilter === "high_intent" || activeFilter === undefined
-      ? undefined
-      : activeFilter;
 
   const [allResults, allLeads] = await Promise.all([
     listSearchboxResults({ projectId: currentProject.id, sort, limit: 60 }),
     listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
   ]);
 
-  const results =
-    activeFilter === "high_intent"
-      ? allResults.filter((r) => (r.intent_score ?? 0) >= 70)
-      : statusFilter
-        ? allResults.filter((r) => r.status === statusFilter)
-        : allResults;
-
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
   const newResultsCount = allResults.filter((r) => r.status === "new").length;
-  const highIntentCount = allResults.filter((r) => (r.intent_score ?? 0) >= 70).length;
 
   const requestedId = params?.resultId;
   const selectedResult = requestedId
-    ? (await getSearchboxResult(currentProject.id, requestedId)) ?? results[0] ?? null
-    : results[0] ?? null;
+    ? (await getSearchboxResult(currentProject.id, requestedId)) ?? allResults[0] ?? null
+    : allResults[0] ?? null;
 
   let selectedLead: LeadDTO | null = null;
   let replies: LeadReplyDTO[] = [];
@@ -77,16 +63,8 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
   const isGenerating = selectedLead?.reply_generation_status === "generating";
   const isNew = !currentProject.last_searchbox_at;
 
-  const FILTERS = [
-    { label: "All", value: undefined },
-    { label: "High Intent", value: "high_intent" },
-    { label: "New", value: "new" },
-    { label: "Replied", value: "replied" },
-    { label: "Dismissed", value: "dismissed" },
-  ] as const;
-
   const baseHref = (extra?: string) =>
-    `/dashboard?projectId=${currentProject.id}${activeFilter ? `&filter=${activeFilter}` : ""}${sort === "recent" ? "&sort=recent" : ""}${extra ?? ""}`;
+    `/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}${extra ?? ""}`;
 
   return (
     <DashboardShell
@@ -110,40 +88,15 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
               Google already validated them. Replying puts your product in front of buyers searching right now.
             </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            {highIntentCount > 0 && (
-              <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
-                {highIntentCount} high intent
-              </Badge>
-            )}
-            {newResultsCount > 0 && (
-              <Badge variant="outline" className="rounded-[7px] font-extrabold text-[#6B6B6E]">
-                {newResultsCount} new
-              </Badge>
-            )}
-          </div>
         </header>
 
         <div className="searchbox-body">
           <section className="opportunity-column" aria-label="Searchbox results">
             <div className="opportunity-toolbar">
-              <div className="filter-row" style={{ marginBottom: 0 }}>
-                {FILTERS.map((f) => {
-                  const isActive = activeFilter === f.value || (!activeFilter && !f.value);
-                  const href = f.value
-                    ? `/dashboard?projectId=${currentProject.id}&filter=${f.value}${sort === "recent" ? "&sort=recent" : ""}`
-                    : `/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}`;
-                  return (
-                    <Link key={f.label} href={href} className={`filter-pill${isActive ? " filter-pill-active" : ""}`}>
-                      {f.label}
-                    </Link>
-                  );
-                })}
-              </div>
               <div className="opportunity-count">
-                <span>{results.length} posts found</span>
+                <span>{allResults.length} posts found</span>
                 <Link
-                  href={`/dashboard?projectId=${currentProject.id}${activeFilter ? `&filter=${activeFilter}` : ""}&sort=${sort === "recent" ? "relevance" : "recent"}`}
+                  href={`/dashboard?projectId=${currentProject.id}&sort=${sort === "recent" ? "relevance" : "recent"}`}
                   style={{ color: "#E07000", fontSize: 11, fontWeight: 700, textDecoration: "none" }}
                 >
                   {sort === "recent" ? "Sort by Intent" : "Sort by Recent"}
@@ -152,8 +105,8 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
             </div>
 
             <div className="opportunity-list">
-              {results.length > 0 ? (
-                results.map((result) => (
+              {allResults.length > 0 ? (
+                allResults.map((result) => (
                   <ResultCard
                     key={result.id}
                     result={result}
@@ -197,24 +150,21 @@ function ResultCard({
   active: boolean;
   baseHref: string;
 }) {
-  const postUrl = `https://reddit.com${result.permalink}`;
+  const postUrl = toRedditUrl(result.permalink);
   const truncatedUrl = postUrl.length > 52 ? postUrl.slice(0, 49) + "…" : postUrl;
 
   return (
     <Link href={baseHref} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
-      <div className="opportunity-meta" style={{ justifyContent: "space-between" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 7 }}>
-          <span
-            className="opportunity-dot"
-            style={{
-              background: result.status === "new" ? "#E07000" : result.status === "replied" ? "#16A34A" : "#AEAEB2",
-            }}
-          />
-          <span>r/{result.subreddit}</span>
-          <span>{formatRelative(result.created_at)}</span>
-          {result.reddit_num_comments !== null && <span>{result.reddit_num_comments} comments</span>}
-        </div>
-        <ScorePill score={result.intent_score} />
+      <div className="opportunity-meta">
+        <span
+          className="opportunity-dot"
+          style={{
+            background: result.status === "new" ? "#E07000" : result.status === "replied" ? "#16A34A" : "#AEAEB2",
+          }}
+        />
+        <span>r/{result.subreddit}</span>
+        <span>{formatRelative(result.created_at)}</span>
+        {result.reddit_num_comments !== null && <span>{result.reddit_num_comments} comments</span>}
       </div>
 
       <h2 className="opportunity-heading">{result.title}</h2>
@@ -233,9 +183,14 @@ function ResultCard({
       </div>
 
       {result.classification_reason && (
-        <p className="opportunity-reason">
-          {result.classification_reason.slice(0, 110)}
-        </p>
+        <div style={{ marginTop: 5 }}>
+          <span style={{ fontSize: 10, fontWeight: 800, color: "#16A34A" }}>
+            Relevance: {result.intent_score ?? "–"}
+          </span>
+          <p style={{ fontSize: 11, color: "#16A34A", fontWeight: 500, lineHeight: 1.4, marginTop: 2 }}>
+            {result.classification_reason.slice(0, 120)}
+          </p>
+        </div>
       )}
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
@@ -276,7 +231,7 @@ function ResultDetail({
   const isGenerating = lead?.reply_generation_status === "generating";
   const hasFailed = lead?.reply_generation_error;
   const returnTo = `/dashboard?projectId=${projectId}&resultId=${result.id}`;
-  const redditUrl = `https://reddit.com${result.permalink}`;
+  const redditUrl = toRedditUrl(result.permalink);
 
   return (
     <section className="detail-pane" aria-label="Detalle del resultado">
@@ -315,23 +270,11 @@ function ResultDetail({
           {result.title}
         </h2>
 
-        <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <span className="intent-badge" style={{
-            background: (result.intent_score ?? 0) >= 80 ? "#E07000" : (result.intent_score ?? 0) >= 60 ? "#FF9F40" : "#E5E5EA",
-            color: (result.intent_score ?? 0) >= 60 ? "#FFF" : "#6B6B6E",
-          }}>
-            🎯 Intent Score: {result.intent_score ?? "–"}
-          </span>
+        <div style={{ marginTop: 12 }}>
           <span style={{ display: "inline-flex", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 800, background: "#EEF2FF", color: "#4338CA" }}>
             Google #{result.google_rank} · {result.google_keyword}
           </span>
         </div>
-
-        {result.classification_reason && (
-          <p style={{ fontSize: 13, color: "#6B6B6E", lineHeight: 1.5, marginTop: 14, padding: "10px 14px", background: "#F5F5F3", borderRadius: 8 }}>
-            {result.classification_reason}
-          </p>
-        )}
       </div>
 
       {/* Post body */}
@@ -402,19 +345,6 @@ function ResultDetail({
 
 // ── Shared small components ───────────────────────────────────
 
-function ScorePill({ score }: { score: number | null }) {
-  const val = score ?? 0;
-  let bg = "#E5E5EA", color = "#8E8E93";
-  if (val >= 80) { bg = "#E07000"; color = "#FFF"; }
-  else if (val >= 60) { bg = "#FF9F40"; color = "#FFF"; }
-
-  return (
-    <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 34, padding: "3px 10px", borderRadius: 7, fontSize: 12, fontWeight: 900, background: bg, color }}>
-      {score ?? "–"}
-    </span>
-  );
-}
-
 function StatusPill({ status }: { status: SearchboxResultDTO["status"] }) {
   const styles = {
     new:       { bg: "#FFF3E8", color: "#C96500" },
@@ -465,12 +395,6 @@ function SearchIcon() {
       <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
-}
-
-function parseFilter(f?: string): "high_intent" | SearchboxResultDTO["status"] | undefined {
-  if (f === "high_intent") return "high_intent";
-  if (f === "new" || f === "replied" || f === "dismissed") return f;
-  return undefined;
 }
 
 function formatDate(date: string) {

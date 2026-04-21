@@ -18,6 +18,7 @@ import {
   useLeadReplyFromForm,
 } from "@/modules/leads/actions";
 import { requireUser } from "@/modules/auth/server";
+import { toRedditUrl } from "@/lib/utils";
 import { resolveCurrentProject } from "@/modules/projects/current";
 
 export const metadata: Metadata = {
@@ -119,7 +120,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                       </p>
                     </div>
                     <Button asChild variant="outline" className="h-9 rounded-[8px] font-extrabold">
-                      <a href={`https://reddit.com${lead.permalink}`} target="_blank" rel="noreferrer">
+                      <a href={toRedditUrl(lead.permalink)} target="_blank" rel="noreferrer">
                         {t("viewOnReddit")}
                       </a>
                     </Button>

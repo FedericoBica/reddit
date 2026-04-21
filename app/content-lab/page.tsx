@@ -8,6 +8,7 @@ import { listProjectSubredditSuggestions } from "@/db/queries/projects";
 import type { LeadDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
+import { toRedditUrl } from "@/lib/utils";
 import { PostDraftGenerator } from "./post-draft-generator";
 
 export const metadata: Metadata = {
@@ -223,7 +224,7 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
                         {topic.leads.map((lead, j) => (
                           <a
                             key={j}
-                            href={lead.permalink ? `https://reddit.com${lead.permalink}` : "#"}
+                            href={lead.permalink ? toRedditUrl(lead.permalink) : "#"}
                             target="_blank"
                             rel="noopener noreferrer"
                             style={{
