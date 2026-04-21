@@ -983,12 +983,12 @@ textarea:focus-visible {
 }
 
 .detail-content {
-  min-height: 0;
-  overflow-y: auto;
   padding: 22px 28px 28px;
 }
 
 .lead-post {
+  min-height: 0;
+  overflow-y: auto;
   background: #FBFBFA;
   border-top: 1px solid #F0F0EE;
   border-bottom: 1px solid #F0F0EE;
