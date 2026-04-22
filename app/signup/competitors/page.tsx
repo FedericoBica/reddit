@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BrandLink } from "@/app/components/logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
+import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { saveCompetitorsFromSignup } from "@/modules/onboarding/signup-actions";
 import { CompetitorsForm } from "./competitors-form";
 
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 type CompetitorsPageProps = {
-  searchParams?: Promise<{ projectId?: string; error?: string }>;
+  searchParams?: Promise<{ projectId?: string; error?: string; preview?: string }>;
 };
 
 export default async function SignupCompetitorsPage({ searchParams }: CompetitorsPageProps) {
@@ -20,7 +21,13 @@ export default async function SignupCompetitorsPage({ searchParams }: Competitor
   const projectId = params?.projectId ?? "";
 
   if (!user) redirect("/signup");
-  if (!projectId) redirect("/signup/company");
+  if (!projectId) {
+    if (params?.preview === "1" && await isCurrentUserAdmin()) {
+      // Admin preview mode — render UI without a real project
+    } else {
+      redirect("/signup/company");
+    }
+  }
 
   return (
     <main className="signup-wizard-shell">

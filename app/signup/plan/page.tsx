@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BrandLink } from "@/app/components/logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
+import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { choosePlanFromSignup } from "@/modules/onboarding/signup-actions";
 
 export const metadata: Metadata = {
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 type PlanPageProps = {
-  searchParams?: Promise<{ projectId?: string }>;
+  searchParams?: Promise<{ projectId?: string; preview?: string }>;
 };
 
 const plans = [
@@ -25,7 +26,13 @@ export default async function SignupPlanPage({ searchParams }: PlanPageProps) {
   const projectId = params?.projectId ?? "";
 
   if (!user) redirect("/signup");
-  if (!projectId) redirect("/signup/company");
+  if (!projectId) {
+    if (params?.preview === "1" && await isCurrentUserAdmin()) {
+      // Admin preview mode
+    } else {
+      redirect("/signup/company");
+    }
+  }
 
   return (
     <main className="signup-wizard-shell">

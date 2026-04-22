@@ -4,6 +4,7 @@ import { BrandLink } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
+import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { continueToPlan } from "@/modules/onboarding/signup-actions";
 
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
 };
 
 type ValuePageProps = {
-  searchParams?: Promise<{ projectId?: string }>;
+  searchParams?: Promise<{ projectId?: string; preview?: string }>;
 };
 
 export default async function SignupValuePage({ searchParams }: ValuePageProps) {
@@ -20,7 +21,13 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
   const projectId = params?.projectId ?? "";
 
   if (!user) redirect("/signup");
-  if (!projectId) redirect("/signup/company");
+  if (!projectId) {
+    if (params?.preview === "1" && await isCurrentUserAdmin()) {
+      // Admin preview mode
+    } else {
+      redirect("/signup/company");
+    }
+  }
 
   return (
     <main className="signup-wizard-shell">
