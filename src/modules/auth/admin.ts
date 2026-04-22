@@ -19,3 +19,17 @@ export async function requireAdmin() {
 
   return user;
 }
+
+export async function isCurrentUserAdmin(): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+
+  const { data } = await supabase
+    .from("users")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+
+  return data?.is_admin === true;
+}

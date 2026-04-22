@@ -12,6 +12,7 @@ import { listSearchboxResults, getSearchboxResult } from "@/db/queries/searchbox
 import type { SearchboxResultDTO, LeadReplyDTO, LeadDTO } from "@/db/schemas/domain";
 import { generateSearchboxReplyFromForm, updateSearchboxStatusFromForm } from "@/modules/searchbox/actions";
 import { requireUser } from "@/modules/auth/server";
+import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import { toRedditUrl } from "@/lib/utils";
 
@@ -31,7 +32,10 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
   const params = await searchParams;
   const projectState = await resolveCurrentProject(params?.projectId);
 
-  if (projectState.status === "missing") redirect("/signup/company");
+  if (projectState.status === "missing") {
+    if (await isCurrentUserAdmin()) redirect("/admin");
+    redirect("/signup/company");
+  }
 
   const { currentProject, projects } = projectState;
 
