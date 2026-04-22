@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getTranslations } from "next-intl/server";
 import { BrandLink } from "@/app/components/logo";
 import { requireAdmin } from "@/modules/auth/admin";
+import { signOut } from "@/modules/auth/actions";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const [user, t] = await Promise.all([
@@ -48,12 +49,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </nav>
 
         <div style={{ padding: "12px 14px", borderTop: "1px solid #EEEEED", background: "#F2F2F0" }}>
-          <p style={{ fontSize: 11, color: "#AEAEB2", marginBottom: 4, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <p style={{ fontSize: 11, color: "#AEAEB2", marginBottom: 6, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {user.email}
           </p>
-          <Link href="/dashboard" style={{ fontSize: 11, fontWeight: 600, color: "#8E8E93", textDecoration: "underline", textUnderlineOffset: 2 }}>
-            {t("backToDashboard")}
-          </Link>
+          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+            <Link href="/dashboard" style={{ fontSize: 11, fontWeight: 600, color: "#8E8E93", textDecoration: "underline", textUnderlineOffset: 2 }}>
+              {t("backToDashboard")}
+            </Link>
+            <form action={signOut}>
+              <button
+                type="submit"
+                style={{ fontSize: 11, fontWeight: 600, color: "#8E8E93", background: "none", border: "none", cursor: "pointer", padding: 0, textDecoration: "underline", textUnderlineOffset: 2 }}
+              >
+                Sign out
+              </button>
+            </form>
+          </div>
         </div>
       </aside>
 

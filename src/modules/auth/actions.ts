@@ -68,10 +68,19 @@ export async function signInWithGoogle(formData: FormData) {
   const origin = headerStore.get("origin") ?? "http://localhost:3000";
   const supabase = await createSupabaseServerClient();
 
+  // Clear any existing session so the OAuth callback always creates a fresh one
+  // for whichever account the user actually selects.
+  await supabase.auth.signOut();
+
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
       redirectTo: `${origin}/auth/callback?next=${encodeURIComponent(next)}`,
+      queryParams: {
+        // Force Google to show the account picker every time so the selected
+        // account is always the one that ends up signed in.
+        prompt: "select_account",
+      },
     },
   });
 
