@@ -50,7 +50,7 @@ async function resolvePostAuthPath(next: string) {
 }
 
 function sanitizeNextPath(next: string) {
-  if (!next.startsWith("/") || next.startsWith("//")) {
+  if (!next.startsWith("/") || next.startsWith("//") || next === "/") {
     return "/dashboard";
   }
 
