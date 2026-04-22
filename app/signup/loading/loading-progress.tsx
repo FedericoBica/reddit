@@ -1,46 +1,79 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 type LoadingProgressProps = {
   projectId: string;
 };
 
-const steps = [
-  "Learning about you and your competitors",
-  "Looking for relevant posts",
+const STEPS = [
+  "Reading your company profile",
+  "Identifying relevant subreddits",
+  "Scanning recent discussions",
+  "Scoring posts by buying intent",
 ];
+
+const TOTAL_MS = 4000;
+const STEP_INTERVALS = [700, 600, 550, 500];
 
 export function LoadingProgress({ projectId }: LoadingProgressProps) {
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const rafRef = useRef<number>(0);
 
   useEffect(() => {
-    const stepTimer = window.setTimeout(() => {
-      setActiveStep(1);
-    }, 1400);
+    const start = Date.now();
 
-    const redirectTimer = window.setTimeout(() => {
+    const tick = () => {
+      const elapsed = Date.now() - start;
+      const pct = Math.min(100, Math.round((elapsed / TOTAL_MS) * 100));
+      setProgress(pct);
+      if (pct < 100) {
+        rafRef.current = requestAnimationFrame(tick);
+      }
+    };
+    rafRef.current = requestAnimationFrame(tick);
+
+    let elapsed = 0;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    STEP_INTERVALS.forEach((delay, i) => {
+      elapsed += delay;
+      timers.push(setTimeout(() => setActiveStep(i + 1), elapsed));
+    });
+
+    const redirectTimer = setTimeout(() => {
       router.push(`/signup/tutorial?projectId=${encodeURIComponent(projectId)}`);
-    }, 3000);
+    }, TOTAL_MS + 400);
 
     return () => {
-      window.clearTimeout(stepTimer);
-      window.clearTimeout(redirectTimer);
+      cancelAnimationFrame(rafRef.current);
+      timers.forEach(clearTimeout);
+      clearTimeout(redirectTimer);
     };
   }, [projectId, router]);
 
   return (
-    <div className="signup-loading-steps" aria-live="polite">
-      {steps.map((step, index) => (
-        <span
-          className={index <= activeStep ? "signup-loading-step-active" : undefined}
-          key={step}
-        >
-          {step}
-        </span>
-      ))}
+    <div className="signup-scan-panel" aria-live="polite">
+      <div className="signup-scan-bar">
+        <div className="signup-scan-fill" style={{ width: `${progress}%` }} />
+      </div>
+      <div className="signup-scan-steps">
+        {STEPS.map((step, i) => {
+          const done = i < activeStep;
+          const active = i === activeStep;
+          return (
+            <div
+              key={step}
+              className={`signup-scan-step${done ? " signup-scan-step-done" : active ? " signup-scan-step-active" : ""}`}
+            >
+              <span className="signup-scan-dot" />
+              <span>{step}</span>
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }

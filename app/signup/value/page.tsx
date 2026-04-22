@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
 import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { continueToPlan } from "@/modules/onboarding/signup-actions";
+import { ValuePanel } from "./value-panel";
 
 export const metadata: Metadata = {
   title: "Cómo ayuda ReddProwl",
@@ -56,16 +57,17 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
 
             <form action={continueToPlan}>
               <input type="hidden" name="projectId" value={projectId} />
-              <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                Next
+              <Button
+                className="h-11 w-full rounded-[8px] font-extrabold text-sm"
+                type="submit"
+              >
+                Next →
               </Button>
             </form>
           </section>
 
           <aside className="signup-wizard-visual">
-            <FloatingPost subreddit="r/startups" title="Email marketing service for a startup?" score="97" />
-            <FloatingPost subreddit="r/productivity" title="Project management tools comparison?" score="94" />
-            <FloatingPost subreddit="r/agency" title="Agency to manage social media ads?" score="98" />
+            <ValuePanel />
           </aside>
         </CardContent>
       </Card>
@@ -95,12 +97,3 @@ function ValueItem({ title, text }: { title: string; text: string }) {
   );
 }
 
-function FloatingPost({ subreddit, title, score }: { subreddit: string; title: string; score: string }) {
-  return (
-    <div className="signup-floating-post">
-      <span>{subreddit}</span>
-      <strong>{title}</strong>
-      <em>Relevance {score}/100</em>
-    </div>
-  );
-}
