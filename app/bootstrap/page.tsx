@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { listProjectsForCurrentUser } from "@/db/queries/projects";
 import { requireUser } from "@/modules/auth/server";
+import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { createFirstProject } from "@/modules/projects/actions";
 import { BootstrapSubmitButton } from "@/app/projects/new/new-project-buttons";
 
@@ -23,6 +24,10 @@ export default async function BootstrapPage() {
 
   if (projects.length > 0) {
     redirect("/dashboard");
+  }
+
+  if (await isCurrentUserAdmin()) {
+    redirect("/admin");
   }
 
   const steps = t.raw("steps") as string[];

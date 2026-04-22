@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { setProjectOnboardingStatus } from "@/db/mutations/projects";
 import { requireUser } from "@/modules/auth/server";
+import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { resolveCurrentProject } from "@/modules/projects/current";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default async function ProjectOnboardingPage({ searchParams }: Onboarding
   const projectState = await resolveCurrentProject(params?.projectId);
 
   if (projectState.status === "missing") {
+    if (await isCurrentUserAdmin()) redirect("/admin");
     redirect("/signup/company");
   }
 
