@@ -87,7 +87,7 @@ export async function listProjectsDueForSearchbox(): Promise<SearchboxScrapeTarg
 }
 
 const searchboxResultColumns = [
-  "id", "project_id", "reddit_post_id", "google_keyword", "google_rank",
+  "id", "project_id", "reddit_post_id", "google_keyword", "google_keywords", "google_rank",
   "title", "body", "subreddit", "author", "permalink", "url",
   "reddit_score", "reddit_num_comments", "reddit_created_utc",
   "intent_score", "classification_reason", "status", "lead_id",

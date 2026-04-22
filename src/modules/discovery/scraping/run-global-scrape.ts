@@ -26,7 +26,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
   const runId = options.runId ?? crypto.randomUUID();
   const maxProjects = readPositiveIntEnv("SCRAPE_MAX_PROJECTS_PER_RUN", 10);
   const maxPosts = readPositiveIntEnv("SCRAPE_MAX_POSTS_PER_KEYWORD", 25);
-  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 60);
+  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 40);
   const candidates = await listProjectsDueForScraping(maxProjects);
   const now = Date.now();
 
@@ -322,7 +322,7 @@ export async function classifyAndSaveBackfillPosts(
   input: Extract<BackfillFetchResult, { status: "fetched" }>,
 ): Promise<{ projectId: string; status: string; postsSeen: number; leadsCreated: number; duplicatesSkipped: number }> {
   const { projectId, scrapeRunId, runId, posts, keywords, project, scrapeFailCount } = input;
-  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 60);
+  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 40);
   const queries = keywords.map((k) => k.term);
   const keywordTargets: KeywordMatchTarget[] = keywords.map((k) => ({
     term: k.term,

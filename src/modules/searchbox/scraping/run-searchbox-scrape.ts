@@ -8,7 +8,7 @@ import type { RedditPost } from "@/modules/discovery/reddit/types";
 import { searchGoogleForRedditPosts } from "@/modules/searchbox/serp/serp-provider";
 import { fetchRedditPostMetadata } from "@/modules/searchbox/scraping/fetch-reddit-metadata";
 
-const SEARCHBOX_INTENT_THRESHOLD = 60;
+const SEARCHBOX_INTENT_THRESHOLD = 40;
 const MAX_RESULTS_PER_PROJECT = 50;
 
 export async function runSearchboxScrapeForProject(projectId: string) {

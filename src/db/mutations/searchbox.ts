@@ -9,6 +9,7 @@ const searchboxResultDTOColumns = [
   "project_id",
   "reddit_post_id",
   "google_keyword",
+  "google_keywords",
   "google_rank",
   "title",
   "body",
@@ -51,18 +52,27 @@ export async function upsertSearchboxResult(
 ): Promise<{ result: SearchboxResultDTO; isNew: boolean }> {
   const supabase = createSupabaseAdminClient();
 
-  const { data: existing } = await supabase
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = supabase as any;
+
+  const { data: existing } = await sb
     .from("searchbox_results")
-    .select("id, status")
+    .select("id, status, google_keywords")
     .eq("project_id", input.projectId)
     .eq("reddit_post_id", input.redditPostId)
     .maybeSingle();
 
   if (existing) {
-    const { data, error } = await supabase
+    const currentKeywords: string[] = existing.google_keywords ?? [];
+    const mergedKeywords = currentKeywords.includes(input.googleKeyword)
+      ? currentKeywords
+      : [...currentKeywords, input.googleKeyword];
+
+    const { data, error } = await sb
       .from("searchbox_results")
       .update({
         google_keyword: input.googleKeyword,
+        google_keywords: mergedKeywords,
         google_rank: input.googleRank,
         intent_score: input.intentScore,
         classification_reason: input.classificationReason,
@@ -77,12 +87,13 @@ export async function upsertSearchboxResult(
     return { result: data as unknown as SearchboxResultDTO, isNew: false };
   }
 
-  const { data, error } = await supabase
+  const { data, error } = await sb
     .from("searchbox_results")
     .insert({
       project_id: input.projectId,
       reddit_post_id: input.redditPostId,
       google_keyword: input.googleKeyword,
+      google_keywords: [input.googleKeyword],
       google_rank: input.googleRank,
       title: input.title,
       body: input.body,

@@ -157,7 +157,9 @@ export type SearchboxResultDTO = Pick<
   | "first_seen_at"
   | "last_seen_at"
   | "created_at"
->;
+> & {
+  google_keywords: string[];
+};
 
 export type Keyword = Tables<"keywords">;
 export type Subreddit = Tables<"subreddits">;
