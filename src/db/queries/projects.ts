@@ -57,7 +57,7 @@ export async function listProjectsForCurrentUser(): Promise<ProjectDTO[]> {
     .from("projects")
     .select(projectColumns)
     .eq("owner_id", user.id)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: false });
 
   if (error) {
     throw new Error(`Failed to list projects: ${error.message}`);

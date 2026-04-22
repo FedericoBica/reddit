@@ -17,6 +17,7 @@ import {
   removeKeywordFromForm,
   toggleKeywordFromForm,
 } from "@/modules/projects/settings-actions";
+import { deleteProjectFromForm } from "@/modules/projects/delete-actions";
 
 export const metadata: Metadata = {
   title: "Settings",
@@ -83,27 +84,31 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               title="General"
               description="Project identity and company context used across classification, mentions and reply generation."
             >
-              <form action={updateProjectFromForm}>
-                <input type="hidden" name="projectId" value={currentProject.id} />
-                <div style={{ display: "grid", gap: 14 }}>
-                  <FieldRow label="Project name">
-                    <input className="settings-input" name="name" defaultValue={currentProject.name} required />
-                  </FieldRow>
-                  <FieldRow label="Website">
-                    <input className="settings-input" name="websiteUrl" defaultValue={currentProject.website_url ?? ""} placeholder="https://yoursite.com" type="url" />
-                  </FieldRow>
-                  <FieldRow label="Region">
-                    <input className="settings-input" name="region" defaultValue={currentProject.region ?? ""} placeholder="US, LATAM, Global" />
-                  </FieldRow>
-                  <FieldRow label="Company info" vertical>
-                    <textarea className="settings-input" name="valueProposition" defaultValue={currentProject.value_proposition ?? ""} placeholder="What you sell, who it is for, positioning, ICP, use cases and proof points." rows={5} style={{ resize: "vertical" }} />
-                  </FieldRow>
-                  <FieldRow label="App language">
-                    <LocaleSwitcher currentLocale={currentLocale} />
-                  </FieldRow>
-                  <FormFooter label="Save general settings" />
-                </div>
-              </form>
+              <div style={{ display: "grid", gap: 18 }}>
+                <form action={updateProjectFromForm}>
+                  <input type="hidden" name="projectId" value={currentProject.id} />
+                  <div style={{ display: "grid", gap: 14 }}>
+                    <FieldRow label="Project name">
+                      <input className="settings-input" name="name" defaultValue={currentProject.name} required />
+                    </FieldRow>
+                    <FieldRow label="Website">
+                      <input className="settings-input" name="websiteUrl" defaultValue={currentProject.website_url ?? ""} placeholder="https://yoursite.com" type="url" />
+                    </FieldRow>
+                    <FieldRow label="Region">
+                      <input className="settings-input" name="region" defaultValue={currentProject.region ?? ""} placeholder="US, LATAM, Global" />
+                    </FieldRow>
+                    <FieldRow label="Company info" vertical>
+                      <textarea className="settings-input" name="valueProposition" defaultValue={currentProject.value_proposition ?? ""} placeholder="What you sell, who it is for, positioning, ICP, use cases and proof points." rows={5} style={{ resize: "vertical" }} />
+                    </FieldRow>
+                    <FieldRow label="App language">
+                      <LocaleSwitcher currentLocale={currentLocale} />
+                    </FieldRow>
+                    <FormFooter label="Save general settings" />
+                  </div>
+                </form>
+
+                <DangerZone projectId={currentProject.id} projectName={currentProject.name} />
+              </div>
             </SettingsSection>
           )}
 
@@ -331,6 +336,67 @@ function FormFooter({ label }: { label: string }) {
       <button type="submit" className="settings-btn-primary">
         {label}
       </button>
+    </div>
+  );
+}
+
+function DangerZone({
+  projectId,
+  projectName,
+}: {
+  projectId: string;
+  projectName: string;
+}) {
+  return (
+    <div
+      style={{
+        border: "1px solid #FFD1D1",
+        background: "#FFF8F8",
+        borderRadius: 10,
+        padding: "16px 18px",
+      }}
+    >
+      <div style={{ marginBottom: 12 }}>
+        <h3 style={{ fontSize: 13, fontWeight: 800, color: "#8F1D1D", marginBottom: 4 }}>
+          Danger zone
+        </h3>
+        <p style={{ fontSize: 12, color: "#7A3A3A", lineHeight: 1.5 }}>
+          Delete this project and all its keywords, leads, replies, suggestions and scraping history.
+        </p>
+      </div>
+
+      <form action={deleteProjectFromForm} style={{ display: "grid", gap: 10 }}>
+        <input type="hidden" name="projectId" value={projectId} />
+        <label style={{ display: "grid", gap: 6 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#7A3A3A" }}>
+            Type <strong>DELETE</strong> to confirm deletion of {projectName}.
+          </span>
+          <input
+            className="settings-input"
+            name="confirmation"
+            placeholder="DELETE"
+            required
+            autoComplete="off"
+          />
+        </label>
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <button
+            type="submit"
+            style={{
+              border: "1px solid #DC2626",
+              background: "#DC2626",
+              color: "#FFFFFF",
+              borderRadius: 8,
+              padding: "9px 14px",
+              fontSize: 12,
+              fontWeight: 800,
+              cursor: "pointer",
+            }}
+          >
+            Delete project
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

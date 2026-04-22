@@ -103,6 +103,20 @@ export async function updateProject(
   return data;
 }
 
+export async function deleteProject(projectId: string): Promise<void> {
+  const parsedProjectId = projectIdSchema.parse(projectId);
+  const supabase = await createSupabaseServerClient();
+
+  const { error } = await supabase
+    .from("projects")
+    .delete()
+    .eq("id", parsedProjectId);
+
+  if (error) {
+    throw new Error(`Failed to delete project: ${error.message}`);
+  }
+}
+
 export async function setProjectOnboardingStatus(
   projectId: string,
   status: Enums<"project_onboarding_status">,

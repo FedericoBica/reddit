@@ -281,30 +281,35 @@ export async function fetchBackfillPosts(
   });
 
   const queries = target.keywords.map((k) => k.term);
+  // Cap per-query so total requested posts stay ≤ BACKFILL_MAX_POSTS regardless of keyword count.
+  // Apify counts maxPostsCount per search term, not total.
+  const limitPerQuery = Math.max(1, Math.floor(BACKFILL_MAX_POSTS / queries.length));
   const allPosts = provider.searchPostsBatch
     ? await provider.searchPostsBatch({
         queries,
         sort: "relevance",
-        time: "all",
-        limitPerQuery: BACKFILL_MAX_POSTS,
+        time: "month",
+        limitPerQuery,
       })
     : await Promise.all(
         target.keywords.map((k) =>
           provider.searchPosts!({
             query: k.term,
             sort: "relevance",
-            time: "all",
-            limit: BACKFILL_MAX_POSTS,
+            time: "month",
+            limit: limitPerQuery,
           }),
         ),
       ).then((results) => results.flat());
 
   const seen = new Set<string>();
-  const posts = allPosts.filter((p) => {
-    if (seen.has(p.id)) return false;
-    seen.add(p.id);
-    return true;
-  });
+  const posts = allPosts
+    .filter((p) => {
+      if (seen.has(p.id)) return false;
+      seen.add(p.id);
+      return true;
+    })
+    .slice(0, BACKFILL_MAX_POSTS);
 
   return {
     status: "fetched",
@@ -323,7 +328,6 @@ export async function classifyAndSaveBackfillPosts(
 ): Promise<{ projectId: string; status: string; postsSeen: number; leadsCreated: number; duplicatesSkipped: number }> {
   const { projectId, scrapeRunId, runId, posts, keywords, project, scrapeFailCount } = input;
   const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 40);
-  const queries = keywords.map((k) => k.term);
   const keywordTargets: KeywordMatchTarget[] = keywords.map((k) => ({
     term: k.term,
     weight: k.intentCategory === "comparative" ? "high" : "normal",

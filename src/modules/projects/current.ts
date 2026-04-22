@@ -98,3 +98,15 @@ export async function setCurrentProject(projectId: string) {
     maxAge: 60 * 60 * 24 * 365,
   });
 }
+
+export async function clearCurrentProject() {
+  const cookieStore = await cookies();
+
+  cookieStore.set(CURRENT_PROJECT_COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
+}
