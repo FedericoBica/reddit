@@ -75,6 +75,74 @@ export type Database = {
           },
         ]
       }
+      brand_mentions: {
+        Row: {
+          author: string | null
+          body: string | null
+          created_at: string
+          id: string
+          num_comments: number | null
+          permalink: string
+          posted_at: string | null
+          project_id: string
+          reddit_post_id: string
+          reddit_score: number | null
+          sentiment: string
+          sentiment_reason: string | null
+          subreddit: string
+          target_label: string
+          target_type: string
+          title: string
+          url: string | null
+        }
+        Insert: {
+          author?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          num_comments?: number | null
+          permalink: string
+          posted_at?: string | null
+          project_id: string
+          reddit_post_id: string
+          reddit_score?: number | null
+          sentiment?: string
+          sentiment_reason?: string | null
+          subreddit: string
+          target_label: string
+          target_type: string
+          title: string
+          url?: string | null
+        }
+        Update: {
+          author?: string | null
+          body?: string | null
+          created_at?: string
+          id?: string
+          num_comments?: number | null
+          permalink?: string
+          posted_at?: string | null
+          project_id?: string
+          reddit_post_id?: string
+          reddit_score?: number | null
+          sentiment?: string
+          sentiment_reason?: string | null
+          subreddit?: string
+          target_label?: string
+          target_type?: string
+          title?: string
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "brand_mentions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       keywords: {
         Row: {
           created_at: string
@@ -624,6 +692,7 @@ export type Database = {
           created_at: string
           first_seen_at: string
           google_keyword: string
+          google_keywords: string[]
           google_rank: number
           id: string
           intent_score: number | null
@@ -648,6 +717,7 @@ export type Database = {
           created_at?: string
           first_seen_at?: string
           google_keyword: string
+          google_keywords?: string[]
           google_rank: number
           id?: string
           intent_score?: number | null
@@ -672,6 +742,7 @@ export type Database = {
           created_at?: string
           first_seen_at?: string
           google_keyword?: string
+          google_keywords?: string[]
           google_rank?: number
           id?: string
           intent_score?: number | null

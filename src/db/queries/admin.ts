@@ -167,3 +167,40 @@ export async function listAdminScrapeLogs(limit = 100): Promise<AdminScrapeLog[]
     };
   });
 }
+
+// ── Schedule settings ─────────────────────────────────────────
+
+export type ScheduleSettings = {
+  opportunities_hour: number;
+  mentions_hour: number;
+  searchbox_hour: number;
+  searchbox_days: number[];
+};
+
+const SCHEDULE_DEFAULTS: ScheduleSettings = {
+  opportunities_hour: 9,
+  mentions_hour: 10,
+  searchbox_hour: 11,
+  searchbox_days: [1, 15],
+};
+
+export async function getScheduleSettings(): Promise<ScheduleSettings> {
+  const supabase = createSupabaseAdminClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data } = await (supabase as any)
+    .from("admin_settings")
+    .select("value")
+    .eq("key", "scrape_schedule")
+    .single();
+
+  if (!data?.value) return SCHEDULE_DEFAULTS;
+  return { ...SCHEDULE_DEFAULTS, ...(data.value as Partial<ScheduleSettings>) };
+}
+
+export async function saveScheduleSettings(settings: ScheduleSettings): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  await (supabase as any)
+    .from("admin_settings")
+    .upsert({ key: "scrape_schedule", value: settings, updated_at: new Date().toISOString() });
+}

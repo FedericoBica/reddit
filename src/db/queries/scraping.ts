@@ -19,6 +19,7 @@ export type ScrapeTarget = {
     id: string;
     term: string;
     intentCategory: string | null;
+    type: string | null;
   }[];
   subreddits: {
     id: string;
@@ -54,7 +55,7 @@ export async function getProjectForScraping(projectId: string): Promise<ScrapeTa
       .order("created_at", { ascending: true }),
     supabase
       .from("keywords")
-      .select("id, project_id, term, intent_category")
+      .select("id, project_id, term, intent_category, type")
       .eq("project_id", projectId)
       .eq("is_active", true)
       .order("created_at", { ascending: true }),
@@ -66,7 +67,7 @@ export async function getProjectForScraping(projectId: string): Promise<ScrapeTa
 
   return {
     project,
-    keywords: (keywords ?? []).map((k) => ({ id: k.id, term: k.term, intentCategory: k.intent_category ?? null })),
+    keywords: (keywords ?? []).map((k) => ({ id: k.id, term: k.term, intentCategory: k.intent_category ?? null, type: k.type ?? null })),
     subreddits: (subreddits ?? []).map((s) => ({ id: s.id, name: s.name })),
   };
 }
@@ -109,7 +110,7 @@ export async function listProjectsDueForScraping(limit: number): Promise<ScrapeT
       .order("created_at", { ascending: true }),
     supabase
       .from("keywords")
-      .select("id, project_id, term, intent_category")
+      .select("id, project_id, term, intent_category, type")
       .in("project_id", projectIds)
       .eq("is_active", true)
       .order("created_at", { ascending: true }),
@@ -131,6 +132,7 @@ export async function listProjectsDueForScraping(limit: number): Promise<ScrapeT
         id: keyword.id,
         term: keyword.term,
         intentCategory: keyword.intent_category ?? null,
+        type: keyword.type ?? null,
       })),
     subreddits: subreddits
       .filter((subreddit) => subreddit.project_id === project.id)

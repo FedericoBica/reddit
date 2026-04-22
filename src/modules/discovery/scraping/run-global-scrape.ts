@@ -82,7 +82,17 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
         term: k.term,
         weight: k.intentCategory === "comparative" ? "high" : "normal",
       }));
-      const queries = target.keywords.map((k) => k.term);
+      // Competitor keywords are searched exclusively by the Mentions pipeline — exclude them here.
+      const queries = target.keywords.filter((k) => k.type !== "competitor").map((k) => k.term);
+      if (queries.length === 0) {
+        await skipProjectScrapeRun({
+          projectId: target.project.id,
+          scrapeRunId: scrapeRun.id,
+          reason: "No non-competitor keywords configured",
+        });
+        results.push({ projectId: target.project.id, status: "skipped", postsSeen: 0 });
+        continue;
+      }
       const posts = provider.searchPostsBatch
         ? await provider.searchPostsBatch({
             queries,
@@ -267,7 +277,9 @@ export async function fetchBackfillPosts(
   const target = await getProjectForScraping(projectId);
 
   if (!target) return { status: "skipped", reason: "Project not found or inactive" };
-  if (target.keywords.length === 0) return { status: "skipped", reason: "No keywords configured" };
+  // Competitor keywords are searched exclusively by the Mentions pipeline — exclude them here.
+  const queries = target.keywords.filter((k) => k.type !== "competitor").map((k) => k.term);
+  if (queries.length === 0) return { status: "skipped", reason: "No keywords configured" };
   if (!provider.searchPostsBatch && !provider.searchPosts) {
     return { status: "skipped", reason: "Provider does not support keyword search" };
   }
@@ -279,8 +291,6 @@ export async function fetchBackfillPosts(
     subredditsCount: 0,
     metadata: { backfill: true, time_window: "all" },
   });
-
-  const queries = target.keywords.map((k) => k.term);
   // Cap per-query so total requested posts stay ≤ BACKFILL_MAX_POSTS regardless of keyword count.
   // Apify counts maxPostsCount per search term, not total.
   const limitPerQuery = Math.max(1, Math.floor(BACKFILL_MAX_POSTS / queries.length));

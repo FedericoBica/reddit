@@ -11,9 +11,7 @@ export const searchboxWeeklyScan = inngest.createFunction(
       finish: "15m",
     },
     triggers: [
-      {
-        cron: process.env.SEARCHBOX_CRON ?? "0 9 1,15 * *",
-      },
+      { event: "scrape/searchbox.requested" },
     ],
   },
   async ({ step }) => {

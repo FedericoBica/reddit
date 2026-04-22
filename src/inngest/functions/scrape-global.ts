@@ -12,9 +12,7 @@ export const scrapeGlobalProjects = inngest.createFunction(
       finish: "5m",
     },
     triggers: [
-      {
-        cron: process.env.SCRAPE_GLOBAL_CRON ?? "0 9 * * *",
-      },
+      { event: "scrape/opportunities.requested" },
     ],
   },
   async ({ step }) => {

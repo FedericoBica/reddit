@@ -262,6 +262,34 @@ export type LeadDTO = Pick<
 
 export type ReplyStyle = z.infer<typeof replyStyleSchema>;
 
+// ─── Brand Mentions ───────────────────────────────────────────
+
+export const brandMentionSentimentSchema = z.enum(["positive", "negative", "neutral"]);
+export const brandMentionTargetTypeSchema = z.enum(["company", "competitor"]);
+
+export type BrandMentionSentiment = z.infer<typeof brandMentionSentimentSchema>;
+export type BrandMentionTargetType = z.infer<typeof brandMentionTargetTypeSchema>;
+
+export type BrandMentionDTO = {
+  id: string;
+  project_id: string;
+  reddit_post_id: string;
+  target_type: BrandMentionTargetType;
+  target_label: string;
+  title: string;
+  body: string | null;
+  subreddit: string;
+  author: string | null;
+  permalink: string;
+  url: string | null;
+  reddit_score: number;
+  num_comments: number;
+  sentiment: BrandMentionSentiment;
+  sentiment_reason: string | null;
+  posted_at: string | null;
+  created_at: string;
+};
+
 export type LeadReplyDTO = Pick<
   LeadReply,
   | "id"

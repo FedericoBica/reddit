@@ -30,9 +30,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
         <nav style={{ flex: 1, padding: "10px 8px", display: "flex", flexDirection: "column", gap: 2 }}>
           {[
-            { href: "/admin",          label: t("stats")   },
-            { href: "/admin/users",    label: t("users")   },
-            { href: "/admin/scraping", label: t("scraping") },
+            { href: "/admin",           label: t("stats")    },
+            { href: "/admin/users",     label: t("users")    },
+            { href: "/admin/scraping",  label: t("scraping") },
+            { href: "/admin/schedule",  label: "Schedule"    },
           ].map((item) => (
             <Link
               key={item.href}
