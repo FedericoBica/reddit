@@ -43,7 +43,7 @@ export default async function PipelinePage({ searchParams }: PipelinePageProps) 
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
 
   const [allLeads, recentLeads] = await Promise.all([
@@ -72,7 +72,6 @@ export default async function PipelinePage({ searchParams }: PipelinePageProps) 
   return (
     <DashboardShell
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
     >

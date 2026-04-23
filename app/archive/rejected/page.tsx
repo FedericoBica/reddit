@@ -20,7 +20,7 @@ export default async function RejectedArchivePage({ searchParams }: Props) {
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
   const [leads, searchboxResults] = await Promise.all([
     listProjectLeads({ projectId: currentProject.id, status: "irrelevant", limit: 100, page: 0 }),
@@ -28,7 +28,7 @@ export default async function RejectedArchivePage({ searchParams }: Props) {
   ]);
 
   return (
-    <DashboardShell user={user} projects={projects} currentProject={currentProject}>
+    <DashboardShell user={user} currentProject={currentProject}>
       <div className="app-page" style={{ maxWidth: 860, padding: "32px 28px" }}>
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em", color: "#1C1C1E" }}>

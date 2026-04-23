@@ -101,7 +101,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
 
   // Parse month param: "2026-04" or default to current
@@ -149,7 +149,6 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   return (
     <DashboardShell
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
     >

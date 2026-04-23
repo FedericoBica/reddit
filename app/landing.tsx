@@ -541,17 +541,17 @@ function TwoWays() {
     {
       tag: "Inbound",
       title: "Public Reddit posts",
-      desc: "Engage in Reddit threads and mention your product to build authority and drive organic traffic.",
+      desc: "Engage in Reddit threads and mention your product to build brand authority and drive organic traffic.",
       feats: ["AI finds relevant discussions to join", "Get high-quality AI-assisted replies", "Creates SEO and AI search visibility"],
-      cta: "Learn about Inbound",
+      cta: "Learn More About RedProwl Inbound",
       tone: "inbound",
     },
     {
       tag: "Outbound",
       title: "Private Reddit DMs",
-      desc: "Send targeted messages to qualified Reddit users and track every response in one place.",
-      feats: ["Bulk-send DMs with safer guardrails", "Track responses via integrated CRM", "Target by subreddit, karma, and activity"],
-      cta: "Learn about Outbound",
+      desc: "Automatically send targeted messages to dozens of Reddit users at once and close deals.",
+      feats: ["Bulk-send DMs without detection", "Track responses via integrated CRM", "Find leads via targeting specific threads or subreddits"],
+      cta: "Learn More About RedProwl Outbound",
       tone: "outbound",
     },
   ];
@@ -593,19 +593,19 @@ function TwoWays() {
 
 function Comparison() {
   const manual = [
-    "Do keyword research manually for 1-2 hours",
-    "Skim hundreds of Google results",
-    "Hunt high-ranking Reddit posts by hand",
-    "Pay for Ahrefs or SEMrush",
-    "Read through dozens of irrelevant posts",
-    "Write authentic replies from scratch",
-    "Miss time-sensitive opportunities daily",
-    "Forget which posts you already replied to",
+    "Do keyword research manually (1-2 hours)",
+    "Skim hundreds of Google search results (2-3 hours)",
+    "Find high-ranking Reddit posts manually (1-2 hours)",
+    "Pay for expensive SEO tools ($120+/month minimum)",
+    "Read through hundreds of irrelevant posts (2-3 hours)",
+    "Write authentic replies manually (1-2 hours)",
+    "Miss time-sensitive opportunities (daily)",
+    "Can't track posts you already replied to (ongoing confusion)",
   ];
   const prowl = [
-    ["Set up your project in 2 minutes", "Drop your website URL. AI extracts your ICP, keywords, and niche automatically."],
-    ["Get high-intent opportunities", "AI tracks indexed Reddit posts and brand mentions as soon as something high-fit goes live."],
-    ["Invest 20 minutes a day", "Review the curated queue and reply. Effective growth with minimal time."],
+    ["Create your project in 2 minutes", "Simply add your website & competitors. Redreach AI automatically finds the most relevant keywords for your business and niche."],
+    ["Get high-ranking Reddit opportunities", "AI tracks search engine indexed Reddit posts and brand mentions inside Reddit comments to surface highly-ranking Reddit posts to engage with. You'll be alerted for new time-sensitive opportunities."],
+    ["Invest just 20 minutes a day", "Review curated opportunities and engage authentically. Highly effective marketing with minimal time investment."],
   ];
 
   return (
@@ -616,7 +616,7 @@ function Comparison() {
           Finding customers feels too hard?<br />
           <em>RedProwl is the better way.</em>
         </h2>
-        <p className="sub">Stop burning hours on Reddit searches. Start joining high-intent conversations that convert.</p>
+        <p className="sub">Stop wasting hours searching customers on Reddit manually and start finding high-intent conversations that actually convert. RedProwl is your Reddit Marketing OS.</p>
 
         <div className="comparison-grid">
           <div className="comparison-card manual">
@@ -626,7 +626,19 @@ function Comparison() {
                 <li key={item}><span>×</span>{item}</li>
               ))}
             </ul>
-            <div>2-3 hours daily plus expensive tooling</div>
+            <div
+              style={{
+                marginTop: 18,
+                padding: "14px 16px",
+                borderRadius: 12,
+                background: "#FEE2E2",
+                border: "1px solid #FCA5A5",
+                color: "#B91C1C",
+                fontWeight: 700,
+              }}
+            >
+              2-3 hours daily plus expensive tooling
+            </div>
           </div>
           <div className="comparison-card prowl">
             <h3>With <span>RedProwl</span></h3>
@@ -638,7 +650,19 @@ function Comparison() {
                 </li>
               ))}
             </ul>
-            <div>Effective growth marketing in 20 min/day</div>
+            <div
+              style={{
+                marginTop: 18,
+                padding: "14px 16px",
+                borderRadius: 12,
+                background: "#DCFCE7",
+                border: "1px solid #86EFAC",
+                color: "#166534",
+                fontWeight: 700,
+              }}
+            >
+              Effective growth marketing in 20 min/day
+            </div>
           </div>
         </div>
       </div>
@@ -716,7 +740,7 @@ function SeoAiSearch() {
             <b>reddit.com / r/marketing</b>
             <strong>Best email marketing tool for startups in 2026?</strong>
             <p>I have tried MailChimp but it is too expensive. What do you recommend for...</p>
-            <blockquote><b>Your Comment:</b> We switched to <b>YourProduct</b> last month and it has been great.</blockquote>
+            <blockquote><b>Your Comment:</b> We switched to YourProduct last month and it has been great.</blockquote>
           </div>
           <div className="search-result ai">
             <div className="mono">AI Search / ChatGPT</div>
@@ -726,9 +750,9 @@ function SeoAiSearch() {
         </div>
         <div>
           <span className="chip">🎯 AI SEO & Parasite SEO</span>
-          <h2 className="h-section">Rank on Google and influence AI search <em>with Reddit</em>.</h2>
+          <h2 className="h-section">Rank on Google & Influence AI Search <em>with Reddit</em>.</h2>
           <p className="sub">
-            Piggyback on Reddit&apos;s domain authority to rank on Google and become the source AI search tools cite.
+            Stop fighting for backlinks. Piggyback on Reddit&apos;s Domain Authority to rank #1 on Google and become the cited source for ChatGPT and Perplexity.
           </p>
           <ul className="seo-list">
             <li><span>✓</span>Find Reddit threads already ranking on Google&apos;s first page</li>
@@ -800,7 +824,7 @@ function HowItWorks() {
     {
       n: "03",
       t: "Get highly relevant posts",
-      d: "GEt a list of the most relevant Reddit posts where you can comment your business. The posts are actually being read by your target audience and not just random guesses.",
+      d: "Get a list of the most relevant Reddit posts where you can comment your business. The posts are actually being read by your target audience and not just random guesses.",
     },
   ];
 

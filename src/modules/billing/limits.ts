@@ -5,7 +5,6 @@ export type KeywordSearchTimeWindow = "hour" | "day" | "week" | "month" | "year"
 export type ProjectLimit = {
   plan: BillingPlan;
   label: string;
-  maxProjects: number | null;
   maxKeywords: number | null;
   maxCompetitors: number | null;
   scrapeIntervalHours: number;
@@ -27,7 +26,6 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
   startup: {
     plan: "startup",
     label: "Startup",
-    maxProjects: 1,
     maxKeywords: 20,
     maxCompetitors: 3,
     scrapeIntervalHours: 168,
@@ -47,7 +45,6 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
   growth: {
     plan: "growth",
     label: "Growth",
-    maxProjects: 2,
     maxKeywords: 40,
     maxCompetitors: 6,
     scrapeIntervalHours: 24,
@@ -67,7 +64,6 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
   professional: {
     plan: "professional",
     label: "Professional",
-    maxProjects: 3,
     maxKeywords: 60,
     maxCompetitors: 8,
     scrapeIntervalHours: 24,
@@ -110,14 +106,3 @@ export function parseBillingPlan(value: string | null | undefined): BillingPlan 
   return null;
 }
 
-export function canCreateProject(projectCount: number, limit = getEffectiveProjectLimit()) {
-  return limit.maxProjects === null || projectCount < limit.maxProjects;
-}
-
-export function formatProjectUsage(projectCount: number, limit = getEffectiveProjectLimit()) {
-  if (limit.maxProjects === null) {
-    return `${projectCount} proyectos`;
-  }
-
-  return `${projectCount}/${limit.maxProjects} proyectos`;
-}

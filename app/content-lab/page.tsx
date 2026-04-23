@@ -106,7 +106,7 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
 
   const [leads, subredditSuggestions, t] = await Promise.all([
@@ -121,7 +121,7 @@ export default async function ContentLabPage({ searchParams }: ContentLabPagePro
   const cooldowns = buildSubredditCooldowns(leads);
 
   return (
-    <DashboardShell user={user} currentProject={currentProject} projects={projects}>
+    <DashboardShell user={user} currentProject={currentProject}>
       <div className="app-page" style={{ minHeight: "100vh" }}>
         <header className="page-header">
           <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 16 }}>

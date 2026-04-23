@@ -33,7 +33,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
   const plan = await getCurrentBillingPlan();
   const windowHours = plan.keywordSearchTimeWindow === "week" ? 168 : 24;
@@ -62,7 +62,6 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
   return (
     <DashboardShell
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
     >

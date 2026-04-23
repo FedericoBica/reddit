@@ -15,8 +15,6 @@ import {
   listProjectsForCurrentUser,
 } from "@/db/queries/projects";
 import { inngest } from "@/inngest/client";
-import { getCurrentBillingPlan } from "@/modules/billing/current";
-import { canCreateProject } from "@/modules/billing/limits";
 import { requireUser } from "@/modules/auth/server";
 import { analyzeCompanyWithAI, fetchWebsiteText } from "@/modules/onboarding/company-analyzer";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
@@ -39,15 +37,6 @@ export async function createFirstProject(formData: FormData) {
 
 export async function analyzeNewProjectWebsite(formData: FormData) {
   await requireUser("/projects/new");
-
-  const projects = await listProjectsForCurrentUser();
-  const limit = await getCurrentBillingPlan();
-
-  if (!canCreateProject(projects.length, limit)) {
-    redirect(
-      `/projects/new?error=${encodeURIComponent(`Tu plan ${limit.label} permite hasta ${limit.maxProjects} proyectos.`)}`,
-    );
-  }
 
   const website = String(formData.get("website") ?? "").trim();
   let draftUrl = "";
@@ -88,15 +77,6 @@ export async function confirmNewProjectDescription(formData: FormData) {
 
 export async function createAdditionalProjectFromProfile(formData: FormData) {
   const user = await requireUser("/projects/new");
-
-  const projects = await listProjectsForCurrentUser();
-  const limit = await getCurrentBillingPlan();
-
-  if (!canCreateProject(projects.length, limit)) {
-    redirect(
-      `/projects/new?error=${encodeURIComponent(`Tu plan ${limit.label} permite hasta ${limit.maxProjects} proyectos.`)}`,
-    );
-  }
 
   const website = String(formData.get("website") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();

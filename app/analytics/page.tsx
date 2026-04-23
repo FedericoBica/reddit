@@ -21,7 +21,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
 
   const allLeads = await listAllProjectLeads(currentProject.id, 500);
@@ -37,7 +37,6 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   return (
     <DashboardShell
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
     >

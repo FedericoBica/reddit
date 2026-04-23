@@ -30,7 +30,7 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
   const [recentLeads, keywords, allMentions] = await Promise.all([
     listProjectLeads({ projectId: currentProject.id, limit: 50, page: 0 }),
@@ -55,7 +55,6 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
   return (
     <DashboardShell
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
     >

@@ -37,7 +37,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
     redirect("/signup/company");
   }
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
   const sort = params?.sort === "recent" ? "recent" : "relevance";
 
@@ -73,7 +73,6 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
   return (
     <DashboardShell
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
       newSearchboxCount={newResultsCount}

@@ -6,36 +6,30 @@ import { ProjectSwitcher } from "./project-switcher";
 import { PushNotificationToggle } from "./push-notification-toggle";
 import { SidebarLinks } from "./sidebar-links";
 import { signOut } from "@/modules/auth/actions";
-import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { ProjectDTO } from "@/db/schemas/domain";
 
 export function DashboardShell({
   user,
-  projects,
   currentProject,
   newLeadsCount,
   newSearchboxCount,
   children,
 }: {
   user: User;
-  projects: ProjectDTO[];
   currentProject: ProjectDTO;
   newLeadsCount?: number;
   newSearchboxCount?: number;
   children: React.ReactNode;
 }) {
-  const billingLimitPromise = getCurrentBillingPlan();
   const isAdminPromise = checkIsAdmin(user.id);
 
   return (
     <DashboardShellContent
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
       newSearchboxCount={newSearchboxCount}
-      billingLimitPromise={billingLimitPromise}
       isAdminPromise={isAdminPromise}
     >
       {children}
@@ -55,25 +49,20 @@ async function checkIsAdmin(userId: string): Promise<boolean> {
 
 async function DashboardShellContent({
   user,
-  projects,
   currentProject,
   newLeadsCount,
   newSearchboxCount,
-  billingLimitPromise,
   isAdminPromise,
   children,
 }: {
   user: User;
-  projects: ProjectDTO[];
   currentProject: ProjectDTO;
   newLeadsCount?: number;
   newSearchboxCount?: number;
-  billingLimitPromise: ReturnType<typeof getCurrentBillingPlan>;
   isAdminPromise: Promise<boolean>;
   children: React.ReactNode;
 }) {
-  const [billingLimit, isAdmin, t] = await Promise.all([
-    billingLimitPromise,
+  const [isAdmin, t] = await Promise.all([
     isAdminPromise,
     getTranslations("nav"),
   ]);
@@ -112,11 +101,7 @@ async function DashboardShellContent({
             style={{ gap: 6, marginBottom: 12, padding: "0 3px" }}
           />
 
-          <ProjectSwitcher
-            projects={projects}
-            currentProject={currentProject}
-            billingLimit={billingLimit}
-          />
+          <ProjectSwitcher currentProject={currentProject} />
         </div>
 
         {/* Nav links */}

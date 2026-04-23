@@ -31,7 +31,7 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
 
   const [threads, allLeads] = await Promise.all([
@@ -52,7 +52,6 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
   return (
     <DashboardShell
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
     >

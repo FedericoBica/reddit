@@ -34,7 +34,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
 
 
   const [currentLocale, t, keywords, subreddits, billingPlan] = await Promise.all([
@@ -55,7 +55,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   return (
     <DashboardShell
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={0}
     >
@@ -200,9 +199,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               title="Billing"
               description="Current plan limits and included capabilities."
             >
-              <div className="metric-grid" style={{ gridTemplateColumns: "repeat(3, minmax(0, 1fr))", marginBottom: 18 }}>
+              <div className="metric-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginBottom: 18 }}>
                 <BillingMetric label="Plan" value={billingPlan.label} />
-                <BillingMetric label="Projects" value={formatLimit(projects.length, billingPlan.maxProjects)} />
                 <BillingMetric label="AI replies" value={formatLimit(0, billingPlan.maxAiRepliesPerMonth)} />
               </div>
               <div style={{ display: "grid", gap: 8 }}>

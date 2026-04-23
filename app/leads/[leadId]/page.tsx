@@ -46,7 +46,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
     redirect("/bootstrap");
   }
 
-  const { currentProject, projects } = projectState;
+  const { currentProject } = projectState;
   const [lead, replies, recentLeads] = await Promise.all([
     getLeadById(currentProject.id, leadId),
     listLeadReplies(currentProject.id, leadId),
@@ -69,7 +69,6 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
   return (
     <DashboardShell
       user={user}
-      projects={projects}
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
     >
