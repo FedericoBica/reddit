@@ -19,12 +19,15 @@ import { KeywordsPillCollapsible } from "./keywords-pill-collapsible";
 
 export const metadata: Metadata = { title: "Searchbox" };
 
+const PAGE_SIZE = 8;
+
 type SearchboxPageProps = {
   searchParams?: Promise<{
     projectId?: string;
     resultId?: string;
     filter?: string;
     sort?: string;
+    page?: string;
   }>;
 };
 
@@ -54,6 +57,15 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
   const selectedResult = requestedId
     ? (await getSearchboxResult(currentProject.id, requestedId)) ?? allResults[0] ?? null
     : allResults[0] ?? null;
+
+  const pageFromParam = Math.max(0, parseInt(params?.page ?? "0") || 0);
+  const selectedIndex = selectedResult ? allResults.findIndex((r) => r.id === selectedResult?.id) : -1;
+  const autoPage = selectedIndex >= 0 ? Math.floor(selectedIndex / PAGE_SIZE) : 0;
+  const currentPage = params?.resultId && !params?.page
+    ? autoPage
+    : Math.min(pageFromParam, Math.max(0, Math.ceil(allResults.length / PAGE_SIZE) - 1));
+  const totalPages = Math.max(1, Math.ceil(allResults.length / PAGE_SIZE));
+  const paginatedResults = allResults.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   let selectedLead: LeadDTO | null = null;
   let replies: LeadReplyDTO[] = [];
@@ -110,7 +122,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
 
             <div className="opportunity-list">
               {allResults.length > 0 ? (
-                allResults.map((result) => (
+                paginatedResults.map((result) => (
                   <ResultCard
                     key={result.id}
                     result={result}
@@ -123,10 +135,33 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
               )}
             </div>
 
-            <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", color: "#AEAEB2", fontSize: 11, fontWeight: 700 }}>
-              {currentProject.last_searchbox_at
-                ? `Last scan ${formatDate(currentProject.last_searchbox_at)}`
-                : "Scan pending — runs every 2 weeks"}
+            <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <span style={{ color: "#AEAEB2", fontSize: 11, fontWeight: 700 }}>
+                {currentProject.last_searchbox_at
+                  ? `Last scan ${formatDate(currentProject.last_searchbox_at)}`
+                  : "Scan pending — runs every 2 weeks"}
+              </span>
+              {totalPages > 1 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {currentPage > 0 ? (
+                    <Link
+                      href={`/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}&page=${currentPage - 1}`}
+                      style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 6px", borderRadius: 5, border: "1px solid #E07000" }}
+                    >
+                      ←
+                    </Link>
+                  ) : <span style={{ width: 26 }} />}
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6E" }}>{currentPage + 1}/{totalPages}</span>
+                  {currentPage < totalPages - 1 ? (
+                    <Link
+                      href={`/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}&page=${currentPage + 1}`}
+                      style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 6px", borderRadius: 5, border: "1px solid #E07000" }}
+                    >
+                      →
+                    </Link>
+                  ) : <span style={{ width: 26 }} />}
+                </div>
+              )}
             </div>
           </section>
 
@@ -195,12 +230,14 @@ function ResultCard({
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-        <StatusPill status={result.status} />
-        {result.reddit_score !== null && (
-          <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>▲ {result.reddit_score}</span>
-        )}
-      </div>
+      {(result.status !== "new" || result.reddit_score !== null) && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+          {result.status !== "new" ? <StatusPill status={result.status} /> : <span />}
+          {result.reddit_score !== null && (
+            <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>▲ {result.reddit_score}</span>
+          )}
+        </div>
+      )}
     </Link>
   );
 }

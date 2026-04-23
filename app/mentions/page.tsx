@@ -14,12 +14,15 @@ export const metadata: Metadata = {
   title: "Mentions",
 };
 
+const PAGE_SIZE = 8;
+
 type MentionsPageProps = {
   searchParams?: Promise<{
     projectId?: string;
     target?: string;
     sentiment?: string;
     sort?: string;
+    page?: string;
   }>;
 };
 
@@ -51,6 +54,11 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
 
   const sentimentStats = computeSentimentStats(targetMentions);
   const targetOptions = buildTargetOptions(currentProject.id, currentProject.name, competitors, selectedTarget);
+
+  const currentPage = Math.max(0, parseInt(params?.page ?? "0") || 0);
+  const totalPages = Math.max(1, Math.ceil(sortedMentions.length / PAGE_SIZE));
+  const safePage = Math.min(currentPage, totalPages - 1);
+  const paginatedMentions = sortedMentions.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
   return (
     <DashboardShell
@@ -97,11 +105,34 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
                 <p className="section-title">No mentions with this filter</p>
               </div>
             ) : (
-              <div className="opportunity-list" style={{ overflowY: "visible", padding: 0 }}>
-                {sortedMentions.map((mention) => (
-                  <MentionCard key={`${mention.id}`} mention={mention} />
-                ))}
-              </div>
+              <>
+                <div className="opportunity-list" style={{ overflowY: "visible", padding: 0 }}>
+                  {paginatedMentions.map((mention) => (
+                    <MentionCard key={`${mention.id}`} mention={mention} />
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, padding: "0 2px" }}>
+                    {safePage > 0 ? (
+                      <Link
+                        href={buildHref({ projectId: currentProject.id, target: selectedTarget, sentiment: selectedSentiment === "all" ? undefined : selectedSentiment, sort: selectedSort === "recent" ? "recent" : undefined, page: safePage - 1 })}
+                        style={{ fontSize: 12, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid #E07000" }}
+                      >
+                        ← Prev
+                      </Link>
+                    ) : <span />}
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#6B6B6E" }}>{safePage + 1} / {totalPages}</span>
+                    {safePage < totalPages - 1 ? (
+                      <Link
+                        href={buildHref({ projectId: currentProject.id, target: selectedTarget, sentiment: selectedSentiment === "all" ? undefined : selectedSentiment, sort: selectedSort === "recent" ? "recent" : undefined, page: safePage + 1 })}
+                        style={{ fontSize: 12, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid #E07000" }}
+                      >
+                        Next →
+                      </Link>
+                    ) : <span />}
+                  </div>
+                )}
+              </>
             )}
           </div>
         )}
@@ -273,11 +304,12 @@ function MonitorIcon() {
 
 // ── Helpers ────────────────────────────────────────────────────
 
-function buildHref({ projectId, target, sentiment, sort }: { projectId: string; target: string; sentiment?: string; sort?: string }) {
+function buildHref({ projectId, target, sentiment, sort, page }: { projectId: string; target: string; sentiment?: string; sort?: string; page?: number }) {
   const p = new URLSearchParams({ projectId });
   if (target && target !== "all") p.set("target", target);
   if (sentiment) p.set("sentiment", sentiment);
   if (sort) p.set("sort", sort);
+  if (page != null && page > 0) p.set("page", String(page));
   return `/mentions?${p.toString()}`;
 }
 

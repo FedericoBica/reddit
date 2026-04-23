@@ -22,8 +22,10 @@ export const metadata: Metadata = {
   title: "New Opportunities",
 };
 
+const PAGE_SIZE = 8;
+
 type OpportunitiesPageProps = {
-  searchParams?: Promise<{ projectId?: string; leadId?: string; filter?: string }>;
+  searchParams?: Promise<{ projectId?: string; leadId?: string; filter?: string; page?: string }>;
 };
 
 export default async function OpportunitiesPage({ searchParams }: OpportunitiesPageProps) {
@@ -55,6 +57,15 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
     : [];
 
   const isGenerating = selectedLead?.reply_generation_status === "generating";
+
+  const pageFromParam = Math.max(0, parseInt(params?.page ?? "0") || 0);
+  const selectedIndex = selectedLead ? freshLeads.findIndex((l) => l.id === selectedLead?.id) : -1;
+  const autoPage = selectedIndex >= 0 ? Math.floor(selectedIndex / PAGE_SIZE) : 0;
+  const currentPage = params?.leadId && !params?.page
+    ? autoPage
+    : Math.min(pageFromParam, Math.max(0, Math.ceil(freshLeads.length / PAGE_SIZE) - 1));
+  const totalPages = Math.max(1, Math.ceil(freshLeads.length / PAGE_SIZE));
+  const paginatedLeads = freshLeads.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   const baseHref = (extra?: string) =>
     `/opportunities?projectId=${currentProject.id}${extra ?? ""}`;
@@ -92,7 +103,7 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
             <div className="opportunity-list">
               {freshLeads.length > 0 ? (
-                freshLeads.map((lead) => (
+                paginatedLeads.map((lead) => (
                   <LeadCard
                     key={lead.id}
                     lead={lead}
@@ -105,10 +116,33 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
               )}
             </div>
 
-            <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", color: "#AEAEB2", fontSize: 11, fontWeight: 700 }}>
-              {currentProject.last_scraped_at
-                ? `Last scan ${formatDate(currentProject.last_scraped_at)}`
-                : "Scan pending"}
+            <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <span style={{ color: "#AEAEB2", fontSize: 11, fontWeight: 700 }}>
+                {currentProject.last_scraped_at
+                  ? `Last scan ${formatDate(currentProject.last_scraped_at)}`
+                  : "Scan pending"}
+              </span>
+              {totalPages > 1 && (
+                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                  {currentPage > 0 ? (
+                    <Link
+                      href={`/opportunities?projectId=${currentProject.id}&page=${currentPage - 1}`}
+                      style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 6px", borderRadius: 5, border: "1px solid #E07000" }}
+                    >
+                      ←
+                    </Link>
+                  ) : <span style={{ width: 26 }} />}
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6E" }}>{currentPage + 1}/{totalPages}</span>
+                  {currentPage < totalPages - 1 ? (
+                    <Link
+                      href={`/opportunities?projectId=${currentProject.id}&page=${currentPage + 1}`}
+                      style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 6px", borderRadius: 5, border: "1px solid #E07000" }}
+                    >
+                      →
+                    </Link>
+                  ) : <span style={{ width: 26 }} />}
+                </div>
+              )}
             </div>
           </section>
 
@@ -172,12 +206,14 @@ function LeadCard({
         </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-        <StatusPill status={lead.status} />
-        {(lead.score ?? 0) > 0 && (
-          <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>▲ {lead.score}</span>
-        )}
-      </div>
+      {(lead.status !== "new" || (lead.score ?? 0) > 0) && (
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
+          {lead.status !== "new" ? <StatusPill status={lead.status} /> : <span />}
+          {(lead.score ?? 0) > 0 && (
+            <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>▲ {lead.score}</span>
+          )}
+        </div>
+      )}
     </Link>
   );
 }
