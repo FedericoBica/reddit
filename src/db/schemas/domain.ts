@@ -191,6 +191,7 @@ export type ProjectDTO = Pick<
   | "suggestions_error"
   | "last_scraped_at"
   | "last_searchbox_at"
+  | "last_mentions_scraped_at"
   | "scrape_fail_count"
   | "scrape_backoff_until"
   | "last_scrape_error"
