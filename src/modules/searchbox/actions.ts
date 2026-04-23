@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { inngest } from "@/inngest/client";
 import { createLeadFromSearchboxResult, updateSearchboxResultStatus } from "@/db/mutations/searchbox";
 import { getSearchboxResult } from "@/db/queries/searchbox";
@@ -40,9 +41,11 @@ export async function updateSearchboxStatusFromForm(formData: FormData) {
 
   const projectId = String(formData.get("projectId") ?? "");
   const resultId = String(formData.get("resultId") ?? "");
+  const returnTo = String(formData.get("returnTo") ?? "");
   const status = searchboxResultStatusSchema.parse(String(formData.get("status") ?? ""));
 
   await updateSearchboxResultStatus({ resultId, projectId, status });
 
   revalidatePath("/dashboard");
+  if (returnTo) redirect(returnTo);
 }

@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   title: "New Opportunities",
 };
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 type OpportunitiesPageProps = {
   searchParams?: Promise<{ projectId?: string; leadId?: string; filter?: string; page?: string }>;
@@ -40,11 +40,12 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
   const plan = await getCurrentBillingPlan();
   const windowHours = plan.keywordSearchTimeWindow === "week" ? 168 : 24;
 
-  const [freshLeads, allLeads] = await Promise.all([
+  const [freshLeadsRaw, allLeads] = await Promise.all([
     listFreshProjectLeads(currentProject.id, windowHours, 100),
     listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
   ]);
 
+  const freshLeads = freshLeadsRaw.filter((l) => l.status !== "irrelevant");
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
 
   const requestedId = params?.leadId;
@@ -116,34 +117,27 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
               )}
             </div>
 
-            <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <span style={{ color: "#AEAEB2", fontSize: 11, fontWeight: 700 }}>
-                {currentProject.last_scraped_at
-                  ? `Last scan ${formatDate(currentProject.last_scraped_at)}`
-                  : "Scan pending"}
-              </span>
-              {totalPages > 1 && (
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  {currentPage > 0 ? (
-                    <Link
-                      href={`/opportunities?projectId=${currentProject.id}&page=${currentPage - 1}`}
-                      style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 6px", borderRadius: 5, border: "1px solid #E07000" }}
-                    >
-                      ←
-                    </Link>
-                  ) : <span style={{ width: 26 }} />}
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6E" }}>{currentPage + 1}/{totalPages}</span>
-                  {currentPage < totalPages - 1 ? (
-                    <Link
-                      href={`/opportunities?projectId=${currentProject.id}&page=${currentPage + 1}`}
-                      style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 6px", borderRadius: 5, border: "1px solid #E07000" }}
-                    >
-                      →
-                    </Link>
-                  ) : <span style={{ width: 26 }} />}
-                </div>
-              )}
-            </div>
+            {totalPages > 1 && (
+              <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
+                {currentPage > 0 ? (
+                  <Link
+                    href={`/opportunities?projectId=${currentProject.id}&page=${currentPage - 1}`}
+                    style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 8px", borderRadius: 5, border: "1px solid #E07000" }}
+                  >
+                    ←
+                  </Link>
+                ) : <span style={{ width: 30 }} />}
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6E" }}>{currentPage + 1} / {totalPages}</span>
+                {currentPage < totalPages - 1 ? (
+                  <Link
+                    href={`/opportunities?projectId=${currentProject.id}&page=${currentPage + 1}`}
+                    style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 8px", borderRadius: 5, border: "1px solid #E07000" }}
+                  >
+                    →
+                  </Link>
+                ) : <span style={{ width: 30 }} />}
+              </div>
+            )}
           </section>
 
           <LeadDetail
@@ -170,8 +164,6 @@ function LeadCard({
 }) {
   const ageMs = lead.created_at ? Date.now() - new Date(lead.created_at).getTime() : null;
   const ageMinutes = ageMs !== null ? Math.floor(ageMs / 60_000) : null;
-  const postUrl = toRedditUrl(lead.permalink);
-  const truncatedUrl = postUrl.length > 52 ? postUrl.slice(0, 49) + "…" : postUrl;
 
   return (
     <Link href={href} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
@@ -190,10 +182,6 @@ function LeadCard({
       </div>
 
       <h2 className="opportunity-heading">{lead.title}</h2>
-
-      <p style={{ fontSize: 10, color: "#AEAEB2", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {truncatedUrl}
-      </p>
 
       {lead.classification_reason && (
         <div style={{ marginTop: 5 }}>
@@ -266,7 +254,7 @@ function LeadDetail({
             <input type="hidden" name="projectId" value={projectId} />
             <input type="hidden" name="leadId" value={lead.id} />
             <input type="hidden" name="status" value="irrelevant" />
-            <input type="hidden" name="returnTo" value={returnTo} />
+            <input type="hidden" name="returnTo" value={`/opportunities?projectId=${projectId}`} />
             <button className="btn-reject" type="submit">Reject Post</button>
           </form>
           <form action={updateLeadStatusFromForm}>

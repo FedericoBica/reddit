@@ -1369,9 +1369,7 @@ textarea:focus-visible {
 }
 
 .detail-content {
-  flex: 0 1 auto;
-  min-height: 0;
-  overflow: hidden;
+  flex: 0 0 auto;
   padding: 22px 28px 28px;
 }
 

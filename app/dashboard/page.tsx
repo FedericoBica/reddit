@@ -19,7 +19,7 @@ import { KeywordsPillCollapsible } from "./keywords-pill-collapsible";
 
 export const metadata: Metadata = { title: "Searchbox" };
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 type SearchboxPageProps = {
   searchParams?: Promise<{
@@ -50,22 +50,23 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
     listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
   ]);
 
+  const displayResults = allResults.filter((r) => r.status !== "dismissed");
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
-  const newResultsCount = allResults.filter((r) => r.status === "new").length;
+  const newResultsCount = displayResults.filter((r) => r.status === "new").length;
 
   const requestedId = params?.resultId;
   const selectedResult = requestedId
-    ? (await getSearchboxResult(currentProject.id, requestedId)) ?? allResults[0] ?? null
-    : allResults[0] ?? null;
+    ? (await getSearchboxResult(currentProject.id, requestedId)) ?? displayResults[0] ?? null
+    : displayResults[0] ?? null;
 
   const pageFromParam = Math.max(0, parseInt(params?.page ?? "0") || 0);
-  const selectedIndex = selectedResult ? allResults.findIndex((r) => r.id === selectedResult?.id) : -1;
+  const selectedIndex = selectedResult ? displayResults.findIndex((r) => r.id === selectedResult?.id) : -1;
   const autoPage = selectedIndex >= 0 ? Math.floor(selectedIndex / PAGE_SIZE) : 0;
   const currentPage = params?.resultId && !params?.page
     ? autoPage
-    : Math.min(pageFromParam, Math.max(0, Math.ceil(allResults.length / PAGE_SIZE) - 1));
-  const totalPages = Math.max(1, Math.ceil(allResults.length / PAGE_SIZE));
-  const paginatedResults = allResults.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+    : Math.min(pageFromParam, Math.max(0, Math.ceil(displayResults.length / PAGE_SIZE) - 1));
+  const totalPages = Math.max(1, Math.ceil(displayResults.length / PAGE_SIZE));
+  const paginatedResults = displayResults.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   let selectedLead: LeadDTO | null = null;
   let replies: LeadReplyDTO[] = [];
@@ -110,7 +111,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
           <section className="opportunity-column" aria-label="Searchbox results">
             <div className="opportunity-toolbar">
               <div className="opportunity-count">
-                <span>{allResults.length} posts found</span>
+                <span>{displayResults.length} posts found</span>
                 <Link
                   href={`/dashboard?projectId=${currentProject.id}&sort=${sort === "recent" ? "relevance" : "recent"}`}
                   style={{ color: "#E07000", fontSize: 11, fontWeight: 700, textDecoration: "none" }}
@@ -135,34 +136,27 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
               )}
             </div>
 
-            <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <span style={{ color: "#AEAEB2", fontSize: 11, fontWeight: 700 }}>
-                {currentProject.last_searchbox_at
-                  ? `Last scan ${formatDate(currentProject.last_searchbox_at)}`
-                  : "Scan pending — runs every 2 weeks"}
-              </span>
-              {totalPages > 1 && (
-                <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                  {currentPage > 0 ? (
-                    <Link
-                      href={`/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}&page=${currentPage - 1}`}
-                      style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 6px", borderRadius: 5, border: "1px solid #E07000" }}
-                    >
-                      ←
-                    </Link>
-                  ) : <span style={{ width: 26 }} />}
-                  <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6E" }}>{currentPage + 1}/{totalPages}</span>
-                  {currentPage < totalPages - 1 ? (
-                    <Link
-                      href={`/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}&page=${currentPage + 1}`}
-                      style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 6px", borderRadius: 5, border: "1px solid #E07000" }}
-                    >
-                      →
-                    </Link>
-                  ) : <span style={{ width: 26 }} />}
-                </div>
-              )}
-            </div>
+            {totalPages > 1 && (
+              <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
+                {currentPage > 0 ? (
+                  <Link
+                    href={`/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}&page=${currentPage - 1}`}
+                    style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 8px", borderRadius: 5, border: "1px solid #E07000" }}
+                  >
+                    ←
+                  </Link>
+                ) : <span style={{ width: 30 }} />}
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6E" }}>{currentPage + 1} / {totalPages}</span>
+                {currentPage < totalPages - 1 ? (
+                  <Link
+                    href={`/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}&page=${currentPage + 1}`}
+                    style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 8px", borderRadius: 5, border: "1px solid #E07000" }}
+                  >
+                    →
+                  </Link>
+                ) : <span style={{ width: 30 }} />}
+              </div>
+            )}
           </section>
 
           <ResultDetail
@@ -189,9 +183,6 @@ function ResultCard({
   active: boolean;
   baseHref: string;
 }) {
-  const postUrl = toRedditUrl(result.permalink);
-  const truncatedUrl = postUrl.length > 52 ? postUrl.slice(0, 49) + "…" : postUrl;
-
   return (
     <Link href={baseHref} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
       <div className="opportunity-meta">
@@ -204,23 +195,15 @@ function ResultCard({
         <span>r/{result.subreddit}</span>
         <span>{formatRelative(result.created_at)}</span>
         {result.reddit_num_comments !== null && <span>{result.reddit_num_comments} comments</span>}
+        <span style={{ display: "inline-flex", padding: "1px 6px", borderRadius: 5, fontSize: 9, fontWeight: 800, background: "#EEF2FF", color: "#4338CA" }}>
+          Google #{result.google_rank}
+        </span>
       </div>
 
       <h2 className="opportunity-heading">{result.title}</h2>
 
-      <p style={{ fontSize: 10, color: "#AEAEB2", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-        {truncatedUrl}
-      </p>
-
-      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-        <span style={{ display: "inline-flex", padding: "2px 8px", borderRadius: 6, fontSize: 10, fontWeight: 800, background: "#EEF2FF", color: "#4338CA" }}>
-          Google #{result.google_rank}
-        </span>
-        <KeywordsPill keywords={result.google_keywords?.length ? result.google_keywords : [result.google_keyword]} />
-      </div>
-
       {result.classification_reason && (
-        <div style={{ marginTop: 5 }}>
+        <div>
           <span style={{ fontSize: 10, fontWeight: 800, color: "#16A34A" }}>
             Relevance: {result.intent_score ?? "–"}
           </span>
@@ -289,6 +272,7 @@ function ResultDetail({
             <input type="hidden" name="projectId" value={projectId} />
             <input type="hidden" name="resultId" value={result.id} />
             <input type="hidden" name="status" value="dismissed" />
+            <input type="hidden" name="returnTo" value={`/dashboard?projectId=${projectId}`} />
             <button className="btn-reject" type="submit">Reject Post</button>
           </form>
           <form action={updateSearchboxStatusFromForm}>
