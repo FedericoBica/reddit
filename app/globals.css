@@ -1350,14 +1350,14 @@ textarea:focus-visible {
 .detail-pane {
   min-width: 0;
   min-height: 0;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
   background: #FFFFFF;
 }
 
 .detail-topbar {
-  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 2;
   min-height: 52px;
   border-bottom: 1.5px solid oklch(0.88 0.015 70);
   padding: 10px 22px;
@@ -1369,14 +1369,10 @@ textarea:focus-visible {
 }
 
 .detail-content {
-  flex: 0 0 auto;
   padding: 22px 28px 28px;
 }
 
 .lead-post {
-  flex: 1 0 0;
-  min-height: 0;
-  overflow-y: auto;
   background: #FBFBFA;
   border-top: 1px solid #F0F0EE;
   border-bottom: 1px solid #F0F0EE;
@@ -1384,11 +1380,9 @@ textarea:focus-visible {
 }
 
 .lead-comment-box {
-  flex-shrink: 0;
   border-top: 1px solid #F0F0EE;
   background: #FFFFFF;
   padding: 14px 18px 16px;
-  overflow-y: auto;
 }
 
 .post-stats-bar {
