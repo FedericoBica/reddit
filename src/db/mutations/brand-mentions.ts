@@ -23,11 +23,8 @@ export type UpsertBrandMentionInput = {
 
 const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, posted_at, created_at`;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabase = any;
-
 export async function upsertBrandMention(input: UpsertBrandMentionInput): Promise<BrandMentionDTO | null> {
-  const supabase = createSupabaseAdminClient() as AnySupabase;
+  const supabase = createSupabaseAdminClient();
 
   const { data, error } = await supabase
     .from("brand_mentions")
@@ -67,8 +64,7 @@ export async function upsertBrandMention(input: UpsertBrandMentionInput): Promis
 
 export async function updateProjectLastMentionsScrapedAt(projectId: string): Promise<void> {
   const supabase = createSupabaseAdminClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any)
+  await supabase
     .from("projects")
     .update({ last_mentions_scraped_at: new Date().toISOString() })
     .eq("id", projectId);

@@ -6,9 +6,6 @@ import type { BrandMentionDTO, BrandMentionSentiment } from "@/db/schemas/domain
 
 const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, posted_at, created_at`;
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AnySupabase = any;
-
 export type ListBrandMentionsInput = {
   projectId: string;
   targetType?: "company" | "competitor";
@@ -19,7 +16,7 @@ export type ListBrandMentionsInput = {
 };
 
 export async function listBrandMentions(input: ListBrandMentionsInput): Promise<BrandMentionDTO[]> {
-  const supabase = (await createSupabaseServerClient()) as AnySupabase;
+  const supabase = await createSupabaseServerClient();
 
   let query = supabase
     .from("brand_mentions")
@@ -41,7 +38,7 @@ export async function listBrandMentions(input: ListBrandMentionsInput): Promise<
 }
 
 export async function getLastMentionScrapedAt(projectId: string): Promise<string | null> {
-  const supabase = createSupabaseAdminClient() as AnySupabase;
+  const supabase = createSupabaseAdminClient();
 
   const { data } = await supabase
     .from("brand_mentions")

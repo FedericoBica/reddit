@@ -566,8 +566,7 @@ const SCHEDULE_DEFAULTS: ScheduleSettings = {
 
 export async function getScheduleSettings(): Promise<ScheduleSettings> {
   const supabase = createSupabaseAdminClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (supabase as any)
+  const { data } = await supabase
     .from("admin_settings")
     .select("value")
     .eq("key", "scrape_schedule")
@@ -579,8 +578,7 @@ export async function getScheduleSettings(): Promise<ScheduleSettings> {
 
 export async function saveScheduleSettings(settings: ScheduleSettings): Promise<void> {
   const supabase = createSupabaseAdminClient();
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (supabase as any)
+  await supabase
     .from("admin_settings")
     .upsert({ key: "scrape_schedule", value: settings, updated_at: new Date().toISOString() });
 }

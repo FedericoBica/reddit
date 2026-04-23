@@ -9,6 +9,24 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          key: string
+          updated_at: string
+          value: Json
+        }
+        Insert: {
+          key: string
+          updated_at?: string
+          value: Json
+        }
+        Update: {
+          key?: string
+          updated_at?: string
+          value?: Json
+        }
+        Relationships: []
+      }
       api_usage_log: {
         Row: {
           cost_usd: number
@@ -568,6 +586,7 @@ export type Database = {
           created_at: string
           currency_code: string
           id: string
+          last_mentions_scraped_at: string | null
           last_scrape_error: string | null
           last_scraped_at: string | null
           last_searchbox_at: string | null
@@ -591,6 +610,7 @@ export type Database = {
           created_at?: string
           currency_code?: string
           id?: string
+          last_mentions_scraped_at?: string | null
           last_scrape_error?: string | null
           last_scraped_at?: string | null
           last_searchbox_at?: string | null
@@ -614,6 +634,7 @@ export type Database = {
           created_at?: string
           currency_code?: string
           id?: string
+          last_mentions_scraped_at?: string | null
           last_scrape_error?: string | null
           last_scraped_at?: string | null
           last_searchbox_at?: string | null
@@ -883,6 +904,7 @@ export type Database = {
           created_at: string
           currency_code: string
           id: string
+          last_mentions_scraped_at: string | null
           last_scrape_error: string | null
           last_scraped_at: string | null
           last_searchbox_at: string | null

@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { listProjectsForCurrentUser } from "@/db/queries/projects";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isCurrentUserAdmin } from "@/modules/auth/admin";
+import { resolvePostAuthPath } from "@/modules/auth/post-auth";
 
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -28,27 +27,6 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.redirect(authErrorUrl(url.origin, next, "Invalid auth callback"));
-}
-
-async function resolvePostAuthPath(next: string) {
-  if (next.startsWith("/signup")) {
-    return next;
-  }
-
-  const projects = await listProjectsForCurrentUser();
-
-  if (projects.length === 0) {
-    if (await isCurrentUserAdmin()) return "/admin";
-    return "/signup/company";
-  }
-
-  const currentProject = projects[0];
-
-  if (currentProject.onboarding_status !== "completed") {
-    return `/onboarding/project?projectId=${currentProject.id}`;
-  }
-
-  return next;
 }
 
 function sanitizeNextPath(next: string) {

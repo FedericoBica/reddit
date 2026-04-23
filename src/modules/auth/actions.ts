@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { resolvePostAuthPath } from "@/modules/auth/post-auth";
 
 export async function signInWithMagicLink(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -59,7 +60,7 @@ export async function verifyLoginCode(formData: FormData) {
     );
   }
 
-  redirect(next);
+  redirect(await resolvePostAuthPath(next));
 }
 
 export async function signInWithGoogle(formData: FormData) {

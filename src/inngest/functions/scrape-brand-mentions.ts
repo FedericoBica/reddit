@@ -21,8 +21,7 @@ export const scrapeBrandMentions = inngest.createFunction(
       const supabase = createSupabaseAdminClient();
       const now = Date.now();
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: projects, error } = await (supabase as any)
+      const { data: projects, error } = await supabase
         .from("projects")
         .select("id, owner_id, last_mentions_scraped_at")
         .eq("status", "active")
@@ -32,8 +31,7 @@ export const scrapeBrandMentions = inngest.createFunction(
       if (!projects?.length) return [];
 
       const resolved = await Promise.all(
-        (projects as Array<{ id: string; owner_id: string; last_mentions_scraped_at: string | null }>).map(
-          async (project) => {
+        projects.map(async (project) => {
             const plan = await getBillingPlanForUser(project.owner_id);
             const intervalMs = plan.scrapeIntervalHours * 60 * 60 * 1000;
             const lastMs = project.last_mentions_scraped_at
