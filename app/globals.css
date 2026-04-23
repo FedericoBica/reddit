@@ -1248,13 +1248,13 @@ textarea:focus-visible {
 
 .searchbox-body {
   min-height: 0;
-  overflow: hidden;
   display: grid;
   grid-template-columns: 360px minmax(0, 1fr);
 }
 
 .opportunity-column {
   min-width: 0;
+  min-height: 0;
   border-right: 1.5px solid oklch(0.22 0.02 50);
   background: oklch(0.985 0.008 80);
   display: grid;
@@ -1350,12 +1350,14 @@ textarea:focus-visible {
 .detail-pane {
   min-width: 0;
   min-height: 0;
-  display: grid;
-  grid-template-rows: auto auto 1fr auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   background: #FFFFFF;
 }
 
 .detail-topbar {
+  flex-shrink: 0;
   min-height: 52px;
   border-bottom: 1.5px solid oklch(0.88 0.015 70);
   padding: 10px 22px;
@@ -1367,10 +1369,14 @@ textarea:focus-visible {
 }
 
 .detail-content {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: hidden;
   padding: 22px 28px 28px;
 }
 
 .lead-post {
+  flex: 1 0 0;
   min-height: 0;
   overflow-y: auto;
   background: #FBFBFA;
@@ -1380,6 +1386,7 @@ textarea:focus-visible {
 }
 
 .lead-comment-box {
+  flex-shrink: 0;
   border-top: 1px solid #F0F0EE;
   background: #FFFFFF;
   padding: 14px 18px 16px;
