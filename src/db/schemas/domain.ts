@@ -308,3 +308,149 @@ export type LeadReplyDTO = Pick<
   | "used_at"
   | "created_at"
 >;
+
+// ─── Outbound ─────────────────────────────────────────────────
+
+export type DmCampaign = Tables<"dm_campaigns">;
+export type DmContact = Tables<"dm_contacts">;
+export type DmQueueItem = Tables<"dm_queue">;
+export type DmMessage = Tables<"dm_messages">;
+export type ExtensionConnectToken = Tables<"extension_connect_tokens">;
+export type ExtensionToken = Tables<"extension_tokens">;
+
+export type DmCampaignType = Enums<"dm_campaign_type">;
+export type DmCampaignStatus = Enums<"dm_campaign_status">;
+export type DmContactStatus = Enums<"dm_contact_status">;
+export type DmQueueStatus = Enums<"dm_queue_status">;
+export type DmMessageDirection = Enums<"dm_message_direction">;
+
+export type DmCampaignDTO = Pick<
+  DmCampaign,
+  | "id"
+  | "project_id"
+  | "created_by"
+  | "name"
+  | "type"
+  | "status"
+  | "source_url"
+  | "source_config"
+  | "message_template"
+  | "daily_limit"
+  | "delay_min_sec"
+  | "delay_max_sec"
+  | "sent_count"
+  | "reply_count"
+  | "failed_count"
+  | "started_at"
+  | "completed_at"
+  | "created_at"
+  | "updated_at"
+>;
+
+export type DmContactDTO = Pick<
+  DmContact,
+  | "id"
+  | "project_id"
+  | "lead_id"
+  | "reddit_username"
+  | "source_type"
+  | "first_campaign_id"
+  | "last_campaign_id"
+  | "status"
+  | "last_message_at"
+  | "last_reply_at"
+  | "created_at"
+  | "updated_at"
+>;
+
+export type DmQueueItemDTO = Pick<
+  DmQueueItem,
+  | "id"
+  | "campaign_id"
+  | "contact_id"
+  | "priority"
+  | "status"
+  | "error_reason"
+  | "scheduled_at"
+  | "sent_at"
+  | "created_at"
+  | "updated_at"
+>;
+
+export type DmMessageDTO = Pick<
+  DmMessage,
+  | "id"
+  | "project_id"
+  | "campaign_id"
+  | "contact_id"
+  | "queue_item_id"
+  | "direction"
+  | "body"
+  | "reddit_message_id"
+  | "sent_at"
+  | "received_at"
+  | "created_at"
+>;
+
+export type ExtensionTokenDTO = Pick<
+  ExtensionToken,
+  | "id"
+  | "user_id"
+  | "project_id"
+  | "label"
+  | "last_used_at"
+  | "expires_at"
+  | "revoked_at"
+  | "created_at"
+>;
+
+// ─── Outbound Zod schemas ─────────────────────────────────────
+
+export const dmCampaignTypeSchema = z.enum([
+  "lead",
+  "thread",
+  "subreddit",
+] satisfies [DmCampaignType, ...DmCampaignType[]]);
+
+export const dmCampaignStatusSchema = z.enum([
+  "draft",
+  "active",
+  "paused",
+  "completed",
+  "failed",
+] satisfies [DmCampaignStatus, ...DmCampaignStatus[]]);
+
+export const dmContactStatusSchema = z.enum([
+  "queued",
+  "sent",
+  "replied",
+  "interested",
+  "won",
+  "lost",
+] satisfies [DmContactStatus, ...DmContactStatus[]]);
+
+export const createDmCampaignSchema = z.object({
+  projectId: projectIdSchema,
+  name: z.string().trim().min(1).max(120),
+  type: dmCampaignTypeSchema,
+  sourceUrl: z.string().url().max(1000).optional().nullable(),
+  sourceConfig: z.record(z.string(), z.unknown()).default({}),
+  messageTemplate: z.string().max(2000).default(""),
+  dailyLimit: z.number().int().min(1).max(500).default(20),
+  delayMinSec: z.number().int().min(5).max(3600).default(30),
+  delayMaxSec: z.number().int().min(5).max(3600).default(120),
+});
+
+export const updateDmCampaignSchema = createDmCampaignSchema
+  .omit({ projectId: true, type: true })
+  .partial();
+
+export const updateDmContactStatusSchema = z.object({
+  contactId: z.string().uuid(),
+  projectId: projectIdSchema,
+  status: dmContactStatusSchema,
+});
+
+export type CreateDmCampaignInput = z.infer<typeof createDmCampaignSchema>;
+export type UpdateDmCampaignInput = z.infer<typeof updateDmCampaignSchema>;
+export type UpdateDmContactStatusInput = z.infer<typeof updateDmContactStatusSchema>;

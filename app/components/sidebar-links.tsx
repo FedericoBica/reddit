@@ -19,12 +19,15 @@ export function SidebarLinks({
   const inArchive = pathname.startsWith("/archive");
   const [archiveOpen, setArchiveOpen] = useState(inArchive);
 
-  const NAV = [
-    { href: "/dashboard",     label: t("searchbox"),  icon: InboxIcon    },
-    { href: "/opportunities", label: t("new"),         icon: FlashIcon    },
-    { href: "/mentions",      label: t("mentions"),    icon: SignalIcon   },
-    { href: "/analytics",     label: t("analytics"),   icon: ChartIcon    },
-    { href: "/settings",      label: t("settings"),    icon: GearIcon     },
+  const INBOUND_NAV = [
+    { href: "/dashboard",     label: t("searchbox"),  icon: InboxIcon,  badge: newSearchboxCount },
+    { href: "/opportunities", label: t("new"),         icon: FlashIcon,  badge: newLeadsCount     },
+    { href: "/mentions",      label: t("mentions"),    icon: SignalIcon,  badge: 0                },
+    { href: "/analytics",     label: t("analytics"),   icon: ChartIcon,  badge: 0                },
+  ];
+
+  const OUTBOUND_NAV = [
+    { href: "/outbound/crm",  label: "Lead CRM",       icon: CrmIcon,    badge: 0                },
   ];
 
   const isActive = (href: string) => {
@@ -45,10 +48,12 @@ export function SidebarLinks({
         gap: 2,
       }}
     >
-      {NAV.map((item) => {
+      {/* ── INBOUND ── */}
+      <GroupLabel>Inbound</GroupLabel>
+
+      {INBOUND_NAV.map((item) => {
         const active = isActive(item.href);
         const Icon = item.icon;
-
         return (
           <Link
             key={item.href}
@@ -62,21 +67,16 @@ export function SidebarLinks({
           >
             <Icon className="sidebar-icon" />
             <span style={{ flex: 1 }}>{item.label}</span>
-            {item.href === "/dashboard" && newSearchboxCount > 0 && (
+            {item.badge > 0 && (
               <span style={{ background: "#E07000", color: "#FFF", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5, lineHeight: 1.4 }}>
-                {newSearchboxCount}
-              </span>
-            )}
-            {item.href === "/opportunities" && newLeadsCount > 0 && (
-              <span style={{ background: "#E07000", color: "#FFF", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5, lineHeight: 1.4 }}>
-                {newLeadsCount}
+                {item.badge}
               </span>
             )}
           </Link>
         );
       })}
 
-      {/* Archive group */}
+      {/* Archive sub-group */}
       <button
         type="button"
         onClick={() => setArchiveOpen((v) => !v)}
@@ -126,6 +126,45 @@ export function SidebarLinks({
           </Link>
         </>
       )}
+
+      {/* ── OUTBOUND ── */}
+      <GroupLabel style={{ marginTop: 10 }}>Outbound</GroupLabel>
+
+      {OUTBOUND_NAV.map((item) => {
+        const active = isActive(item.href);
+        const Icon = item.icon;
+        return (
+          <Link
+            key={item.href}
+            href={`${item.href}?projectId=${currentProjectId}`}
+            className="sidebar-link"
+            style={{
+              fontWeight: active ? 700 : 500,
+              color: active ? "#1C1C1E" : "#6B6B6E",
+              background: active ? "#EAEAE8" : "transparent",
+            }}
+          >
+            <Icon className="sidebar-icon" />
+            <span style={{ flex: 1 }}>{item.label}</span>
+          </Link>
+        );
+      })}
+
+      {/* ── Settings (global) ── */}
+      <div style={{ marginTop: "auto", paddingTop: 8 }}>
+        <Link
+          href={`/settings?projectId=${currentProjectId}`}
+          className="sidebar-link"
+          style={{
+            fontWeight: isActive("/settings") ? 700 : 500,
+            color: isActive("/settings") ? "#1C1C1E" : "#6B6B6E",
+            background: isActive("/settings") ? "#EAEAE8" : "transparent",
+          }}
+        >
+          <GearIcon className="sidebar-icon" />
+          <span style={{ flex: 1 }}>{t("settings")}</span>
+        </Link>
+      </div>
     </nav>
   );
 }
@@ -191,5 +230,31 @@ function ChevronIcon({ open }: { open: boolean }) {
     >
       <path d="M4 2.5L7.5 6L4 9.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+function CrmIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function GroupLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <p style={{
+      fontSize: 9,
+      fontWeight: 800,
+      color: "#AEAEB2",
+      textTransform: "uppercase",
+      letterSpacing: "0.07em",
+      padding: "6px 8px 2px",
+      ...style,
+    }}>
+      {children}
+    </p>
   );
 }

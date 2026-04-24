@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "ReddProwl Outbound",
+  "version": "0.1.0",
+  "description": "ReddProwl outbound DM campaigns from Reddit",
+  "permissions": [
+    "storage",
+    "alarms",
+    "activeTab",
+    "scripting"
+  ],
+  "host_permissions": [
+    "https://www.reddit.com/*",
+    "https://old.reddit.com/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ReddProwl"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.reddit.com/*", "https://old.reddit.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

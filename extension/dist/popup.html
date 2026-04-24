@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReddProwl</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 320px;
+      min-height: 400px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      color: #1C1C1E;
+      background: #FAFAF8;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid #EEEEED;
+      background: #F7F7F5;
+    }
+    .logo {
+      font-size: 14px;
+      font-weight: 800;
+      color: #E07000;
+      letter-spacing: -0.02em;
+    }
+    .project-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: #6B6B6E;
+      background: #EEEEED;
+      border-radius: 4px;
+      padding: 2px 6px;
+      margin-left: auto;
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .screen { display: none; padding: 16px; }
+    .screen.active { display: block; }
+    .label {
+      font-size: 9px;
+      font-weight: 800;
+      color: #AEAEB2;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      margin-bottom: 6px;
+    }
+    .input {
+      width: 100%;
+      border: 1px solid #DDDDD9;
+      border-radius: 8px;
+      padding: 9px 10px;
+      font-size: 12px;
+      color: #1C1C1E;
+      background: #FFF;
+      outline: none;
+    }
+    .input:focus { border-color: #E07000; }
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    .btn-primary { background: #E07000; color: #FFF; }
+    .btn-primary:disabled { background: #D1D1D6; cursor: not-allowed; }
+    .btn-secondary { background: #EAEAE8; color: #1C1C1E; }
+    .btn-danger { background: #FFF; color: #DC2626; border: 1px solid #FECACA; }
+    .error {
+      background: #FFF5F5;
+      border: 1px solid #FECACA;
+      border-radius: 7px;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #DC2626;
+      margin-top: 10px;
+    }
+    .campaign-card {
+      background: #FFF;
+      border: 1px solid #EEEEED;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+    }
+    .campaign-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: #1C1C1E;
+      margin-bottom: 4px;
+    }
+    .campaign-meta {
+      font-size: 11px;
+      color: #8E8E93;
+      display: flex;
+      gap: 10px;
+    }
+    .status-dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      margin-right: 4px;
+      vertical-align: middle;
+    }
+    .status-active { background: #16A34A; }
+    .status-paused { background: #E07000; }
+    .status-draft { background: #D1D1D6; }
+    .status-completed { background: #6B6B6E; }
+    .runner-status {
+      background: #FFF;
+      border: 1px solid #EEEEED;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #6B6B6E;
+    }
+    .runner-status strong { color: #1C1C1E; }
+    .divider {
+      border: none;
+      border-top: 1px solid #EEEEED;
+      margin: 12px 0;
+    }
+    .empty {
+      text-align: center;
+      color: #AEAEB2;
+      font-size: 12px;
+      padding: 20px 0;
+    }
+    #new-campaign-btn {
+      margin-top: 12px;
+    }
+    .wizard-step { display: none; }
+    .wizard-step.active { display: block; }
+    .field { margin-bottom: 12px; }
+    .row { display: flex; gap: 8px; }
+    .row .field { flex: 1; }
+    textarea.input { resize: vertical; min-height: 80px; }
+    .step-nav {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .step-nav .btn { margin-top: 0; }
+    .back-link {
+      font-size: 11px;
+      color: #8E8E93;
+      cursor: pointer;
+      text-decoration: underline;
+      display: inline-block;
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <span class="logo">ReddProwl</span>
+    <span class="project-badge" id="project-name">Not connected</span>
+  </div>
+
+  <!-- Connect screen -->
+  <div class="screen active" id="screen-connect">
+    <div style="margin-bottom: 16px; margin-top: 4px;">
+      <p style="font-size: 12px; color: #6B6B6E; line-height: 1.5;">
+        Paste the connect token from ReddProwl Settings → Extension.
+      </p>
+    </div>
+    <div class="field">
+      <div class="label">Connect token</div>
+      <input class="input" type="password" id="connect-token-input" placeholder="Paste token here…" />
+    </div>
+    <div class="field">
+      <div class="label">Device label (optional)</div>
+      <input class="input" type="text" id="connect-label-input" placeholder="e.g. MacBook Chrome" />
+    </div>
+    <button class="btn btn-primary" id="connect-btn">Connect</button>
+    <div class="error" id="connect-error" style="display:none;"></div>
+  </div>
+
+  <!-- Home screen -->
+  <div class="screen" id="screen-home">
+    <div class="runner-status" id="runner-status">
+      Runner: <strong>idle</strong>
+    </div>
+    <div class="label">Campaigns</div>
+    <div id="campaigns-list">
+      <div class="empty">Loading…</div>
+    </div>
+    <button class="btn btn-primary" id="new-campaign-btn">+ New campaign</button>
+    <hr class="divider" />
+    <button class="btn btn-danger" id="disconnect-btn">Disconnect</button>
+  </div>
+
+  <!-- New campaign wizard -->
+  <div class="screen" id="screen-new-campaign">
+    <span class="back-link" id="back-to-home">← Back</span>
+
+    <!-- Step 1: Source type -->
+    <div class="wizard-step active" id="wizard-step-1">
+      <div class="label">Step 1 — Campaign type</div>
+      <div style="display: grid; gap: 8px; margin-top: 8px;">
+        <button class="btn btn-secondary campaign-type-btn" data-type="lead">Lead campaign — from intent inbox</button>
+        <button class="btn btn-secondary campaign-type-btn" data-type="thread">Thread campaign — from post comments</button>
+        <button class="btn btn-secondary campaign-type-btn" data-type="subreddit">Subreddit campaign — from community</button>
+      </div>
+    </div>
+
+    <!-- Step 2: Audience -->
+    <div class="wizard-step" id="wizard-step-2">
+      <div class="label">Step 2 — Audience</div>
+      <div id="audience-lead" style="display:none;">
+        <div class="field">
+          <div class="label">Min intent score (0–100)</div>
+          <input class="input" type="number" id="min-intent" value="50" min="0" max="100" />
+        </div>
+        <div class="row">
+          <div class="field">
+            <div class="label">Max leads</div>
+            <input class="input" type="number" id="max-leads" value="50" min="1" max="500" />
+          </div>
+          <div class="field" style="display:flex; align-items:flex-end; padding-bottom: 2px;">
+            <label style="font-size:12px; color:#6B6B6E; display:flex; gap:6px; align-items:center; cursor:pointer;">
+              <input type="checkbox" id="only-new" checked /> Only new leads
+            </label>
+          </div>
+        </div>
+      </div>
+      <div id="audience-thread" style="display:none;">
+        <div class="field">
+          <div class="label">Post URL</div>
+          <input class="input" type="url" id="thread-url" placeholder="https://reddit.com/r/.../comments/..." />
+        </div>
+      </div>
+      <div id="audience-subreddit" style="display:none;">
+        <div class="field">
+          <div class="label">Subreddit</div>
+          <input class="input" type="text" id="subreddit-name" placeholder="e.g. saas" />
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-secondary" id="step2-back">Back</button>
+        <button class="btn btn-primary" id="step2-next">Next</button>
+      </div>
+    </div>
+
+    <!-- Step 3: Message + limits -->
+    <div class="wizard-step" id="wizard-step-3">
+      <div class="label">Step 3 — Message &amp; limits</div>
+      <div class="field">
+        <div class="label">Campaign name</div>
+        <input class="input" type="text" id="campaign-name" placeholder="My campaign" />
+      </div>
+      <div class="field">
+        <div class="label">Message template</div>
+        <textarea class="input" id="message-template" placeholder="Hi {{username}}, saw your post about…"></textarea>
+        <p style="font-size: 10px; color: #AEAEB2; margin-top: 4px;">Variables: {{username}}, {{post_title}}, {{subreddit}}</p>
+      </div>
+      <div class="row">
+        <div class="field">
+          <div class="label">Daily limit</div>
+          <input class="input" type="number" id="daily-limit" value="20" min="1" max="200" />
+        </div>
+        <div class="field">
+          <div class="label">Min delay (s)</div>
+          <input class="input" type="number" id="delay-min" value="30" min="5" />
+        </div>
+        <div class="field">
+          <div class="label">Max delay (s)</div>
+          <input class="input" type="number" id="delay-max" value="120" min="5" />
+        </div>
+      </div>
+      <div class="step-nav">
+        <button class="btn btn-secondary" id="step3-back">Back</button>
+        <button class="btn btn-primary" id="create-draft-btn">Save draft</button>
+        <button class="btn btn-primary" id="create-start-btn">Create &amp; start</button>
+      </div>
+      <div class="error" id="wizard-error" style="display:none;"></div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -161,6 +161,382 @@ export type Database = {
           },
         ]
       }
+      dm_campaigns: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          created_by: string
+          daily_limit: number
+          delay_max_sec: number
+          delay_min_sec: number
+          failed_count: number
+          id: string
+          message_template: string
+          name: string
+          project_id: string
+          reply_count: number
+          sent_count: number
+          source_config: Json
+          source_url: string | null
+          started_at: string | null
+          status: Database["public"]["Enums"]["dm_campaign_status"]
+          type: Database["public"]["Enums"]["dm_campaign_type"]
+          updated_at: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          created_by: string
+          daily_limit?: number
+          delay_max_sec?: number
+          delay_min_sec?: number
+          failed_count?: number
+          id?: string
+          message_template?: string
+          name: string
+          project_id: string
+          reply_count?: number
+          sent_count?: number
+          source_config?: Json
+          source_url?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["dm_campaign_status"]
+          type: Database["public"]["Enums"]["dm_campaign_type"]
+          updated_at?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string
+          daily_limit?: number
+          delay_max_sec?: number
+          delay_min_sec?: number
+          failed_count?: number
+          id?: string
+          message_template?: string
+          name?: string
+          project_id?: string
+          reply_count?: number
+          sent_count?: number
+          source_config?: Json
+          source_url?: string | null
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["dm_campaign_status"]
+          type?: Database["public"]["Enums"]["dm_campaign_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_campaigns_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_contacts: {
+        Row: {
+          created_at: string
+          first_campaign_id: string | null
+          id: string
+          last_campaign_id: string | null
+          last_message_at: string | null
+          last_reply_at: string | null
+          lead_id: string | null
+          project_id: string
+          reddit_username: string
+          source_type: Database["public"]["Enums"]["dm_campaign_type"]
+          status: Database["public"]["Enums"]["dm_contact_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          first_campaign_id?: string | null
+          id?: string
+          last_campaign_id?: string | null
+          last_message_at?: string | null
+          last_reply_at?: string | null
+          lead_id?: string | null
+          project_id: string
+          reddit_username: string
+          source_type: Database["public"]["Enums"]["dm_campaign_type"]
+          status?: Database["public"]["Enums"]["dm_contact_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          first_campaign_id?: string | null
+          id?: string
+          last_campaign_id?: string | null
+          last_message_at?: string | null
+          last_reply_at?: string | null
+          lead_id?: string | null
+          project_id?: string
+          reddit_username?: string
+          source_type?: Database["public"]["Enums"]["dm_campaign_type"]
+          status?: Database["public"]["Enums"]["dm_contact_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_contacts_first_campaign_id_fkey"
+            columns: ["first_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dm_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_contacts_last_campaign_id_fkey"
+            columns: ["last_campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dm_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_contacts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "leads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_contacts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_messages: {
+        Row: {
+          body: string
+          campaign_id: string
+          contact_id: string
+          created_at: string
+          direction: Database["public"]["Enums"]["dm_message_direction"]
+          id: string
+          project_id: string
+          queue_item_id: string | null
+          received_at: string | null
+          reddit_message_id: string | null
+          sent_at: string | null
+        }
+        Insert: {
+          body: string
+          campaign_id: string
+          contact_id: string
+          created_at?: string
+          direction: Database["public"]["Enums"]["dm_message_direction"]
+          id?: string
+          project_id: string
+          queue_item_id?: string | null
+          received_at?: string | null
+          reddit_message_id?: string | null
+          sent_at?: string | null
+        }
+        Update: {
+          body?: string
+          campaign_id?: string
+          contact_id?: string
+          created_at?: string
+          direction?: Database["public"]["Enums"]["dm_message_direction"]
+          id?: string
+          project_id?: string
+          queue_item_id?: string | null
+          received_at?: string | null
+          reddit_message_id?: string | null
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_messages_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dm_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_messages_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "dm_contacts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_messages_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_messages_queue_item_id_fkey"
+            columns: ["queue_item_id"]
+            isOneToOne: false
+            referencedRelation: "dm_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dm_queue: {
+        Row: {
+          campaign_id: string
+          contact_id: string
+          created_at: string
+          error_reason: string | null
+          id: string
+          priority: number
+          scheduled_at: string
+          sent_at: string | null
+          status: Database["public"]["Enums"]["dm_queue_status"]
+          updated_at: string
+        }
+        Insert: {
+          campaign_id: string
+          contact_id: string
+          created_at?: string
+          error_reason?: string | null
+          id?: string
+          priority?: number
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["dm_queue_status"]
+          updated_at?: string
+        }
+        Update: {
+          campaign_id?: string
+          contact_id?: string
+          created_at?: string
+          error_reason?: string | null
+          id?: string
+          priority?: number
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: Database["public"]["Enums"]["dm_queue_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dm_queue_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "dm_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dm_queue_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "dm_contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extension_connect_tokens: {
+        Row: {
+          consumed_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          project_id: string
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          project_id: string
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          consumed_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          project_id?: string
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extension_connect_tokens_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extension_connect_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      extension_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          label: string | null
+          last_used_at: string | null
+          project_id: string
+          revoked_at: string | null
+          token_hash: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          project_id: string
+          revoked_at?: string | null
+          token_hash: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          label?: string | null
+          last_used_at?: string | null
+          project_id?: string
+          revoked_at?: string | null
+          token_hash?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "extension_tokens_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "extension_tokens_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       keywords: {
         Row: {
           created_at: string
@@ -853,6 +1229,8 @@ export type Database = {
           avatar_url: string | null
           billing_plan: string
           created_at: string
+          dm_cycle_resets_at: string | null
+          dm_monthly_used: number
           email: string
           full_name: string | null
           id: string
@@ -864,6 +1242,8 @@ export type Database = {
           avatar_url?: string | null
           billing_plan?: string
           created_at?: string
+          dm_cycle_resets_at?: string | null
+          dm_monthly_used?: number
           email: string
           full_name?: string | null
           id: string
@@ -875,6 +1255,8 @@ export type Database = {
           avatar_url?: string | null
           billing_plan?: string
           created_at?: string
+          dm_cycle_resets_at?: string | null
+          dm_monthly_used?: number
           email?: string
           full_name?: string | null
           id?: string
@@ -938,6 +1320,18 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_campaign_reply_count: {
+        Args: { _campaign_id: string }
+        Returns: undefined
+      }
+      increment_campaign_sent_count: {
+        Args: { _campaign_id: string }
+        Returns: undefined
+      }
+      increment_user_dm_monthly_used: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
       is_project_member: { Args: { _project_id: string }; Returns: boolean }
     }
     Enums: {
@@ -948,6 +1342,17 @@ export type Database = {
         | "apify"
         | "inngest"
         | "serpapi"
+      dm_campaign_status: "draft" | "active" | "paused" | "completed" | "failed"
+      dm_campaign_type: "lead" | "thread" | "subreddit"
+      dm_contact_status:
+        | "queued"
+        | "sent"
+        | "replied"
+        | "interested"
+        | "won"
+        | "lost"
+      dm_message_direction: "out" | "in"
+      dm_queue_status: "pending" | "sending" | "sent" | "failed" | "skipped"
       intent_category: "informational" | "comparative" | "transactional"
       keyword_type: "custom" | "ai_suggested" | "competitor"
       lead_sentiment: "positive" | "negative" | "neutral"
@@ -1106,6 +1511,18 @@ export const Constants = {
         "inngest",
         "serpapi",
       ],
+      dm_campaign_status: ["draft", "active", "paused", "completed", "failed"],
+      dm_campaign_type: ["lead", "thread", "subreddit"],
+      dm_contact_status: [
+        "queued",
+        "sent",
+        "replied",
+        "interested",
+        "won",
+        "lost",
+      ],
+      dm_message_direction: ["out", "in"],
+      dm_queue_status: ["pending", "sending", "sent", "failed", "skipped"],
       intent_category: ["informational", "comparative", "transactional"],
       keyword_type: ["custom", "ai_suggested", "competitor"],
       lead_sentiment: ["positive", "negative", "neutral"],

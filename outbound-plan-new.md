@@ -240,15 +240,20 @@ Cada item de queue refiere a:
 - una prioridad
 - un estado operacional
 
-### 5.4 Log
+### 5.4 Messages
 
-`dm_log` guarda el histórico real de:
+`dm_messages` guarda el histórico de conversación multi-turno con cada contacto.
 
-- mensaje enviado
-- respuesta recibida
-- outcome comercial
+Cada fila representa un mensaje individual, enviado o recibido:
 
-Este log es la base del reporting y del CRM.
+- `direction: 'out' | 'in'`
+- `body` — texto del mensaje
+- `reddit_message_id` — para deduplicar sync del inbox
+- `sent_at` / `received_at`
+
+El outcome comercial vive en `dm_contacts.status`, no en `dm_messages`.
+
+Esta tabla reemplaza el concepto de `dm_log`. No se usa una tabla de log plano — se modela como conversación.
 
 ---
 
@@ -367,9 +372,9 @@ Constraint:
 
 - unique `(campaign_id, contact_id)`
 
-### 7.4 `dm_log`
+### 7.4 `dm_messages`
 
-Histórico de DMs.
+Conversación multi-turno por contacto.
 
 Campos mínimos:
 
@@ -377,20 +382,35 @@ Campos mínimos:
 - `project_id`
 - `campaign_id`
 - `contact_id`
-- `queue_item_id` nullable
-- `message_sent`
-- `response_received`
-- `response_text` nullable
-- `response_at` nullable
-- `outcome` (`pending | replied | interested | won | lost`)
-- `sent_at`
-- `last_synced_at`
+- `queue_item_id` — `NOT NULL` para mensajes outbound (`direction = 'out'`); nullable para mensajes inbound (`direction = 'in'`). Aplica constraint `unique (queue_item_id)` filtrado a `direction = 'out'` para garantizar idempotencia de result reporting.
+- `direction` (`out | in`)
+- `body` — texto del mensaje (truncar a 2000 chars)
+- `reddit_message_id` nullable — ID de Reddit para deduplicar sync del inbox
+- `sent_at` nullable — cuándo se envió (si `direction = 'out'`)
+- `received_at` nullable — cuándo se recibió (si `direction = 'in'`)
+- `created_at`
 
-Regla:
+Notas:
 
-- truncar `response_text` a 500 chars
+- el outcome (`pending | replied | interested | won | lost`) vive en `dm_contacts.status`, no aquí
+- `reddit_message_id` permite deduplicar si el poller lee el mismo inbox message dos veces
+- una conversación = N filas con el mismo `contact_id`, ordenadas por timestamp
 
-### 7.5 `extension_connect_tokens`
+### 7.5 `dm_contacts` — campo `status`
+
+El status del contacto es la fuente de verdad del pipeline outbound:
+
+- `queued` — en cola, no enviado aún
+- `sent` — DM enviado, sin respuesta
+- `replied` — respondió (puede seguir la conversación)
+- `interested` — señal positiva detectada
+- `won` — cerrado como ganado
+- `lost` — cerrado como perdido
+
+El campo `last_message_at` refleja el último mensaje saliente.
+El campo `last_reply_at` refleja la última respuesta recibida.
+
+### 7.7 `extension_connect_tokens`
 
 Token temporal de conexión.
 
@@ -404,7 +424,7 @@ Campos mínimos:
 - `consumed_at`
 - `created_at`
 
-### 7.6 `extension_tokens`
+### 7.8 `extension_tokens`
 
 Token persistente de dispositivo/extensión.
 
@@ -420,7 +440,9 @@ Campos mínimos:
 - `revoked_at`
 - `created_at`
 
-### 7.7 `users`
+La extensión guarda el token en `chrome.storage.local`. No se necesita almacenamiento externo ni cookies.
+
+### 7.9 `users`
 
 Agregar:
 
@@ -653,11 +675,20 @@ No rediseñar el dashboard completo.
 
 ### 12.1 Sidebar
 
-Agregar item:
+Reorganizar con dos grupos no-clicables como encabezados de sección:
 
-- `Outbound`
+```
+INBOUND          ← encabezado, sin link
+  Dashboard
+  Opportunities
+  Mentions
+  Analytics
 
-Mantener la navegación existente. No reordenar el producto salvo necesidad real.
+OUTBOUND         ← encabezado, sin link
+  Lead CRM
+```
+
+Los encabezados son labels estáticos, no links. Los links debajo de cada grupo son las rutas existentes (Inbound) y nuevas (Outbound).
 
 ### 12.2 Rutas web sugeridas
 
@@ -684,9 +715,11 @@ Debe mostrar:
 
 - overview
 - queue
-- logs
+- conversación por contacto (`dm_messages`)
 - stats
 - acciones básicas
+
+Cuando la campaña está activa, la página debe auto-refrescar cada 30 segundos para reflejar nuevos envíos y respuestas. Usar el componente `AutoRefresh` ya existente en la app con `intervalMs={30_000}`.
 
 ### 12.5 `Outbound CRM`
 
@@ -741,18 +774,32 @@ app/api/ext/*
 - `GET /api/ext/campaigns/:id/queue/next`
 - `POST /api/ext/queue/:id/result`
 
-### 13.4 Responses
+### 13.4 Contacts batch (scraping outbound)
 
-- `POST /api/ext/dm-log/sync-responses`
-- `POST /api/ext/dm-log/:id/outcome`
+- `POST /api/ext/campaigns/:id/contacts/batch`
 
-### 13.5 Settings
+La extensión usa este endpoint para empujar usernames scrapeados desde threads o subreddits al backend. El backend hace upsert de `dm_contacts` y crea los `dm_queue` items correspondientes.
+
+Body esperado:
+```json
+{ "usernames": ["user1", "user2", ...] }
+```
+
+### 13.5 Conversación / respuestas
+
+- `POST /api/ext/messages/sync` — la extensión envía mensajes recibidos del inbox de Reddit
+- `POST /api/ext/contacts/:id/outcome` — marcar outcome (`won`, `lost`, etc.)
+
+El sync de inbox crea filas en `dm_messages` con `direction: 'in'` y actualiza `dm_contacts.last_reply_at`.
+El dedup se hace por `reddit_message_id`.
+
+### 13.6 Settings
 
 - `POST /api/ext/settings/generate-connect-token`
 - `GET /api/ext/settings/tokens`
 - `POST /api/ext/settings/tokens/:id/revoke`
 
-### 13.6 Optional helper endpoints for extension UI
+### 13.7 Optional helper endpoints for extension UI
 
 - `GET /api/ext/projects/:id/leads/eligible`
 - `POST /api/ext/ai/generate-message`
@@ -775,10 +822,10 @@ Lead campaign:
 Thread/Subreddit:
 
 1. crear campaña
-2. dejar queue vacía hasta que la extensión scrapee usernames
-3. la extensión puede empujar candidatos al backend o el backend puede generar queue luego del scrape
-
-Definir esa parte de forma explícita al implementar.
+2. la extensión scrapea usernames del thread o subreddit
+3. la extensión empuja los usernames al backend via `POST /api/ext/campaigns/:id/contacts/batch`
+4. el backend hace upsert de `dm_contacts` y crea los `dm_queue` items
+5. la extensión puede empezar a ejecutar inmediatamente
 
 ### 14.2 Uso mensual
 
@@ -788,27 +835,48 @@ Cada envío exitoso debe:
 - respetar `dm_cycle_resets_at`
 - recalcular permitido según plan actual
 
+El incremento debe ocurrir **dentro de la misma transacción** que hace la transición atómica `dm_queue.status: pending → sent` (ver sección 14.5). Si esa transición no aplica (la fila ya no estaba en `pending`), no se toca el contador. Esto previene double-counting en reintentos.
+
 ### 14.3 Campaña activa
 
-MVP recomendado:
+El schema de DB soporta múltiples campañas activas simultáneas desde el principio.
 
-- una sola campaña activa por proyecto
+Para el MVP de la extensión, la extensión opera sobre una campaña activa a la vez (simplifica el runner y la UX). Esto es una restricción del cliente, no del backend.
 
-Esto simplifica:
+En fases posteriores, el dashboard podrá mostrar y gestionar varias campañas activas en paralelo.
 
-- queue execution
-- status global
-- UX de la extensión
-- manejo de errores
+### 14.4 Deduplicación y no-recontacto
 
-### 14.4 Deduplicación
+El constraint `unique (project_id, reddit_username)` en `dm_contacts` impide duplicar la fila del contacto, pero **no es suficiente para prevenir recontacto cross-campaign**.
 
-No recontactar el mismo `reddit_username` dentro del mismo proyecto si ya existe `dm_contact`.
+Regla explícita para `contacts/batch`:
 
-Regla inicial:
+1. Buscar si ya existe `dm_contact` para `(project_id, reddit_username)`.
+2. Si existe y `status` no es `queued` (es decir, ya fue enviado o está en progreso), **saltear sin crear queue item**. No se recontacta.
+3. Si existe y `status = queued` (todavía no enviado), también saltear — ya está en cola.
+4. Solo crear el `dm_queue` item si el contacto es nuevo (recién insertado en este batch).
 
-- si ya existe `dm_contact` del username en el proyecto, no crear otro
-- decidir si se reusa o se salta según configuración futura
+Esta lógica debe aplicarse también en la creación de lead campaigns (sección 14.1).
+
+Constraint adicional recomendado en `dm_queue`:
+
+- `unique (campaign_id, contact_id)` — ya definido.
+- La inserción en `dm_queue` debe ser `INSERT ... ON CONFLICT DO NOTHING` para tolerar batches concurrentes sin duplicar.
+
+### 14.5 Idempotencia del resultado de envío
+
+El endpoint `POST /api/ext/queue/:id/result` debe ser idempotente.
+
+Problema: la extensión puede reintentar el call si recibe timeout o error de red después de que Reddit ya aceptó el DM. Sin idempotencia, esto puede:
+- duplicar filas en `dm_messages`
+- incrementar `dm_monthly_used` dos veces
+- avanzar contadores de campaña incorrectamente
+
+Solución:
+
+1. `dm_queue.status` es la fuente de verdad del envío. La transición `pending → sent` (o `failed`) debe ser una **CAS atómica** vía `UPDATE ... WHERE status = 'pending'`. Si la fila ya no está en `pending`, devolver 200 sin hacer nada más.
+2. `dm_messages` para el mensaje saliente debe tener `queue_item_id NOT NULL` y un constraint `unique (queue_item_id)` donde `direction = 'out'`. Así un retry no puede insertar una segunda fila de mensaje outbound para el mismo envío.
+3. `dm_monthly_used` solo se incrementa dentro de la misma transacción que hace la transición `pending → sent`. Si la CAS no matchea, no se toca el contador.
 
 ---
 
@@ -858,9 +926,14 @@ IA es apoyo, no prerequisito duro del primer envío.
 
 MVP puede arrancar con:
 
-- un solo `message_template`
-- preview simple
-- interpolación básica de username/contexto
+- un solo `message_template` por campaña
+- sintaxis de variables: doble llave `{{variable}}`
+- variables soportadas en MVP:
+  - `{{username}}` — Reddit username del contacto
+  - `{{post_title}}` — título del post que generó el lead (si aplica)
+  - `{{subreddit}}` — subreddit de origen
+- preview simple con interpolación en tiempo real en la extensión
+- la extensión reemplaza variables antes de enviar
 
 ### 16.2 Fase posterior
 
@@ -958,7 +1031,26 @@ Idealmente agregar luego setting de privacidad para no guardar body de respuesta
 
 ---
 
-## 19. Qué no hacer
+## 19. Decisiones cerradas en sesión de diseño
+
+Estas decisiones se tomaron explícitamente y no deben revertirse al implementar:
+
+| Tema | Decisión |
+|------|----------|
+| Sidebar | Dos grupos INBOUND / OUTBOUND con headers no-clicables |
+| `dm_log` | Reemplazado por `dm_messages` con `direction: 'out'|'in'` y `reddit_message_id` para dedup |
+| Outcome | `dm_contacts.status` es la verdad del pipeline, no una columna en `dm_messages` |
+| Variables | Sintaxis `{{username}}`, `{{post_title}}`, `{{subreddit}}` |
+| AutoRefresh | 30s cuando campaña activa usando el componente `AutoRefresh` existente |
+| Múltiples campañas activas | DB soporta N desde el inicio; extensión MVP opera 1 a la vez |
+| Token storage en extensión | `chrome.storage.local` — aceptado |
+| Batch de contactos | Extensión empuja usernames via `POST /api/ext/campaigns/:id/contacts/batch` |
+| No-recontacto cross-campaign | `contacts/batch` salta contactos existentes con `status != queued`; queue insertion es `ON CONFLICT DO NOTHING` |
+| Idempotencia de result report | CAS atómica `pending → sent` en `dm_queue`; `dm_messages` unique por `queue_item_id` para `direction='out'`; uso mensual solo se incrementa en esa transición |
+
+---
+
+## 20. Qué no hacer
 
 - No migrar a monorepo ahora solo por prolijidad arquitectónica
 - No mezclar inbound status con outbound status
@@ -966,10 +1058,12 @@ Idealmente agregar luego setting de privacidad para no guardar body de respuesta
 - No hacer que el dashboard sea el único lugar de campaign creation
 - No introducir una taxonomía de planes distinta a la actual
 - No construir primero thread/subreddit scraping sin tener sólido el núcleo de lead campaigns
+- No usar `dm_log` — el modelo correcto es `dm_messages` (conversación multi-turno)
+- No restringir a una sola campaña activa en el schema de DB
 
 ---
 
-## 20. Instrucción final
+## 21. Instrucción final
 
 Implementar este módulo pensando en el proyecto real actual, no en un greenfield idealizado.
 

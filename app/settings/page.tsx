@@ -5,7 +5,8 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "@/app/components/locale-switcher";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listProjectKeywords, listProjectSubreddits } from "@/db/queries/settings";
-import type { KeywordDTO } from "@/db/schemas/domain";
+import { listActiveExtensionTokens } from "@/db/queries/extension-tokens";
+import type { ExtensionTokenDTO, KeywordDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { resolveCurrentProject } from "@/modules/projects/current";
@@ -18,13 +19,17 @@ import {
   toggleKeywordFromForm,
 } from "@/modules/projects/settings-actions";
 import { deleteProjectFromForm } from "@/modules/projects/delete-actions";
+import {
+  generateConnectTokenFromForm,
+  revokeExtensionTokenFromForm,
+} from "@/modules/outbound/extension-token-actions";
 
 export const metadata: Metadata = {
   title: "Settings",
 };
 
 type SettingsPageProps = {
-  searchParams?: Promise<{ projectId?: string; tab?: string }>;
+  searchParams?: Promise<{ projectId?: string; tab?: string; connectToken?: string }>;
 };
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
@@ -37,15 +42,17 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const { currentProject } = projectState;
 
 
-  const [currentLocale, t, keywords, subreddits, billingPlan] = await Promise.all([
+  const selectedTab = parseSettingsTab(params?.tab);
+
+  const [currentLocale, t, keywords, subreddits, billingPlan, extensionTokens] = await Promise.all([
     getLocale(),
     getTranslations("settings"),
     listProjectKeywords(currentProject.id),
     listProjectSubreddits(currentProject.id),
     getCurrentBillingPlan(),
+    selectedTab === "extension" ? listActiveExtensionTokens(user.id, currentProject.id) : Promise.resolve([]),
   ]);
-
-  const selectedTab = parseSettingsTab(params?.tab);
+  const connectToken = params?.connectToken ?? null;
   const competitorKeywords = keywords.filter((k) => k.type === "competitor");
   const searchKeywords = keywords.filter((k) => k.type !== "competitor");
   const activeKeywords = searchKeywords.filter((k) => k.is_active);
@@ -212,6 +219,14 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               </div>
             </SettingsSection>
           )}
+
+          {selectedTab === "extension" && (
+            <ExtensionSection
+              projectId={currentProject.id}
+              tokens={extensionTokens}
+              connectToken={connectToken}
+            />
+          )}
         </main>
       </div>
     </DashboardShell>
@@ -220,7 +235,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
 /* ─── Section wrapper ─── */
 
-type SettingsTab = "general" | "competitors" | "keywords" | "prompts" | "notifications" | "billing";
+type SettingsTab = "general" | "competitors" | "keywords" | "prompts" | "notifications" | "billing" | "extension";
 
 const SETTINGS_TABS: Array<{ id: SettingsTab; label: string }> = [
   { id: "general", label: "General" },
@@ -229,6 +244,7 @@ const SETTINGS_TABS: Array<{ id: SettingsTab; label: string }> = [
   { id: "prompts", label: "Prompts" },
   { id: "notifications", label: "Notifications" },
   { id: "billing", label: "Billing" },
+  { id: "extension", label: "Extension" },
 ];
 
 function SettingsTabs({
@@ -667,6 +683,129 @@ function PlanLimit({ label, value }: { label: string; value: string }) {
       <span style={{ fontSize: 13, color: "#1C1C1E", fontWeight: 800 }}>{value}</span>
     </div>
   );
+}
+
+/* ─── Extension section ─── */
+
+function ExtensionSection({
+  projectId,
+  tokens,
+  connectToken,
+}: {
+  projectId: string;
+  tokens: ExtensionTokenDTO[];
+  connectToken: string | null;
+}) {
+  return (
+    <div style={{ display: "grid", gap: 16 }}>
+      {connectToken && (
+        <div style={{
+          background: "#F0FAF4",
+          border: "1px solid #BBF1CE",
+          borderRadius: 10,
+          padding: "16px 18px",
+        }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#15803D", marginBottom: 6 }}>
+            Connect token generated — copy it now, it won&apos;t be shown again.
+          </p>
+          <p style={{ fontSize: 11, color: "#6B6B6E", marginBottom: 10 }}>
+            Expires in 15 minutes. Paste it in the Chrome Extension to connect.
+          </p>
+          <code style={{
+            display: "block",
+            background: "#FFFFFF",
+            border: "1px solid #D1FAE5",
+            borderRadius: 7,
+            padding: "10px 12px",
+            fontSize: 12,
+            fontFamily: "monospace",
+            color: "#1C1C1E",
+            wordBreak: "break-all",
+            userSelect: "all",
+          }}>
+            {connectToken}
+          </code>
+        </div>
+      )}
+
+      <SettingsSection
+        title="Chrome Extension"
+        description="Generate a one-time connect token to pair your browser extension with this project. The token expires in 15 minutes and can only be used once."
+      >
+        <form action={generateConnectTokenFromForm}>
+          <input type="hidden" name="projectId" value={projectId} />
+          <button type="submit" className="settings-btn-primary">
+            Generate connect token
+          </button>
+        </form>
+      </SettingsSection>
+
+      <SettingsSection
+        title="Active extension sessions"
+        description="Devices currently connected to this project via the Chrome Extension."
+        badge={tokens.length > 0 ? `${tokens.length} active` : undefined}
+      >
+        {tokens.length === 0 ? (
+          <p style={{ fontSize: 12, color: "#AEAEB2", padding: "8px 0" }}>
+            No active sessions. Generate a connect token and use it in the extension to pair a device.
+          </p>
+        ) : (
+          <div style={{ display: "grid", gap: 0 }}>
+            {tokens.map((token) => (
+              <div
+                key={token.id}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 12,
+                  padding: "10px 0",
+                  borderBottom: "1px solid #F5F5F3",
+                }}
+              >
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>
+                    {token.label ?? "Extension"}
+                  </p>
+                  <p style={{ fontSize: 11, color: "#8E8E93", marginTop: 2 }}>
+                    Connected {formatRelativeDate(token.created_at)}
+                    {token.last_used_at && ` · Last used ${formatRelativeDate(token.last_used_at)}`}
+                  </p>
+                </div>
+                <form action={revokeExtensionTokenFromForm}>
+                  <input type="hidden" name="tokenId" value={token.id} />
+                  <input type="hidden" name="projectId" value={projectId} />
+                  <button
+                    type="submit"
+                    style={{
+                      fontSize: 11,
+                      fontWeight: 700,
+                      color: "#DC2626",
+                      background: "none",
+                      border: "1px solid #FECACA",
+                      borderRadius: 6,
+                      padding: "4px 10px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Revoke
+                  </button>
+                </form>
+              </div>
+            ))}
+          </div>
+        )}
+      </SettingsSection>
+    </div>
+  );
+}
+
+function formatRelativeDate(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60_000);
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  return `${Math.floor(hours / 24)}d ago`;
 }
 
 /* ─── Helpers ─── */
