@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:outbound": "tsc -p tsconfig.outbound-tests.json && node --test .test-dist/outbound/src/modules/outbound/*.test.js",
+    "test:outbound:integration": "mkdir -p .test-dist && npx supabase status -o env --override-name api.url=NEXT_PUBLIC_SUPABASE_URL > .test-dist/outbound-integration.env && tsc -p tsconfig.outbound-integration.json && node --require ./scripts/register-path-alias.cjs --test .test-dist/outbound-integration/src/modules/outbound/integration.test.js",
     "typecheck": "tsc --noEmit",
     "supabase:start": "supabase start",
     "supabase:stop": "supabase stop",

@@ -1,6 +1,5 @@
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
 import { BrandLink } from "./logo";
 import { ProjectSwitcher } from "./project-switcher";
 import { PushNotificationToggle } from "./push-notification-toggle";
@@ -40,16 +39,17 @@ export function DashboardShell({
 function RefreshCountdowns({
   lastOpportunitiesAt,
   lastMentionsAt,
+  nowMs,
 }: {
   lastOpportunitiesAt: string | null;
   lastMentionsAt: string | null;
+  nowMs: number;
 }) {
   const CYCLE_HOURS = 24;
-  const now = Date.now();
 
   function computeBar(lastAt: string | null) {
     if (!lastAt) return { pct: 0, label: "Pending", color: "#DDDDD9" };
-    const hoursSince = (now - new Date(lastAt).getTime()) / 3_600_000;
+    const hoursSince = (nowMs - new Date(lastAt).getTime()) / 3_600_000;
     const hoursLeft = Math.max(0, CYCLE_HOURS - hoursSince);
     const pct = Math.max(0, Math.min(100, (hoursLeft / CYCLE_HOURS) * 100));
     let label: string;
@@ -125,10 +125,8 @@ async function DashboardShellContent({
   isAdminPromise: Promise<boolean>;
   children: React.ReactNode;
 }) {
-  const [isAdmin, t] = await Promise.all([
-    isAdminPromise,
-    getTranslations("nav"),
-  ]);
+  const isAdmin = await isAdminPromise;
+  const refreshNowMs = Number(new Date());
 
   return (
     <div
@@ -180,6 +178,7 @@ async function DashboardShellContent({
           <RefreshCountdowns
             lastOpportunitiesAt={currentProject.last_scraped_at}
             lastMentionsAt={currentProject.last_mentions_scraped_at}
+            nowMs={refreshNowMs}
           />
 
           {/* User profile row */}

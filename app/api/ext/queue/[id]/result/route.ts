@@ -1,34 +1,25 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { resolveExtToken, unauthorized, badRequest, serverError } from "@/lib/ext-auth";
+import { resolveExtToken, serverError } from "@/lib/ext-auth";
 import { recordQueueResult } from "@/db/mutations/outbound";
+import { handleRecordQueueResult } from "@/modules/outbound/api";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await resolveExtToken(request.headers.get("authorization"));
-    if (!auth) return unauthorized();
-
     const { id: queueItemId } = await params;
-    const body = (await request.json()) as {
-      campaignId?: string;
-      success?: boolean;
-      errorReason?: string;
-    };
-
-    if (!body.campaignId) return badRequest("Missing campaignId");
-    if (typeof body.success !== "boolean") return badRequest("Missing success field");
-
-    const processed = await recordQueueResult({
+    const result = await handleRecordQueueResult(
+      request.headers.get("authorization"),
       queueItemId,
-      campaignId: body.campaignId,
-      projectId: auth.projectId,
-      success: body.success,
-      errorReason: body.errorReason,
-    });
+      await request.json(),
+      {
+        resolveAuth: resolveExtToken,
+        recordQueueResult,
+      },
+    );
 
-    return NextResponse.json({ ok: true, processed });
+    return NextResponse.json(result.body, { status: result.status });
   } catch (err) {
     return serverError(err);
   }

@@ -56,7 +56,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
               maxWidth: 720,
             }}
           >
-            Find customers where they're already asking for your product.
+            Find customers where they&apos;re already asking for your product.
           </h1>
           <p className="page-copy" style={{ fontSize: 18, marginTop: 24 }}>
             ReddProwl detects buying intent, prioritizes opportunities and helps

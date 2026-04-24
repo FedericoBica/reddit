@@ -1,5 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 
+type RedditCommentChild = {
+  kind?: string;
+  data?: {
+    id?: string;
+    author?: string;
+    body?: string;
+    score?: number;
+  };
+};
+
+type RedditCommentsPayload = [unknown, { data?: { children?: RedditCommentChild[] } }?];
+
 function toRedditPath(permalink: string): string {
   if (!permalink.startsWith("http")) return permalink;
   try { return new URL(permalink).pathname; } catch { return permalink; }
@@ -25,17 +37,21 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Reddit returned an error" }, { status: 502 });
     }
 
-    const data = await res.json();
+    const data = (await res.json()) as RedditCommentsPayload;
 
     const comments = (data[1]?.data?.children ?? [])
-      .filter((c: any) => c.kind === "t1" && c.data?.body && c.data.body !== "[deleted]" && c.data.body !== "[removed]")
+      .filter((c) => c.kind === "t1" && c.data?.body && c.data.body !== "[deleted]" && c.data.body !== "[removed]")
       .slice(0, 12)
-      .map((c: any) => ({
-        id: c.data.id as string,
-        author: c.data.author as string,
-        body: c.data.body as string,
-        score: c.data.score as number,
-      }));
+      .flatMap((c) => {
+        if (!c.data) return [];
+
+        return [{
+          id: c.data.id as string,
+          author: c.data.author as string,
+          body: c.data.body as string,
+          score: c.data.score as number,
+        }];
+      });
 
     return NextResponse.json({ comments });
   } catch {

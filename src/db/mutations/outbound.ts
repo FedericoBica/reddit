@@ -8,6 +8,10 @@ import type {
   DmContactDTO,
   CreateDmCampaignInput,
 } from "@/db/schemas/domain";
+import {
+  filterSeedableLeadCandidates,
+  interpolateDmMessageTemplate,
+} from "@/modules/outbound/logic";
 
 // ─── Campaigns ────────────────────────────────────────────────
 
@@ -100,21 +104,7 @@ export async function seedLeadCampaignQueue(
     .eq("project_id", input.projectId)
     .in("reddit_username", usernames);
 
-  const alreadyContacted = new Set(
-    (existing ?? [])
-      .filter((c) => c.status !== "queued")
-      .map((c) => c.reddit_username),
-  );
-  const alreadyQueued = new Set(
-    (existing ?? [])
-      .filter((c) => c.status === "queued")
-      .map((c) => c.reddit_username),
-  );
-
-  // Only process leads whose author hasn't been contacted or queued yet.
-  const newLeads = leads.filter(
-    (l) => !alreadyContacted.has(l.author as string) && !alreadyQueued.has(l.author as string),
-  );
+  const newLeads = filterSeedableLeadCandidates(leads, existing ?? []);
 
   if (newLeads.length === 0) return { contactsCreated: 0, queueItemsCreated: 0 };
 
@@ -233,11 +223,10 @@ export async function getNextQueueItem(
 
   const contact = candidate.dm_contacts as unknown as DmContactDTO;
 
-  const interpolatedMessage = campaign.message_template
-    .replace(/\{\{username\}\}/gi, contact.reddit_username)
-    .replace(/\{\{subreddit\}\}/gi, "");
+  const interpolatedMessage = interpolateDmMessageTemplate(campaign.message_template, contact);
 
-  const { dm_contacts: _, ...queueItem } = candidate;
+  const { dm_contacts, ...queueItem } = candidate;
+  void dm_contacts;
 
   return {
     ...(queueItem as DmQueueItemDTO),
@@ -301,19 +290,21 @@ export async function recordQueueResult(input: QueueResultInput): Promise<boolea
 
     if (!contact) return true;
 
-    // Insert outbound message row (unique constraint prevents duplicate on retry).
-    await supabase.from("dm_messages").upsert(
-      {
-        project_id: contact.project_id,
-        campaign_id: updated.campaign_id,
-        contact_id: updated.contact_id,
-        queue_item_id: updated.id,
-        direction: "out" as const,
-        body: "",
-        sent_at: now,
-      },
-      { onConflict: "queue_item_id", ignoreDuplicates: true },
-    );
+    // A prior CAS already prevents duplicate success processing for the same queue item.
+    // Use insert here because Postgres partial unique indexes are not a reliable target for upsert.
+    const { error: messageInsertError } = await supabase.from("dm_messages").insert({
+      project_id: contact.project_id,
+      campaign_id: updated.campaign_id,
+      contact_id: updated.contact_id,
+      queue_item_id: updated.id,
+      direction: "out" as const,
+      body: "",
+      sent_at: now,
+    });
+
+    if (messageInsertError && messageInsertError.code !== "23505") {
+      throw new Error(`Failed to insert outbound message: ${messageInsertError.message}`);
+    }
 
     // Update contact status + timestamp.
     await supabase

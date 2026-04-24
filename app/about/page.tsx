@@ -54,8 +54,8 @@ export default function AboutPage() {
           <div style={{ display: "grid", gap: 28, color: "var(--ink-2)", fontSize: 17, lineHeight: 1.65 }}>
             <p>
               Every day thousands of people post on Reddit asking for exactly what you sell.
-              <em style={{ color: "var(--accent-ink)", fontStyle: "normal", fontWeight: 700 }}> "What&apos;s the best tool for X?"</em>{" "}
-              <em style={{ color: "var(--accent-ink)", fontStyle: "normal", fontWeight: 700 }}>"Anyone tried Y? Looking for alternatives."</em>{" "}
+              <em style={{ color: "var(--accent-ink)", fontStyle: "normal", fontWeight: 700 }}> &quot;What&apos;s the best tool for X?&quot;</em>{" "}
+              <em style={{ color: "var(--accent-ink)", fontStyle: "normal", fontWeight: 700 }}>&quot;Anyone tried Y? Looking for alternatives.&quot;</em>{" "}
               These posts sit there for days, sometimes weeks, indexed by Google and read by thousands.
             </p>
             <p>

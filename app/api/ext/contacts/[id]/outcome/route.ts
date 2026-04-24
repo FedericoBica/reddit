@@ -1,30 +1,34 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { resolveExtToken, unauthorized, badRequest, serverError } from "@/lib/ext-auth";
-import { dmContactStatusSchema } from "@/db/schemas/domain";
+import { resolveExtToken, serverError } from "@/lib/ext-auth";
+import { handleUpdateContactOutcome } from "@/modules/outbound/api";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const auth = await resolveExtToken(request.headers.get("authorization"));
-    if (!auth) return unauthorized();
-
     const { id: contactId } = await params;
-    const body = (await request.json()) as { status?: unknown };
-    const parsed = dmContactStatusSchema.safeParse(body.status);
-    if (!parsed.success) return badRequest("Invalid status");
+    const result = await handleUpdateContactOutcome(
+      request.headers.get("authorization"),
+      contactId,
+      await request.json(),
+      {
+        resolveAuth: resolveExtToken,
+        updateContactStatus: async ({ contactId: id, projectId, status }) => {
+          const supabase = createSupabaseAdminClient();
+          const { error } = await supabase
+            .from("dm_contacts")
+            .update({ status })
+            .eq("id", id)
+            .eq("project_id", projectId);
 
-    const supabase = createSupabaseAdminClient();
-    const { error } = await supabase
-      .from("dm_contacts")
-      .update({ status: parsed.data })
-      .eq("id", contactId)
-      .eq("project_id", auth.projectId);
+          if (error) throw new Error(error.message);
+        },
+      },
+    );
 
-    if (error) throw new Error(error.message);
-    return NextResponse.json({ ok: true });
+    return NextResponse.json(result.body, { status: result.status });
   } catch (err) {
     return serverError(err);
   }

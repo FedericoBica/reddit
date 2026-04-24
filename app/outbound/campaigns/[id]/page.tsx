@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { getCampaign, listContacts, listContactMessages } from "@/db/queries/outbound";
-import type { DmCampaignDTO, DmContactDTO, DmContactStatus, DmMessageDTO } from "@/db/schemas/domain";
+import type { DmContactDTO, DmContactStatus, DmMessageDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
+import { formatRelativeTime, getOutcomeTransitions } from "@/modules/outbound/logic";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import { updateContactStatusFromForm } from "@/modules/outbound/contact-actions";
 
@@ -206,9 +207,9 @@ function ContactListItem({ contact, isSelected }: { contact: DmContactDTO; isSel
       </div>
       <p style={{ fontSize: 10, color: "#AEAEB2", marginTop: 3, paddingLeft: 14 }}>
         {contact.last_reply_at
-          ? `Replied ${formatRelative(contact.last_reply_at)}`
+          ? `Replied ${formatRelativeTime(contact.last_reply_at)}`
           : contact.last_message_at
-            ? `Sent ${formatRelative(contact.last_message_at)}`
+            ? `Sent ${formatRelativeTime(contact.last_message_at)}`
             : "Queued"}
       </p>
     </div>
@@ -234,21 +235,15 @@ function MessageBubble({ message }: { message: DmMessageDTO }) {
       }}>
         {message.body || <em style={{ opacity: 0.6 }}>(no content recorded)</em>}
         <p style={{ fontSize: 9, marginTop: 4, opacity: 0.65, textAlign: isOut ? "right" : "left" }}>
-          {isOut ? "You" : `u/contact`} · {formatRelative(message.sent_at ?? message.received_at ?? message.created_at)}
+          {isOut ? "You" : `u/contact`} · {formatRelativeTime(message.sent_at ?? message.received_at ?? message.created_at)}
         </p>
       </div>
     </div>
   );
 }
 
-const OUTCOME_TRANSITIONS: Partial<Record<DmContactStatus, DmContactStatus[]>> = {
-  sent:       ["replied", "lost"],
-  replied:    ["interested", "lost"],
-  interested: ["won", "lost"],
-};
-
 function OutcomeActions({ contact, projectId }: { contact: DmContactDTO; projectId: string }) {
-  const transitions = OUTCOME_TRANSITIONS[contact.status] ?? [];
+  const transitions = getOutcomeTransitions(contact.status);
   if (transitions.length === 0) return null;
 
   return (
@@ -278,15 +273,4 @@ function OutcomeActions({ contact, projectId }: { contact: DmContactDTO; project
       ))}
     </div>
   );
-}
-
-/* ─── Utils ─── */
-
-function formatRelative(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
 }

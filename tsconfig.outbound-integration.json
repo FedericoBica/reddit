@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".test-dist/outbound-integration",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "rootDir": ".",
+    "incremental": false
+  },
+  "include": [
+    "src/db/schemas/database.types.ts",
+    "src/db/schemas/domain.ts",
+    "src/lib/env.ts",
+    "src/lib/supabase/admin.ts",
+    "src/modules/outbound/logic.ts",
+    "src/db/mutations/outbound.ts",
+    "src/modules/outbound/integration.test.ts"
+  ],
+  "exclude": []
+}

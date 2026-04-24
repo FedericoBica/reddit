@@ -5,6 +5,7 @@ import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listCampaigns, listContacts } from "@/db/queries/outbound";
 import type { DmCampaignDTO, DmContactDTO, DmContactStatus } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
+import { computeCrmStats, formatRelativeTime, getOutcomeTransitions } from "@/modules/outbound/logic";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import { updateContactStatusFromForm } from "@/modules/outbound/contact-actions";
 
@@ -41,7 +42,7 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
 
   // Overview stats.
   const allContacts = await listContacts(currentProject.id);
-  const stats = computeStats(allContacts, campaigns);
+  const stats = computeCrmStats(allContacts, campaigns);
 
   function buildHref(overrides: Record<string, string | undefined>) {
     const p = new URLSearchParams({ projectId: currentProject.id });
@@ -188,11 +189,6 @@ function CampaignCard({ campaign }: { campaign: DmCampaignDTO }) {
 /* ─── Contact row ─── */
 
 const TERMINAL_STATUSES: DmContactStatus[] = ["won", "lost"];
-const OUTCOME_TRANSITIONS: Partial<Record<DmContactStatus, DmContactStatus[]>> = {
-  replied: ["interested", "lost"],
-  interested: ["won", "lost"],
-  sent: ["replied", "lost"],
-};
 
 function ContactRow({
   contact,
@@ -203,7 +199,7 @@ function ContactRow({
   campaignName: string;
   projectId: string;
 }) {
-  const transitions = OUTCOME_TRANSITIONS[contact.status] ?? [];
+  const transitions = getOutcomeTransitions(contact.status);
   const isTerminal = TERMINAL_STATUSES.includes(contact.status);
 
   return (
@@ -223,10 +219,10 @@ function ContactRow({
         <StatusBadge status={contact.status} />
       </td>
       <td style={{ padding: "10px 16px", fontSize: 12, color: "#8E8E93" }}>
-        {contact.last_message_at ? formatRelative(contact.last_message_at) : "—"}
+        {contact.last_message_at ? formatRelativeTime(contact.last_message_at) : "—"}
       </td>
       <td style={{ padding: "10px 16px", fontSize: 12, color: "#8E8E93" }}>
-        {contact.last_reply_at ? formatRelative(contact.last_reply_at) : "—"}
+        {contact.last_reply_at ? formatRelativeTime(contact.last_reply_at) : "—"}
       </td>
       <td style={{ padding: "10px 16px" }}>
         {isTerminal ? (
@@ -298,26 +294,6 @@ function StatusBadge({ status }: { status: DmContactStatus }) {
       {status}
     </span>
   );
-}
-
-function computeStats(contacts: DmContactDTO[], campaigns: DmCampaignDTO[]) {
-  const byStatus = STATUS_OPTIONS.reduce(
-    (acc, s) => ({ ...acc, [s]: contacts.filter((c) => c.status === s).length }),
-    {} as Record<DmContactStatus, number>,
-  );
-  const totalSent = campaigns.reduce((sum, c) => sum + c.sent_count, 0);
-  const totalReplies = campaigns.reduce((sum, c) => sum + c.reply_count, 0);
-  const responseRate = totalSent > 0 ? Math.round((totalReplies / totalSent) * 100) : 0;
-  return { byStatus, responseRate };
-}
-
-function formatRelative(iso: string): string {
-  const diff = Date.now() - new Date(iso).getTime();
-  const mins = Math.floor(diff / 60_000);
-  if (mins < 60) return `${mins}m ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
 }
 
 function capitalize(s: string) {

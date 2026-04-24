@@ -407,7 +407,7 @@ function EmptyState({ isNew }: { isNew?: boolean }) {
       <div className="empty-state">
         <p className="section-title" style={{ fontSize: 15 }}>Scanning Reddit now…</p>
         <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
-          We're finding posts with buyer intent for your keywords. Results appear in a few minutes — refresh shortly.
+          We&apos;re finding posts with buyer intent for your keywords. Results appear in a few minutes — refresh shortly.
         </p>
       </div>
     );

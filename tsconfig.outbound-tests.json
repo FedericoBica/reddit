@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".test-dist/outbound",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "rootDir": ".",
+    "incremental": false
+  },
+  "include": [
+    "src/db/schemas/database.types.ts",
+    "src/db/schemas/domain.ts",
+    "src/modules/outbound/api.ts",
+    "src/modules/outbound/api.test.ts",
+    "src/modules/outbound/logic.ts",
+    "src/modules/outbound/logic.test.ts"
+  ],
+  "exclude": []
+}

@@ -162,7 +162,7 @@ function LeadCard({
   active: boolean;
   href: string;
 }) {
-  const ageMs = lead.created_at ? Date.now() - new Date(lead.created_at).getTime() : null;
+  const ageMs = lead.created_at ? Number(new Date()) - new Date(lead.created_at).getTime() : null;
   const ageMinutes = ageMs !== null ? Math.floor(ageMs / 60_000) : null;
 
   return (

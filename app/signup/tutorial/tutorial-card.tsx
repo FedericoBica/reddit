@@ -173,12 +173,13 @@ function TutorialReplyPanel() {
   const indexRef = useRef(0);
 
   useEffect(() => {
+    let currentIndex = 0;
     indexRef.current = 0;
-    setDisplayed("");
     const timer = setInterval(() => {
-      indexRef.current += 1;
-      setDisplayed(REPLY_TEXT.slice(0, indexRef.current));
-      if (indexRef.current >= REPLY_TEXT.length) clearInterval(timer);
+      currentIndex += 1;
+      indexRef.current = currentIndex;
+      setDisplayed(REPLY_TEXT.slice(0, currentIndex));
+      if (currentIndex >= REPLY_TEXT.length) clearInterval(timer);
     }, 28);
     return () => clearInterval(timer);
   }, []);

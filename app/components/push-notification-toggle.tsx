@@ -9,7 +9,9 @@ type PushNotificationToggleProps = {
 type PushStatus = "unsupported" | "disabled" | "enabled" | "denied" | "saving";
 
 export function PushNotificationToggle({ publicKey }: PushNotificationToggleProps) {
-  const [status, setStatus] = useState<PushStatus>("unsupported");
+  const [status, setStatus] = useState<PushStatus>(() => {
+    return publicKey && isPushSupported() ? "disabled" : "unsupported";
+  });
   const enabled = status === "enabled";
   const label = useMemo(() => {
     if (status === "saving") return "Guardando...";
@@ -19,18 +21,22 @@ export function PushNotificationToggle({ publicKey }: PushNotificationToggleProp
   }, [status]);
 
   useEffect(() => {
-    if (!publicKey || !isPushSupported()) {
-      setStatus("unsupported");
-      return;
-    }
+    if (!publicKey || !isPushSupported()) return;
+
+    let cancelled = false;
 
     void getExistingSubscription().then((subscription) => {
+      if (cancelled) return;
       if (Notification.permission === "denied") {
         setStatus("denied");
       } else {
         setStatus(subscription ? "enabled" : "disabled");
       }
     });
+
+    return () => {
+      cancelled = true;
+    };
   }, [publicKey]);
 
   if (!publicKey || status === "unsupported") {
