@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listProjectLeads } from "@/db/queries/leads";
 import { listSearchboxResults } from "@/db/queries/searchbox";
-import type { LeadDTO, SearchboxResultDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import { toRedditUrl } from "@/lib/utils";

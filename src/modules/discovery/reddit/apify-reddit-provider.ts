@@ -93,24 +93,36 @@ export class ApifyRedditProvider implements RedditDiscoveryProvider {
 
   private async runActor(body: Record<string, unknown>): Promise<ApifyRedditItem[]> {
     const actorId = process.env.APIFY_REDDIT_ACTOR_ID ?? "harshmaur/reddit-scraper";
-    const timeoutSecs = readPositiveIntEnv("APIFY_REDDIT_TIMEOUT_SECS", 50);
-    const url = new URL(
-      `https://api.apify.com/v2/acts/${encodeURIComponent(actorId)}/run-sync-get-dataset-items`,
-    );
-    url.searchParams.set("token", requireEnv("APIFY_API_TOKEN"));
-    url.searchParams.set("timeout", String(timeoutSecs));
+    const token = requireEnv("APIFY_API_TOKEN");
+    // How long to wait for the actor to finish before returning whatever it has collected.
+    // Default 300s (5 min). Set APIFY_REDDIT_TIMEOUT_SECS higher if the actor is slow.
+    const waitSecs = readPositiveIntEnv("APIFY_REDDIT_TIMEOUT_SECS", 300);
 
-    const response = await fetch(url, {
+    // Start the actor run (non-blocking — returns immediately with a run ID).
+    const startUrl = new URL(`https://api.apify.com/v2/acts/${encodeURIComponent(actorId)}/runs`);
+    startUrl.searchParams.set("token", token);
+
+    const startResp = await fetch(startUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
-
-    if (!response.ok) {
-      throw new Error(`Apify Reddit actor failed: ${response.status}`);
+    if (!startResp.ok) {
+      throw new Error(`Apify run start failed: ${startResp.status}`);
     }
+    const { data: run } = await startResp.json() as { data: { id: string } };
 
-    return response.json() as Promise<ApifyRedditItem[]>;
+    // Fetch dataset items, blocking until the actor finishes or waitSecs elapses.
+    // If the actor is still running at that point, Apify returns whatever it has collected so far.
+    const itemsUrl = new URL(`https://api.apify.com/v2/actor-runs/${run.id}/dataset/items`);
+    itemsUrl.searchParams.set("token", token);
+    itemsUrl.searchParams.set("waitForFinish", String(waitSecs));
+
+    const itemsResp = await fetch(itemsUrl);
+    if (!itemsResp.ok) {
+      throw new Error(`Apify dataset fetch failed: ${itemsResp.status}`);
+    }
+    return itemsResp.json() as Promise<ApifyRedditItem[]>;
   }
 }
 

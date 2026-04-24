@@ -170,10 +170,8 @@ document.getElementById("disconnect-btn")!.addEventListener("click", async () =>
 // ── New campaign wizard ────────────────────────────────────────
 
 let selectedCampaignType: string | null = null;
-let currentWizardStep = 1;
 
 function showWizardStep(step: number) {
-  currentWizardStep = step;
   document.querySelectorAll<HTMLElement>(".wizard-step").forEach((s) => s.classList.remove("active"));
   document.getElementById(`wizard-step-${step}`)?.classList.add("active");
 }

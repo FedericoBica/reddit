@@ -101,7 +101,6 @@ export async function snoozeLeadFromForm(formData: FormData) {
   const projectId = String(formData.get("projectId") ?? "");
   const leadId = String(formData.get("leadId") ?? "");
   const snoozedUntil = String(formData.get("snoozedUntil") ?? "");
-  const returnTo = String(formData.get("returnTo") ?? `/leads/${leadId}?projectId=${projectId}`);
 
   if (!snoozedUntil) return;
 

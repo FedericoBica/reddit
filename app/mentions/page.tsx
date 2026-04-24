@@ -225,8 +225,6 @@ function SentimentBar({
   selectedSort: string;
   stats: Record<string, number>;
 }) {
-  const total = Math.max(1, stats.all);
-
   const items: Array<{ value: BrandMentionSentiment | "all"; label: string; color: string; bg: string }> = [
     { value: "all", label: "All", color: "#6B6B6E", bg: "#F3F4F6" },
     { value: "positive", ...SENTIMENT_CONFIG.positive },

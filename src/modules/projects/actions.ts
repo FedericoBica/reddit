@@ -24,7 +24,6 @@ import type { ProjectDTO } from "@/db/schemas/domain";
 
 const NEW_PROJECT_WEBSITE_COOKIE = "new_project_website";
 const NEW_PROJECT_DESCRIPTION_COOKIE = "new_project_description";
-const NEW_PROJECT_COMPETITORS_COOKIE = "new_project_competitors";
 
 export async function createFirstProject(formData: FormData) {
   const user = await requireUser("/bootstrap");

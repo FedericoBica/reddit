@@ -138,7 +138,7 @@ export async function resetCompanyWebsiteAnalysis() {
 }
 
 export async function createProjectFromCompanyProfile(formData: FormData) {
-  const user = await requireUser("/signup/company");
+  await requireUser("/signup/company");
   const website = String(formData.get("website") ?? "").trim();
   const description = String(formData.get("description") ?? "").trim();
 

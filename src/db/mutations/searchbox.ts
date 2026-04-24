@@ -130,7 +130,6 @@ export async function updateSearchboxResultStatus(
 
 export async function createLeadFromSearchboxResult(
   result: SearchboxResultDTO,
-  userId: string,
 ): Promise<string> {
   const supabase = await createSupabaseServerClient();
 

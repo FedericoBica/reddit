@@ -26,7 +26,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
   const runId = options.runId ?? crypto.randomUUID();
   const maxProjects = readPositiveIntEnv("SCRAPE_MAX_PROJECTS_PER_RUN", 10);
   const maxPosts = readPositiveIntEnv("SCRAPE_MAX_POSTS_PER_KEYWORD", 25);
-  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 40);
+  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 50);
   const candidates = await listProjectsDueForScraping(maxProjects);
   const now = Date.now();
 
@@ -128,12 +128,14 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
                 )
                 .slice(0, 1);
 
-        if (keywordsMatched.length === 0) continue;
+        // Apify already found this post via our search terms — let the classifier
+        // decide relevance. Fall back to all search keywords as context.
+        const effectiveKeywords = keywordsMatched.length > 0 ? keywordsMatched : keywordTargets;
 
         const classification = await classifyLeadCandidate({
           project: target.project,
           post,
-          keywordsMatched,
+          keywordsMatched: effectiveKeywords,
         });
 
         classificationsCount += 1;
@@ -162,7 +164,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
           sentiment: classification.sentiment,
           classificationReason: classification.classificationReason,
           classifierPromptVersion: classification.promptVersion,
-          keywordsMatched: keywordsMatched.map((k) => k.term),
+          keywordsMatched: effectiveKeywords.map((k) => k.term),
           rawData: post.rawData,
         });
 
@@ -337,7 +339,7 @@ export async function classifyAndSaveBackfillPosts(
   input: Extract<BackfillFetchResult, { status: "fetched" }>,
 ): Promise<{ projectId: string; status: string; postsSeen: number; leadsCreated: number; duplicatesSkipped: number }> {
   const { projectId, scrapeRunId, runId, posts, keywords, project, scrapeFailCount } = input;
-  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 40);
+  const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 50);
   const keywordTargets: KeywordMatchTarget[] = keywords.map((k) => ({
     term: k.term,
     weight: k.intentCategory === "comparative" ? "high" : "normal",

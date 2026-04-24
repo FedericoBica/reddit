@@ -49,16 +49,12 @@ export default async function FounderPage() {
 
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
-  const monthAgo = new Date(now.getTime() - 30 * 86_400_000);
 
   const newUsersThisWeek = allUsers.filter(
     (u) => new Date(u.created_at) >= weekAgo
   ).length;
   const leadsThisWeek = allLeads.filter(
     (l) => new Date(l.created_at) >= weekAgo
-  ).length;
-  const leadsThisMonth = allLeads.filter(
-    (l) => new Date(l.created_at) >= monthAgo
   ).length;
 
   const wonLeads = allLeads.filter((l) => l.status === "won");

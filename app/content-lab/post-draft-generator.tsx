@@ -16,7 +16,6 @@ export function PostDraftGenerator({
   cooldowns?: Record<string, SubredditCooldown>;
 }) {
   const t = useTranslations("contentLab.generator");
-  const tCommon = useTranslations("common");
   const tCalendar = useTranslations("calendar");
 
   const STYLES = [

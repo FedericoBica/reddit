@@ -343,23 +343,6 @@ function LeadDetail({
   );
 }
 
-// ── Shared small components ───────────────────────────────────
-
-function IntentTypePill({ type }: { type: string }) {
-  const config: Record<string, { label: string; color: string; bg: string }> = {
-    competitor_comparison: { label: "Competitor", color: "#7C3AED", bg: "#F5F3FF" },
-    active_buying:         { label: "Active Buying", color: "#E07000", bg: "#FFF3E8" },
-    pain_expression:       { label: "Pain Point", color: "#DC2626", bg: "#FEF2F2" },
-    existing_user:         { label: "Existing User", color: "#16A34A", bg: "#F0FDF4" },
-    low_intent:            { label: "Low Intent", color: "#AEAEB2", bg: "#F5F5F3" },
-  };
-  const c = config[type] ?? config.low_intent;
-  return (
-    <span style={{ display: "inline-flex", padding: "3px 9px", borderRadius: 6, fontSize: 10, fontWeight: 800, background: c.bg, color: c.color, letterSpacing: "0.01em" }}>
-      {c.label}
-    </span>
-  );
-}
 
 function StatusPill({ status }: { status: LeadDTO["status"] }) {
   const styles: Record<string, { bg: string; color: string }> = {

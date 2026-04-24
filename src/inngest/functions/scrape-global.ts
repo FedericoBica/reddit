@@ -9,7 +9,7 @@ export const scrapeGlobalProjects = inngest.createFunction(
     retries: 0,
     concurrency: 1,
     timeouts: {
-      finish: "5m",
+      finish: "15m",
     },
     triggers: [
       { event: "scrape/opportunities.requested" },

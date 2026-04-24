@@ -21,7 +21,7 @@ export async function generateSearchboxReplyFromForm(formData: FormData) {
   let leadId = result.lead_id;
 
   if (!leadId) {
-    leadId = await createLeadFromSearchboxResult(result, user.id);
+    leadId = await createLeadFromSearchboxResult(result);
   }
 
   const queued = await requestLeadReplyGeneration({ projectId, leadId });
