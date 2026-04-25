@@ -34,8 +34,8 @@ export default async function SignupTutorialPage({ searchParams }: TutorialPageP
         <BrandLink logoSize={28} wordmarkSize={18} />
       </header>
 
-      <Card className="signup-wizard-card">
-        <CardContent className="signup-wizard-content">
+      <Card className="signup-wizard-card" style={{ marginTop: 32 }}>
+        <CardContent className="signup-wizard-content" style={{ padding: 0 }}>
           <TutorialCard projectId={projectId} />
         </CardContent>
       </Card>

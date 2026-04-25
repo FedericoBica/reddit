@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { getCurrentUser } from "@/modules/auth/server";
 import { signUpWithPassword } from "@/modules/onboarding/signup-actions";
+import { SignupProgress } from "./components/signup-progress";
 
 export const metadata: Metadata = {
   title: "Crear cuenta",
@@ -32,18 +33,27 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
     <main className="signup-wizard-shell">
       <header className="signup-wizard-brand">
         <BrandLink logoSize={28} wordmarkSize={18} />
+        <div className="signup-topbar-right">
+          <a href="/login" className="signup-topbar-help">Already have an account?</a>
+        </div>
       </header>
 
+      <div className="sw-progress-wrap">
+        <SignupProgress active={-1} />
+      </div>
+
       <Card className="signup-wizard-card">
-        <CardContent className="signup-wizard-content">
+        <CardContent className="signup-wizard-content" style={{ padding: 0 }}>
           <section className="signup-wizard-main">
-            <StepDots active={0} total={5} />
-            <p className="page-kicker">Signup</p>
+            <div className="sw-eyebrow">
+              <span className="sw-eyebrow-dot" />
+              Start here
+            </div>
             <h1 className="signup-wizard-title" id="signup-title">
-              Unlock Reddit&apos;s hidden customer goldmine
+              Unlock Reddit&apos;s<br /><em>hidden buyers.</em>
             </h1>
             <p className="signup-wizard-copy" id="signup-description">
-              Join businesses finding high-quality leads from Reddit in minutes.
+              Join businesses finding high-quality leads from Reddit in minutes. No credit card required.
             </p>
 
             {params?.error && (
@@ -73,7 +83,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
                 <span className="field-label">Email</span>
                 <Input
                   aria-invalid={Boolean(params?.error)}
-                  className="h-11 rounded-[8px] bg-white px-3 text-sm"
+                  className="h-11 rounded-[10px] bg-white px-3 text-sm"
                   id="signup-email"
                   name="email"
                   type="email"
@@ -86,7 +96,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
               <label className="field-group" htmlFor="signup-password">
                 <span className="field-label">Password</span>
                 <Input
-                  className="h-11 rounded-[8px] bg-white px-3 text-sm"
+                  className="h-11 rounded-[10px] bg-white px-3 text-sm"
                   id="signup-password"
                   name="password"
                   type="password"
@@ -96,23 +106,29 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
                   required
                 />
               </label>
-              <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                Next
+              <Button className="h-11 rounded-[10px] font-bold text-sm" type="submit">
+                Create account →
               </Button>
             </form>
-
-            <p className="section-copy" style={{ marginTop: 18 }}>
-              ¿Ya tenés cuenta?{" "}
-              <a href="/login" style={{ color: "#E07000", fontWeight: 800, textDecoration: "none" }}>
-                Entrar
-              </a>
-            </p>
           </section>
 
           <aside className="signup-wizard-visual">
-            <FloatingLead title="Best project management tool?" score="98" />
-            <FloatingLead title="Looking for a CRM alternative" score="91" />
-            <FloatingLead title="Agency tools for social leads" score="87" />
+            <div className="sw-pane-eyebrow">
+              <span className="sw-live-tag">
+                <span className="sw-pulse" />
+                Live leads
+              </span>
+              <span className="sw-pane-meta">Today</span>
+            </div>
+            <div className="sw-radar-feed">
+              <FloatingLead title="Best CRM for a bootstrapped SaaS?" score="94" fresh />
+              <FloatingLead title="Looking for a lightweight Intercom alternative" score="88" />
+              <FloatingLead title="Agency tools for social lead monitoring" score="81" dim />
+            </div>
+            <div className="sw-divider" style={{ marginTop: 16 }} />
+            <p style={{ fontSize: 12, color: "oklch(0.6 0.02 55)", fontFamily: "ui-monospace, Menlo, monospace", letterSpacing: "0.04em" }}>
+              Tip — works best for B2B SaaS, agencies, and dev tools.
+            </p>
           </aside>
         </CardContent>
       </Card>
@@ -120,25 +136,15 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   );
 }
 
-function StepDots({ active, total }: { active: number; total: number }) {
+function FloatingLead({ title, score, fresh, dim }: { title: string; score: string; fresh?: boolean; dim?: boolean }) {
   return (
-    <div className="signup-step-dots" aria-label={`Step ${active + 1} of ${total}`} role="status">
-      {Array.from({ length: total }).map((_, index) => (
-        <span
-          aria-hidden="true"
-          key={index}
-          className={index === active ? "signup-step-dot-active" : ""}
-        />
-      ))}
-    </div>
-  );
-}
-
-function FloatingLead({ title, score }: { title: string; score: string }) {
-  return (
-    <div className="signup-floating-lead">
-      <span>{title}</span>
-      <strong>{score}</strong>
+    <div
+      className={`sw-radar-row${fresh ? " sw-radar-row-fresh" : ""}${dim ? " sw-radar-row-muted" : ""}`}
+    >
+      <div>
+        <div className="sw-radar-post">{title}</div>
+      </div>
+      <div className="sw-radar-score">{score}</div>
     </div>
   );
 }

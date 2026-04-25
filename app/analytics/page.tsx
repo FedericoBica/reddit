@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listAllProjectLeads } from "@/db/queries/leads";
+import { listSearchboxResults } from "@/db/queries/searchbox";
 import type { LeadDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
@@ -24,12 +25,17 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   const { currentProject } = projectState;
 
 
-  const allLeads = await listAllProjectLeads(currentProject.id, 500);
+  const [allLeads, searchboxResults] = await Promise.all([
+    listAllProjectLeads(currentProject.id, 500),
+    listSearchboxResults({ projectId: currentProject.id, limit: 500 }),
+  ]);
+
+  const analyticsPosts = normalizeAnalyticsPosts(allLeads, searchboxResults);
 
   const stats = computeStats(allLeads);
-  const subredditStats = computeSubredditStats(allLeads);
-  const keywordStats = computeKeywordStats(allLeads);
-  const relevantSubreddits = computeRelevantSubreddits(allLeads);
+  const subredditStats = computeSubredditStats(analyticsPosts);
+  const keywordStats = computeKeywordStats(analyticsPosts);
+  const relevantSubreddits = computeRelevantSubreddits(analyticsPosts);
   const timeline = computeTimeline(allLeads);
 
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
@@ -343,6 +349,38 @@ function TimelineChart({ rows }: { rows: { date: string; count: number }[] }) {
 
 // ── Analytics helpers ─────────────────────────────────────────
 
+type AnalyticsPost = {
+  subreddit: string;
+  keywords: string[];
+  intentScore: number;
+  createdAt: string;
+};
+
+function normalizeAnalyticsPosts(
+  leads: LeadDTO[],
+  searchbox: Awaited<ReturnType<typeof listSearchboxResults>>,
+): AnalyticsPost[] {
+  const fromLeads: AnalyticsPost[] = leads.map((l) => ({
+    subreddit: l.subreddit,
+    keywords: l.keywords_matched,
+    intentScore: l.intent_score ?? 0,
+    createdAt: l.created_at,
+  }));
+
+  const seenPostIds = new Set(leads.map((l) => l.reddit_post_id));
+
+  const fromSearchbox: AnalyticsPost[] = searchbox
+    .filter((s) => !seenPostIds.has(s.reddit_post_id))
+    .map((s) => ({
+      subreddit: s.subreddit,
+      keywords: s.google_keywords.length > 0 ? s.google_keywords : [s.google_keyword],
+      intentScore: s.intent_score ?? 0,
+      createdAt: s.created_at,
+    }));
+
+  return [...fromLeads, ...fromSearchbox];
+}
+
 function computeStats(leads: LeadDTO[]) {
   const total = leads.length;
   const newCount = leads.filter((l) => l.status === "new").length;
@@ -353,13 +391,13 @@ function computeStats(leads: LeadDTO[]) {
   return { total, new: newCount, replied, avgScore };
 }
 
-function computeSubredditStats(leads: LeadDTO[]) {
+function computeSubredditStats(posts: AnalyticsPost[]) {
   const map = new Map<string, { count: number; scoreSum: number }>();
-  for (const l of leads) {
-    const entry = map.get(l.subreddit) ?? { count: 0, scoreSum: 0 };
+  for (const p of posts) {
+    const entry = map.get(p.subreddit) ?? { count: 0, scoreSum: 0 };
     entry.count++;
-    entry.scoreSum += l.intent_score ?? 0;
-    map.set(l.subreddit, entry);
+    entry.scoreSum += p.intentScore;
+    map.set(p.subreddit, entry);
   }
   return Array.from(map.entries())
     .map(([subreddit, { count, scoreSum }]) => ({
@@ -370,20 +408,18 @@ function computeSubredditStats(leads: LeadDTO[]) {
     .sort((a, b) => b.count - a.count);
 }
 
-function computeRelevantSubreddits(leads: LeadDTO[]) {
+function computeRelevantSubreddits(posts: AnalyticsPost[]) {
   const map = new Map<string, { count: number; scoreSum: number; highIntent: number }>();
 
-  for (const lead of leads) {
-    const entry = map.get(lead.subreddit) ?? { count: 0, scoreSum: 0, highIntent: 0 };
-    const score = lead.intent_score ?? 0;
-
+  for (const p of posts) {
+    const entry = map.get(p.subreddit) ?? { count: 0, scoreSum: 0, highIntent: 0 };
     entry.count++;
-    entry.scoreSum += score;
-    if (score >= 80) entry.highIntent++;
-    map.set(lead.subreddit, entry);
+    entry.scoreSum += p.intentScore;
+    if (p.intentScore >= 80) entry.highIntent++;
+    map.set(p.subreddit, entry);
   }
 
-  const maxCount = Math.max(...Array.from(map.values()).map((entry) => entry.count), 1);
+  const maxCount = Math.max(...Array.from(map.values()).map((e) => e.count), 1);
 
   return Array.from(map.entries())
     .map(([subreddit, entry]) => {
@@ -395,22 +431,15 @@ function computeRelevantSubreddits(leads: LeadDTO[]) {
         volumeScore * 0.25 +
         highIntentRate * 0.20,
       );
-
-      return {
-        subreddit,
-        count: entry.count,
-        avgScore,
-        highIntentRate,
-        relevancyScore,
-      };
+      return { subreddit, count: entry.count, avgScore, highIntentRate, relevancyScore };
     })
     .sort((a, b) => b.relevancyScore - a.relevancyScore || b.count - a.count);
 }
 
-function computeKeywordStats(leads: LeadDTO[]) {
+function computeKeywordStats(posts: AnalyticsPost[]) {
   const map = new Map<string, number>();
-  for (const l of leads) {
-    for (const kw of l.keywords_matched) {
+  for (const p of posts) {
+    for (const kw of p.keywords) {
       map.set(kw, (map.get(kw) ?? 0) + 1);
     }
   }

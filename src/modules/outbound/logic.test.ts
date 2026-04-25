@@ -2,11 +2,17 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import type { DmCampaignDTO, DmContactDTO } from "@/db/schemas/domain";
 import {
+  attachCampaignMessageSpintax,
+  buildCampaignMessageVariants,
+  buildCampaignMessageSpintax,
   computeCrmStats,
+  expandSpintax,
   filterSeedableLeadCandidates,
   formatRelativeTime,
   getOutcomeTransitions,
   interpolateDmMessageTemplate,
+  resolveCampaignSubreddit,
+  selectCampaignMessageVariant,
 } from "./logic";
 
 function createContact(
@@ -77,11 +83,61 @@ test("interpolateDmMessageTemplate replaces supported placeholders", () => {
   const contact = createContact({ reddit_username: "carol" });
 
   const message = interpolateDmMessageTemplate(
-    "Hey {{username}}, saw your post in {{subreddit}}.",
+    "Hey {{username}}, saw your post \"{{post_title}}\" in {{subreddit}}.",
     contact,
+    { subreddit: "saas", postTitle: "Need help with onboarding" },
   );
 
-  assert.equal(message, "Hey carol, saw your post in .");
+  assert.equal(message, "Hey carol, saw your post \"Need help with onboarding\" in saas.");
+});
+
+test("buildCampaignMessageVariants keeps primary template and fills alternates by type", () => {
+  const variants = buildCampaignMessageVariants("thread", "Hi {{username}}, saw your comment.", {});
+
+  assert.ok(variants.length >= 1);
+  assert.ok(variants.length <= 3);
+  assert.ok(variants.every((variant) => variant.includes("{{username}}")));
+});
+
+test("buildCampaignMessageSpintax converts message variants into a single spintax template", () => {
+  const spintax = buildCampaignMessageSpintax("lead", "Hi {{username}}", {});
+
+  assert.equal(
+    spintax,
+    "{Hi {{username}}|Hey {{username}}, saw your post and thought I'd reach out.|Hi {{username}}, your post caught my attention so I wanted to send a quick note.}",
+  );
+});
+
+test("attachCampaignMessageSpintax stores a generated spintax template inside source config", () => {
+  const sourceConfig = attachCampaignMessageSpintax("lead", { minIntentScore: 50 }, "Hi {{username}}");
+
+  assert.deepEqual(sourceConfig, {
+    minIntentScore: 50,
+    messageSpintax: "{Hi {{username}}|Hey {{username}}, saw your post and thought I'd reach out.|Hi {{username}}, your post caught my attention so I wanted to send a quick note.}",
+  });
+});
+
+test("expandSpintax resolves placeholders without breaking template variables", () => {
+  const result = expandSpintax("{Hello|Hi|Hey} {{username}} from {{subreddit}}", "seed-1");
+
+  assert.match(result, /^(Hello|Hi|Hey) \{\{username\}\} from \{\{subreddit\}\}$/);
+});
+
+test("selectCampaignMessageVariant rotates deterministically per queue item", () => {
+  const first = selectCampaignMessageVariant("subreddit", "Hi {{username}}", { subreddit: "saas" }, "queue-a");
+  const second = selectCampaignMessageVariant("subreddit", "Hi {{username}}", { subreddit: "saas" }, "queue-b");
+
+  assert.match(first, /\{\{username\}\}/);
+  assert.match(second, /\{\{username\}\}/);
+  assert.equal(
+    selectCampaignMessageVariant("subreddit", "Hi {{username}}", { subreddit: "saas" }, "queue-a"),
+    first,
+  );
+});
+
+test("resolveCampaignSubreddit returns the configured subreddit when present", () => {
+  assert.equal(resolveCampaignSubreddit({ subreddit: "startups" }), "startups");
+  assert.equal(resolveCampaignSubreddit({}), "");
 });
 
 test("getOutcomeTransitions exposes the CRM progression rules", () => {

@@ -4,6 +4,8 @@ export type ExtStorage = {
   projectId: string;
   projectName: string;
   activeCampaignId: string | null;
+  linkedRedditUsername: string | null;
+  linkedRedditVerifiedAt: string | null;
 };
 
 export async function getStorage(): Promise<Partial<ExtStorage>> {
@@ -13,6 +15,8 @@ export async function getStorage(): Promise<Partial<ExtStorage>> {
     "projectId",
     "projectName",
     "activeCampaignId",
+    "linkedRedditUsername",
+    "linkedRedditVerifiedAt",
   ]) as Promise<Partial<ExtStorage>>;
 }
 

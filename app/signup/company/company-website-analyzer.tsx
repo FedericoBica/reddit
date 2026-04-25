@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SignupProgress } from "@/app/signup/components/signup-progress";
 
 type CompanyWebsiteAnalyzerProps = {
   action: (formData: FormData) => void | Promise<void>;
@@ -11,9 +12,10 @@ type CompanyWebsiteAnalyzerProps = {
 };
 
 const analysisSteps = [
-  "Analyzing your website",
-  "Discovering high intent keywords",
-  "Generating company description",
+  { label: "Reading your site", pending: "Crawling pages…" },
+  { label: "Discovering high-intent keywords", pending: "Queued" },
+  { label: "Generating company brief", pending: "Queued" },
+  { label: "Mapping target subreddits", pending: "Queued" },
 ];
 
 export function CompanyWebsiteAnalyzer({ action, error }: CompanyWebsiteAnalyzerProps) {
@@ -22,11 +24,16 @@ export function CompanyWebsiteAnalyzer({ action, error }: CompanyWebsiteAnalyzer
   return (
     <>
       <section className="signup-wizard-main">
-        <StepDots active={1} total={5} />
-        <p className="page-kicker">Company</p>
-        <h1 className="signup-wizard-title">Tell us about your company</h1>
+        <SignupProgress active={0} />
+        <div className="sw-eyebrow" style={{ marginTop: 20 }}>
+          <span className="sw-eyebrow-dot" />
+          Step 01 · Company
+        </div>
+        <h1 className="signup-wizard-title">
+          Tell us about<br /><em>your company.</em>
+        </h1>
         <p className="signup-wizard-copy">
-          We&apos;ll analyze your website and prepare the company description.
+          Drop your URL — we read your site, build a positioning brief, and learn the language buyers use to describe what you do.
         </p>
 
         {error && <div className="signup-error">{error}</div>}
@@ -37,30 +44,62 @@ export function CompanyWebsiteAnalyzer({ action, error }: CompanyWebsiteAnalyzer
           onSubmit={() => setSubmitted(true)}
         >
           <label className="field-group">
-            <span className="field-label">Company website</span>
-            <Input
-              className="h-11 rounded-[8px] bg-white px-3 text-sm"
-              name="website"
-              type="url"
-              placeholder="https://example.com"
-              required
-            />
+            <span className="field-label">Company website <span style={{ color: "oklch(0.6 0.02 55)", fontWeight: 400 }}>— we&apos;ll handle the rest</span></span>
+            <div className="sw-input-wrap">
+              <span className="sw-input-prefix">https://</span>
+              <input
+                className="sw-input"
+                name="website"
+                type="text"
+                placeholder="yourcompany.com"
+                required
+              />
+            </div>
           </label>
           <AnalyzeButton />
         </form>
+        <div className="sw-foot-note">
+          <span>🔒</span> We don&apos;t store the page text — only the positioning brief.
+        </div>
       </section>
 
       <aside className="signup-wizard-visual">
-        <div className="signup-analysis-list signup-analysis-list-compact">
-          {analysisSteps.map((step, index) => (
-            <AnalysisStep
-              active={submitted}
-              index={index}
-              key={step}
-              title={step}
-            />
-          ))}
+        <div className="sw-pane-eyebrow">
+          <span className="sw-live-tag">
+            {submitted && <span className="sw-pulse" />}
+            Live analysis
+          </span>
+          <span className="sw-pane-meta">~ 12s</span>
         </div>
+        <div className="sw-run-list">
+          {analysisSteps.map((step, index) => {
+            const isActive = submitted && index === 0;
+            const isDone = false;
+            return (
+              <div
+                key={step.label}
+                className={`sw-run-item${isActive ? " sw-run-item-active" : isDone ? " sw-run-item-done" : ""}`}
+              >
+                <div className="sw-run-icon">
+                  {isActive
+                    ? <span className="sw-run-spinner" />
+                    : isDone
+                      ? <span>✓</span>
+                      : <span>{String(index + 1).padStart(2, "0")}</span>
+                  }
+                </div>
+                <div className="sw-run-text">
+                  <span className="sw-run-title">{step.label}</span>
+                  <span className="sw-run-status">{isActive ? step.pending : "Queued"}</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="sw-divider" />
+        <p style={{ fontSize: 12, color: "oklch(0.6 0.02 55)", fontFamily: "ui-monospace, Menlo, monospace", letterSpacing: "0.04em" }}>
+          Tip — works best with a homepage that explains what you do in one sentence.
+        </p>
       </aside>
     </>
   );
@@ -71,44 +110,11 @@ function AnalyzeButton() {
 
   return (
     <Button
-      className="h-11 rounded-[8px] font-extrabold"
+      className="h-11 rounded-[10px] font-bold text-sm"
       disabled={pending}
       type="submit"
     >
-      {pending ? "Analyzing..." : "Next"}
+      {pending ? "Analyzing…" : "Analyze my site →"}
     </Button>
-  );
-}
-
-function StepDots({ active, total }: { active: number; total: number }) {
-  return (
-    <div className="signup-step-dots">
-      {Array.from({ length: total }).map((_, index) => (
-        <span key={index} className={index === active ? "signup-step-dot-active" : ""} />
-      ))}
-    </div>
-  );
-}
-
-function AnalysisStep({
-  active,
-  index,
-  title,
-}: {
-  active: boolean;
-  index: number;
-  title: string;
-}) {
-  return (
-    <div
-      className={`signup-analysis-step${active ? " signup-analysis-step-loading" : ""}`}
-      style={{ animationDelay: `${index * 640}ms` }}
-    >
-      <span />
-      <div>
-        <strong>{title}</strong>
-        <p>{active ? "Working on this now." : "Ready"}</p>
-      </div>
-    </div>
   );
 }

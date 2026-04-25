@@ -11,6 +11,7 @@ import {
   createProjectFromCompanyProfile,
 } from "./actions";
 import { CompanyWebsiteAnalyzer } from "./company-website-analyzer";
+import { SignupProgress } from "@/app/signup/components/signup-progress";
 
 export const metadata: Metadata = {
   title: "Tu compañía",
@@ -41,16 +42,24 @@ export default async function SignupCompanyPage({ searchParams }: CompanyPagePro
         <BrandLink logoSize={28} wordmarkSize={18} />
       </header>
 
+      <div className="sw-progress-wrap">
+        <SignupProgress active={0} />
+      </div>
+
       <Card className="signup-wizard-card">
-        <CardContent className="signup-wizard-content">
+        <CardContent className="signup-wizard-content" style={{ padding: 0 }}>
           {!analyzed ? (
             <CompanyWebsiteAnalyzer action={analyzeCompanyWebsite} error={params?.error} />
           ) : (
             <>
               <section className="signup-wizard-main">
-                <StepDots active={1} total={5} />
-                <p className="page-kicker">Company</p>
-                <h1 className="signup-wizard-title">AI generated company description</h1>
+                <div className="sw-eyebrow">
+                  <span className="sw-eyebrow-dot" />
+                  Step 01 · Company
+                </div>
+                <h1 className="signup-wizard-title">
+                  AI-generated<br /><em>company brief.</em>
+                </h1>
                 <p className="signup-wizard-copy">
                   Review the description before we set up your competitor scan.
                 </p>
@@ -60,24 +69,28 @@ export default async function SignupCompanyPage({ searchParams }: CompanyPagePro
                   <label className="field-group">
                     <span className="field-label">Company description</span>
                     <Textarea
-                      className="min-h-[132px] rounded-[8px] bg-white px-3 py-3 text-sm"
+                      className="min-h-[132px] rounded-[10px] bg-white px-3 py-3 text-sm"
                       name="description"
                       defaultValue={description}
                       maxLength={800}
                       required
                     />
                   </label>
-                  <Button className="h-11 rounded-[8px] font-extrabold" type="submit">
-                    Next
+                  <Button className="h-11 rounded-[10px] font-bold text-sm" type="submit">
+                    Continue →
                   </Button>
                 </form>
               </section>
 
               <aside className="signup-wizard-visual">
-                <div className="signup-analysis-list">
-                  <AnalysisStep done title="Analyzing your website" text="Website analysis complete." />
-                  <AnalysisStep done title="Discovering high intent keywords" text="Keywords are saved in the background." />
-                  <AnalysisStep done title="Generating company description" text="Review your generated description." />
+                <div className="sw-pane-eyebrow">
+                  <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>Analysis complete</span>
+                  <span className="sw-pane-meta">3 steps done</span>
+                </div>
+                <div className="sw-run-list">
+                  <AnalysisStep done title="Analyzing your website" text="Complete" />
+                  <AnalysisStep done title="Discovering high-intent keywords" text="Keywords saved in background" />
+                  <AnalysisStep done title="Generating company brief" text="Ready to review" />
                 </div>
               </aside>
             </>
@@ -120,23 +133,15 @@ function sanitizeText(value: string) {
   return value.replace(/[\u0000-\u0008\u000E-\u001F]/g, "").trim();
 }
 
-function StepDots({ active, total }: { active: number; total: number }) {
-  return (
-    <div className="signup-step-dots">
-      {Array.from({ length: total }).map((_, index) => (
-        <span key={index} className={index === active ? "signup-step-dot-active" : ""} />
-      ))}
-    </div>
-  );
-}
-
 function AnalysisStep({ done, title, text }: { done: boolean; title: string; text: string }) {
   return (
-    <div className="signup-analysis-step">
-      <span className={done ? "signup-analysis-dot-done" : ""} />
-      <div>
-        <strong>{title}</strong>
-        <p>{text}</p>
+    <div className={`sw-run-item${done ? " sw-run-item-done" : ""}`}>
+      <div className="sw-run-icon">
+        {done ? <span>✓</span> : null}
+      </div>
+      <div className="sw-run-text">
+        <span className="sw-run-title">{title}</span>
+        <span className="sw-run-status">{text}</span>
       </div>
     </div>
   );

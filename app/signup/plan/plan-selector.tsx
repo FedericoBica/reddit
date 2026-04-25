@@ -3,61 +3,56 @@
 import { useState } from "react";
 import { choosePlanFromSignup } from "@/modules/onboarding/signup-actions";
 import { Button } from "@/components/ui/button";
+import { SignupProgress } from "@/app/signup/components/signup-progress";
 
 const PLANS = [
   {
     id: "startup",
     name: "Startup",
     price: "$19",
-    note: "Start generating leads and revenue from Reddit with our entry-level plan for businesses new to Reddit marketing.",
+    note: "For founders testing Reddit as a channel — 10 keywords, 50 replies, 1 seat.",
     features: [
       "20 Custom Tracked Keywords",
       "3 Tracked Competitors",
       "100 AI-Guided Replies",
-      "Weekly New Lead Opportunities",
-      "Weekly Competitor Tracking",
+      "Weekly Lead Opportunities",
       "Monthly SEO Opportunities",
-      "Analytics Insight Dashboard",
+      "Analytics Dashboard",
       "1 Seat (Owner Only)",
-      "Notifications Alerts: Email",
-      "Basic Email Support",
+      "Email Notifications",
     ],
   },
   {
     id: "growth",
     name: "Growth",
     price: "$39",
-    note: "Convert more Reddit leads into paying customers with daily insights and expanded tracking to maximize your ROI",
+    note: "Daily insights, expanded tracking, 300 AI replies — for teams converting Reddit to revenue.",
     popular: true,
     features: [
       "40 Custom Tracked Keywords",
       "6 Tracked Competitors",
       "300 AI-Guided Replies",
-      "Daily New Lead Opportunities",
-      "Daily Competitor Tracking",
+      "Daily Lead Opportunities",
       "Monthly SEO Opportunities",
-      "Analytics Insight Dashboard",
+      "Analytics Dashboard",
       "2 Seats (Owner + 1 Member)",
-      "Notifications Alerts: Email & Telegram",
-      "Priority Email Support",
+      "Email & Telegram Alerts",
     ],
   },
   {
     id: "professional",
     name: "Professional",
     price: "$79",
-    note: "Maximize revenue potential across multiple brands with our most powerful Reddit lead generation.",
+    note: "Multiple brands, unlimited replies, priority support — agencies and multi-product teams.",
     features: [
       "60 Custom Tracked Keywords",
       "8 Tracked Competitors",
       "500 AI-Guided Replies",
-      "Daily New Lead Opportunities",
-      "Daily Competitor Tracking",
+      "Daily Lead Opportunities",
       "Monthly SEO Opportunities",
-      "Analytics Insight Dashboard",
+      "Analytics Dashboard",
       "3 Seats (Owner + 2 Members)",
-      "Notifications Alerts: Email & Telegram",
-      "Priority Email Support",
+      "Email & Telegram Alerts",
     ],
   },
 ] as const;
@@ -74,15 +69,18 @@ export function PlanSelector({ projectId }: PlanSelectorProps) {
 
   return (
     <div className="signup-plan-selector">
-      {/* Left: features of selected plan */}
       <div className="signup-plan-features-panel">
-        <div className="signup-step-dots">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <span key={i} className={i === 4 ? "signup-step-dot-active" : ""} />
-          ))}
+        <SignupProgress active={3} />
+        <div className="sw-eyebrow" style={{ marginTop: 20 }}>
+          <span className="sw-eyebrow-dot" />
+          Step 04 · Plan
         </div>
-        <p className="page-kicker">Plan</p>
-        <h1 className="signup-wizard-title">Choose your plan</h1>
+        <h1 className="signup-wizard-title">
+          Pick a plan,<br /><em>start in minutes.</em>
+        </h1>
+        <p className="signup-wizard-copy" style={{ marginBottom: 0 }}>
+          Every plan includes keyword tracking, intent scoring, AI replies, and battlecards.
+        </p>
 
         <div className="signup-plan-features-list">
           {plan.features.map((feat) => (
@@ -93,20 +91,26 @@ export function PlanSelector({ projectId }: PlanSelectorProps) {
           ))}
         </div>
 
-        <form action={choosePlanFromSignup}>
+        <form action={choosePlanFromSignup} style={{ marginTop: "auto" }}>
           <input type="hidden" name="projectId" value={projectId} />
           <input type="hidden" name="plan" value={selected} />
           <Button
             type="submit"
-            className="h-11 w-full rounded-[8px] font-extrabold text-sm"
+            className="h-11 w-full rounded-[10px] font-bold text-sm"
           >
             Start with {plan.name} — {plan.price}/mo →
           </Button>
         </form>
+        <div className="sw-foot-note">
+          <span>🔒</span> 7-day trial · cancel anytime · no card today
+        </div>
       </div>
 
-      {/* Right: plan cards */}
       <div className="signup-plan-cards-panel">
+        <div className="sw-pane-eyebrow">
+          <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>Choose your plan</span>
+          <span className="sw-pane-meta">Monthly</span>
+        </div>
         {PLANS.map((p) => (
           <button
             key={p.id}
@@ -117,9 +121,10 @@ export function PlanSelector({ projectId }: PlanSelectorProps) {
             {"popular" in p && p.popular && (
               <span className="signup-plan-badge">Recommended</span>
             )}
+            <div className="signup-plan-radio" aria-hidden="true" />
             <div className="signup-plan-card-select-name">
               <strong>{p.name}</strong>
-              <em>{p.price}/mo</em>
+              <em>{p.price}<span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "oklch(0.6 0.02 55)", fontStyle: "normal", fontWeight: 500 }}>/mo</span></em>
             </div>
             <small>{p.note}</small>
           </button>

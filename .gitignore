@@ -13,6 +13,8 @@
 # testing
 /coverage
 /.test-dist
+/.artifacts
+/extension/public/icons
 
 # next.js
 /.next/

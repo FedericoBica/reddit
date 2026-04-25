@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/modules/auth/server";
 import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { continueToPlan } from "@/modules/onboarding/signup-actions";
 import { ValuePanel } from "./value-panel";
+import { SignupProgress } from "@/app/signup/components/signup-progress";
 
 export const metadata: Metadata = {
   title: "Cómo ayuda ReddProwl",
@@ -36,37 +37,49 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
         <BrandLink logoSize={28} wordmarkSize={18} />
       </header>
 
+      <div className="sw-progress-wrap">
+        <SignupProgress active={2} />
+      </div>
+
       <Card className="signup-wizard-card">
-        <CardContent className="signup-wizard-content">
+        <CardContent className="signup-wizard-content" style={{ padding: 0 }}>
           <section className="signup-wizard-main">
-            <StepDots active={3} total={5} />
-            <p className="page-kicker">Why Reddit</p>
+            <div className="sw-eyebrow">
+              <span className="sw-eyebrow-dot" />
+              Step 03 · Why Reddit
+            </div>
             <h1 className="signup-wizard-title">
-              Let ReddProwl help you get more customers
+              Where buyers<br /><em>ask out loud.</em>
             </h1>
             <p className="signup-wizard-copy">
-              Reddit is full of people asking for tools, comparing vendors and
-              describing urgent pain.
+              Reddit is full of people comparing tools, asking for recommendations, and describing urgent pain — in plain language, with their wallet half-open.
             </p>
 
-            <div className="signup-value-list">
+            <ul className="sw-checklist">
               <ValueItem title="Find buyers early" text="Catch recommendation requests before competitors do." />
-              <ValueItem title="Reply with context" text="Use the post and your positioning." />
-              <ValueItem title="Protect your account" text="Avoid spam patterns." />
-            </div>
+              <ValueItem title="Reply with context" text="Drafts use the post and your positioning — not boilerplate." />
+              <ValueItem title="Protect your account" text="Pace and tone checks keep you out of spam patterns." />
+            </ul>
 
             <form action={continueToPlan}>
               <input type="hidden" name="projectId" value={projectId} />
               <Button
-                className="h-11 w-full rounded-[8px] font-extrabold text-sm"
+                className="h-11 w-full rounded-[10px] font-bold text-sm"
                 type="submit"
               >
-                Next →
+                Continue →
               </Button>
             </form>
           </section>
 
           <aside className="signup-wizard-visual">
+            <div className="sw-pane-eyebrow">
+              <span className="sw-live-tag">
+                <span className="sw-pulse" />
+                Live radar
+              </span>
+              <span className="sw-pane-meta">142 threads today</span>
+            </div>
             <ValuePanel />
           </aside>
         </CardContent>
@@ -75,25 +88,14 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
   );
 }
 
-function StepDots({ active, total }: { active: number; total: number }) {
-  return (
-    <div className="signup-step-dots">
-      {Array.from({ length: total }).map((_, index) => (
-        <span key={index} className={index === active ? "signup-step-dot-active" : ""} />
-      ))}
-    </div>
-  );
-}
-
 function ValueItem({ title, text }: { title: string; text: string }) {
   return (
-    <div className="signup-value-item">
-      <span />
+    <li>
+      <span className="sw-ch-icon">✓</span>
       <div>
-        <strong>{title}</strong>
-        <p>{text}</p>
+        <div className="sw-ch-title">{title}</div>
+        <div className="sw-ch-desc">{text}</div>
       </div>
-    </div>
+    </li>
   );
 }
-

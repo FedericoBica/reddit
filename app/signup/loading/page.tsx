@@ -29,7 +29,7 @@ export default async function SignupLoadingPage({ searchParams }: LoadingPagePro
   }
 
   return (
-    <main className="signup-wizard-shell">
+    <main className="signup-wizard-shell signup-tutorial-backdrop">
       <header className="signup-wizard-brand">
         <BrandLink logoSize={28} wordmarkSize={18} />
       </header>
@@ -37,8 +37,12 @@ export default async function SignupLoadingPage({ searchParams }: LoadingPagePro
       <Card className="signup-loading-card">
         <div className="signup-loading-solo">
           <div className="signup-loader" />
-          <h1 className="signup-wizard-title">
-            Learning about you and your competitors
+          <div className="sw-eyebrow">
+            <span className="sw-eyebrow-dot" />
+            Setting up your prowl
+          </div>
+          <h1 className="signup-wizard-title" style={{ fontSize: 34, marginTop: 8 }}>
+            Learning about you<br />and your <em>competitors.</em>
           </h1>
           <p className="signup-wizard-copy">
             This takes a few seconds — we&apos;re finding the best Reddit discussions for your product.

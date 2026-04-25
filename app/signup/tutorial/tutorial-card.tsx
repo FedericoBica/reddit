@@ -9,12 +9,16 @@ type TutorialCardProps = {
 
 const steps = [
   {
-    title: "Welcome to ReddProwl",
-    copy: "ReddProwl scans Reddit for buying intent, recommendation requests and competitor comparisons that match your company.",
+    eyebrow: "Welcome · You&apos;re in",
+    title: "Welcome to",
+    titleEm: "RedProwl.",
+    copy: "RedProwl scans Reddit for buying intent, recommendation requests and competitor comparisons that match your company.",
     detail: "Your Searchbox ranks posts by intent so you can focus on conversations worth answering.",
   },
   {
-    title: "Start with the Searchbox",
+    eyebrow: "Tutorial · Step 2",
+    title: "Start with the",
+    titleEm: "Searchbox.",
     copy: "Open a post, read the context, and use the generated reply as a starting point.",
     detail: "Battlecards, intent scores and reply generation are ready from the dashboard.",
   },
@@ -28,37 +32,56 @@ export function TutorialCard({ projectId }: TutorialCardProps) {
   return (
     <>
       <section className="signup-wizard-main">
-        <div
-          className="signup-tutorial-progress"
-          aria-label={`Step ${step + 1} of ${steps.length}`}
-        >
+        <div className="signup-tutorial-progress" aria-label={`Step ${step + 1} of ${steps.length}`}>
           {steps.map((item, index) => (
             <span
               className={index <= step ? "signup-tutorial-progress-active" : undefined}
-              key={item.title}
+              key={item.titleEm}
             />
           ))}
         </div>
-        <p className="page-kicker">Tutorial</p>
-        <h1 className="signup-wizard-title">{current.title}</h1>
+        <div className="sw-eyebrow" style={{ marginTop: 8 }}>
+          <span className="sw-eyebrow-dot" />
+          <span dangerouslySetInnerHTML={{ __html: current.eyebrow }} />
+        </div>
+        <h1 className="signup-wizard-title">
+          {current.title}<br /><em>{current.titleEm}</em>
+        </h1>
         <p className="signup-wizard-copy">{current.copy}</p>
-        <p className="signup-wizard-copy">{current.detail}</p>
+        <p className="signup-wizard-copy" style={{ marginBottom: 0 }}>{current.detail}</p>
 
-        <div style={{ marginTop: 24 }}>
+        <ul className="sw-checklist" style={{ marginTop: 22 }}>
+          <li>
+            <span className="sw-ch-icon">✓</span>
+            <div>
+              <div className="sw-ch-title">Open a high-intent post</div>
+              <div className="sw-ch-desc">Use the suggested reply as a starting point — edit, then post.</div>
+            </div>
+          </li>
+          <li>
+            <span className="sw-ch-icon">✓</span>
+            <div>
+              <div className="sw-ch-title">Battlecards on tap</div>
+              <div className="sw-ch-desc">Hover any competitor mention to see your one-line answer.</div>
+            </div>
+          </li>
+        </ul>
+
+        <div style={{ marginTop: "auto", paddingTop: 16 }}>
           {isLast ? (
             <Button
               asChild
-              className="h-11 w-full rounded-[8px] font-extrabold text-sm"
+              className="h-11 w-full rounded-[10px] font-bold text-sm"
             >
-              <a href={`/dashboard?projectId=${projectId}`}>Go to dashboard →</a>
+              <a href={`/dashboard?projectId=${projectId}`}>Open my dashboard →</a>
             </Button>
           ) : (
             <Button
-              className="h-11 w-full rounded-[8px] font-extrabold text-sm"
+              className="h-11 w-full rounded-[10px] font-bold text-sm"
               type="button"
               onClick={() => setStep((v) => v + 1)}
             >
-              Next →
+              Continue →
             </Button>
           )}
         </div>
@@ -102,18 +125,15 @@ function TutorialFeedPanel() {
 
   return (
     <div className="tutorial-visual-panel">
-      <div className="value-live-header" style={{ marginBottom: 4 }}>
-        <span className="value-live-dot" />
-        <span>Live radar</span>
-        <span className="value-live-stat">142 threads today</span>
+      <div className="sw-pane-eyebrow">
+        <span className="sw-live-tag">
+          <span className="sw-pulse" />
+          Your first lead
+        </span>
+        <span className="sw-pane-meta">Demo</span>
       </div>
       {stack.map((thread, i) => (
-        <TutorialFeedCard
-          key={thread.uid}
-          thread={thread}
-          fresh={i === 0}
-          dim={i === 2}
-        />
+        <TutorialFeedCard key={thread.uid} thread={thread} fresh={i === 0} dim={i === 2} />
       ))}
     </div>
   );
@@ -144,21 +164,16 @@ function TutorialFeedCard({
     return () => { clearTimeout(t); cancelAnimationFrame(raf); };
   }, [fresh, thread.score]);
 
-  const color = score >= 90 ? "#E07000" : score >= 80 ? "#B45309" : "#8E8E93";
-
   return (
     <div
-      className={`tutorial-thread-card${fresh ? " tutorial-thread-card-enter" : ""}`}
-      style={{ opacity: dim ? 0.38 : 1, transition: "opacity 300ms ease" }}
+      className={`sw-radar-row${fresh ? " sw-radar-row-fresh" : ""}${dim ? " sw-radar-row-muted" : ""}`}
+      style={{ transition: "opacity 300ms ease" }}
     >
-      <div className="tutorial-thread-meta">
-        <span>{thread.sub}</span>
-        <span className="tutorial-thread-score">{score}</span>
+      <div>
+        <div className="sw-radar-sub">{thread.sub}</div>
+        <div className="sw-radar-post">{thread.title}</div>
       </div>
-      <p className="tutorial-thread-title">{thread.title}</p>
-      <div className="value-thread-track">
-        <div className="value-thread-fill" style={{ width: `${score}%`, background: color }} />
-      </div>
+      <div className="sw-radar-score">{score}</div>
     </div>
   );
 }
@@ -186,9 +201,13 @@ function TutorialReplyPanel() {
 
   return (
     <div className="tutorial-visual-panel">
+      <div className="sw-pane-eyebrow">
+        <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>Generated reply</span>
+        <span className="sw-pane-meta">Demo</span>
+      </div>
       <div className="tutorial-thread-card" style={{ opacity: 0.7 }}>
         <div className="tutorial-thread-meta">
-          <span>r/SaaS</span>
+          <span>r/SaaS · 14m ago</span>
           <span className="tutorial-thread-score">91</span>
         </div>
         <p className="tutorial-thread-title">
@@ -204,6 +223,11 @@ function TutorialReplyPanel() {
             <span className="tutorial-reply-cursor" aria-hidden="true" />
           )}
         </div>
+      </div>
+
+      <div style={{ marginTop: 12, display: "flex", gap: 7, alignItems: "center", fontSize: 11, color: "oklch(0.6 0.02 55)", fontFamily: "ui-monospace, Menlo, monospace", letterSpacing: "0.04em" }}>
+        <span style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "oklch(0.55 0.1 150)", flexShrink: 0 }} />
+        Tone: friendly · 0 spam flags
       </div>
     </div>
   );

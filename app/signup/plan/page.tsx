@@ -41,4 +41,5 @@ export default async function SignupPlanPage({ searchParams }: PlanPageProps) {
       </Card>
     </main>
   );
+  // Note: SignupProgress is rendered inside PlanSelector to keep layout self-contained
 }

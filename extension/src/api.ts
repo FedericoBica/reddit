@@ -1,13 +1,17 @@
-const BASE_URL = "https://reddprowl.com"; // overrideable via env at build time
+declare const __API_BASE_URL__: string | undefined;
+
+const BASE_URL = __API_BASE_URL__ || "https://reddprowl.com";
 
 type Campaign = {
   id: string;
   name: string;
   type: string;
   status: string;
+  source_url?: string | null;
   sent_count: number;
   reply_count: number;
   failed_count: number;
+  daily_limit: number;
   started_at: string | null;
   created_at: string;
 };
@@ -34,13 +38,15 @@ async function apiFetch(
   token: string,
   options: RequestInit = {},
 ): Promise<Response> {
+  const mergedHeaders = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+    ...(options.headers ? Object.fromEntries(new Headers(options.headers).entries()) : {}),
+  };
+
   return fetch(`${BASE_URL}${path}`, {
     ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options.headers ?? {}),
-    },
+    headers: mergedHeaders,
   });
 }
 
@@ -62,10 +68,21 @@ export async function connect(
 
 export async function getStatus(
   token: string,
-): Promise<{ ok: boolean; project: { id: string; name: string } | null }> {
+): Promise<{
+  ok: boolean;
+  project: { id: string; name: string } | null;
+  redditAccount: { username: string; verifiedAt: string | null } | null;
+}> {
   const res = await apiFetch("/api/ext/status", token);
-  if (!res.ok) throw new Error("Unauthorized");
-  return res.json() as Promise<{ ok: boolean; project: { id: string; name: string } | null }>;
+  if (!res.ok) {
+    const err = (await res.json().catch(() => null)) as { error?: string } | null;
+    throw new Error(err?.error ?? "Failed to load extension status");
+  }
+  return res.json() as Promise<{
+    ok: boolean;
+    project: { id: string; name: string } | null;
+    redditAccount: { username: string; verifiedAt: string | null } | null;
+  }>;
 }
 
 export async function listCampaigns(token: string): Promise<Campaign[]> {
@@ -163,6 +180,21 @@ export async function updateContactOutcome(
     method: "POST",
     body: JSON.stringify({ status }),
   });
+}
+
+export async function syncRedditAccount(
+  token: string,
+  username: string,
+): Promise<{ username: string; verifiedAt: string }> {
+  const res = await apiFetch("/api/ext/reddit-account/sync", token, {
+    method: "POST",
+    body: JSON.stringify({ username }),
+  });
+  if (!res.ok) {
+    const err = (await res.json()) as { error?: string };
+    throw new Error(err.error ?? "Failed to sync Reddit account");
+  }
+  return res.json() as Promise<{ username: string; verifiedAt: string }>;
 }
 
 export async function addContactsBatch(

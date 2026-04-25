@@ -9,8 +9,12 @@ import type {
   CreateDmCampaignInput,
 } from "@/db/schemas/domain";
 import {
+  attachCampaignMessageSpintax,
   filterSeedableLeadCandidates,
   interpolateDmMessageTemplate,
+  resolveCampaignPostTitle,
+  resolveCampaignSubreddit,
+  selectCampaignMessageVariant,
 } from "@/modules/outbound/logic";
 
 // ─── Campaigns ────────────────────────────────────────────────
@@ -19,6 +23,11 @@ export async function createCampaign(
   input: CreateDmCampaignInput & { createdBy: string },
 ): Promise<DmCampaignDTO> {
   const supabase = createSupabaseAdminClient();
+  const sourceConfig = attachCampaignMessageSpintax(
+    input.type,
+    input.sourceConfig as Record<string, unknown> | null | undefined,
+    input.messageTemplate,
+  );
 
   const { data, error } = await supabase
     .from("dm_campaigns")
@@ -28,7 +37,7 @@ export async function createCampaign(
       name: input.name,
       type: input.type,
       source_url: input.sourceUrl ?? null,
-      source_config: input.sourceConfig as unknown as Json,
+      source_config: sourceConfig as unknown as Json,
       message_template: input.messageTemplate,
       daily_limit: input.dailyLimit,
       delay_min_sec: input.delayMinSec,
@@ -164,7 +173,7 @@ export async function getNextQueueItem(
   // Validate campaign belongs to the calling project and is active.
   const { data: campaign } = await supabase
     .from("dm_campaigns")
-    .select("daily_limit, message_template, delay_min_sec, delay_max_sec")
+    .select("type, source_config, daily_limit, message_template, delay_min_sec, delay_max_sec")
     .eq("id", campaignId)
     .eq("project_id", projectId)
     .eq("status", "active")
@@ -222,8 +231,17 @@ export async function getNextQueueItem(
   if (!claimed) return null; // race — another runner claimed it first
 
   const contact = candidate.dm_contacts as unknown as DmContactDTO;
+  const sourceConfig = (campaign.source_config ?? {}) as Record<string, unknown>;
+  const selectedTemplate = selectCampaignMessageVariant(
+    campaign.type,
+    campaign.message_template,
+    sourceConfig,
+    candidate.id,
+  );
+  const subreddit = resolveCampaignSubreddit(sourceConfig);
+  const postTitle = resolveCampaignPostTitle(sourceConfig);
 
-  const interpolatedMessage = interpolateDmMessageTemplate(campaign.message_template, contact);
+  const interpolatedMessage = interpolateDmMessageTemplate(selectedTemplate, contact, { subreddit, postTitle });
 
   const { dm_contacts, ...queueItem } = candidate;
   void dm_contacts;

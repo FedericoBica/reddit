@@ -75,7 +75,7 @@ export async function getProjectForScraping(projectId: string): Promise<ScrapeTa
 export async function listProjectsDueForScraping(limit: number): Promise<ScrapeTarget[]> {
   const supabase = createSupabaseAdminClient();
   const now = new Date();
-  const minIntervalCutoff = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const minIntervalCutoff = new Date(now.getTime() - 20 * 60 * 60 * 1000).toISOString();
 
   const { data: projects, error: projectsError } = await supabase
     .from("projects")

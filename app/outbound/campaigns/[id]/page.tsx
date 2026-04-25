@@ -4,7 +4,7 @@ import { DashboardShell } from "@/app/components/dashboard-shell";
 import { getCampaign, listContacts, listContactMessages } from "@/db/queries/outbound";
 import type { DmContactDTO, DmContactStatus, DmMessageDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
-import { formatRelativeTime, getOutcomeTransitions } from "@/modules/outbound/logic";
+import { buildCampaignMessageVariants, formatRelativeTime, getOutcomeTransitions } from "@/modules/outbound/logic";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import { updateContactStatusFromForm } from "@/modules/outbound/contact-actions";
 
@@ -30,6 +30,12 @@ export default async function CampaignDetailPage({ params, searchParams }: Campa
   ]);
 
   if (!campaign) notFound();
+
+  const messageVariants = buildCampaignMessageVariants(
+    campaign.type,
+    campaign.message_template,
+    (campaign.source_config ?? {}) as Record<string, unknown>,
+  );
 
   const selectedContactId = query?.contactId ?? contacts[0]?.id ?? null;
   const selectedContact = contacts.find((c) => c.id === selectedContactId) ?? null;
@@ -77,6 +83,25 @@ export default async function CampaignDetailPage({ params, searchParams }: Campa
               <p style={{ fontSize: 13, color: "#1C1C1E", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
                 {campaign.message_template}
               </p>
+              {messageVariants.length > 1 && (
+                <div style={{ marginTop: 14 }}>
+                  <p style={{ fontSize: 10, fontWeight: 800, color: "#AEAEB2", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 8 }}>
+                    Rotation variants
+                  </p>
+                  <div style={{ display: "grid", gap: 8 }}>
+                    {messageVariants.map((variant, index) => (
+                      <div key={`${campaign.id}-variant-${index}`} style={{ background: "#FAFAF8", border: "1px solid #EEEEED", borderRadius: 8, padding: "10px 12px" }}>
+                        <p style={{ fontSize: 10, fontWeight: 800, color: "#AEAEB2", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 4 }}>
+                          Spintax preview {index + 1}
+                        </p>
+                        <p style={{ fontSize: 12, color: "#1C1C1E", lineHeight: 1.6, whiteSpace: "pre-wrap" }}>
+                          {variant}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

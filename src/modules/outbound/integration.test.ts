@@ -312,7 +312,8 @@ test("outbound integration: getNextQueueItem claims the highest priority eligibl
     assert.ok(item);
     assert.equal(item.contact.reddit_username, "bravo");
     assert.equal(item.status, "pending");
-    assert.equal(item.interpolatedMessage, "Hey bravo from ");
+    assert.match(item.interpolatedMessage, /bravo/);
+    assert.doesNotMatch(item.interpolatedMessage, /\{\{username\}\}|\{\{subreddit\}\}|\{\{post_title\}\}/);
 
     const { data: claimedRow, error: claimedError } = await fixture.admin
       .from("dm_queue")

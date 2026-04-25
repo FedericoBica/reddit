@@ -6,6 +6,7 @@ import { getCurrentUser } from "@/modules/auth/server";
 import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { saveCompetitorsFromSignup } from "@/modules/onboarding/signup-actions";
 import { CompetitorsForm } from "./competitors-form";
+import { SignupProgress } from "@/app/signup/components/signup-progress";
 
 export const metadata: Metadata = {
   title: "Competidores",
@@ -23,7 +24,7 @@ export default async function SignupCompetitorsPage({ searchParams }: Competitor
   if (!user) redirect("/signup");
   if (!projectId) {
     if (params?.preview === "1" && await isCurrentUserAdmin()) {
-      // Admin preview mode — render UI without a real project
+      // Admin preview mode
     } else {
       redirect("/signup/company");
     }
@@ -35,14 +36,22 @@ export default async function SignupCompetitorsPage({ searchParams }: Competitor
         <BrandLink logoSize={28} wordmarkSize={18} />
       </header>
 
+      <div className="sw-progress-wrap">
+        <SignupProgress active={1} />
+      </div>
+
       <Card className="signup-wizard-card">
-        <CardContent className="signup-wizard-content">
+        <CardContent className="signup-wizard-content" style={{ padding: 0 }}>
           <section className="signup-wizard-main">
-            <StepDots active={2} total={5} />
-            <p className="page-kicker">Competitors</p>
-            <h1 className="signup-wizard-title">How are your competitors?</h1>
+            <div className="sw-eyebrow">
+              <span className="sw-eyebrow-dot" />
+              Step 02 · Competitors
+            </div>
+            <h1 className="signup-wizard-title">
+              Who do you<br /><em>get compared</em> to?
+            </h1>
             <p className="signup-wizard-copy">
-              Add competitor websites so ReddProwl can detect comparisons.
+              Add the alternatives buyers weigh against you. RedProwl builds battlecards so you have a one-line answer ready when someone asks.
             </p>
 
             {params?.error && <div className="signup-error">{params.error}</div>}
@@ -51,27 +60,34 @@ export default async function SignupCompetitorsPage({ searchParams }: Competitor
           </section>
 
           <aside className="signup-wizard-visual">
-            <div className="signup-preview-card">
-              <p className="page-kicker">Battlecards</p>
-              <h3>When someone compares you, you&apos;ll know what to say.</h3>
-              <div className="signup-mini-post">
-                <strong>What are good HubSpot alternatives?</strong>
-                <span>Relevance 92/100</span>
+            <div className="sw-pane-eyebrow">
+              <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>Battlecards</span>
+              <span className="sw-pane-meta">3 generated</span>
+            </div>
+            <p className="sw-pane-quote">When someone compares you, you&apos;ll already know <em>what to say.</em></p>
+            <div className="sw-bc-list">
+              <div className="sw-bc">
+                <span className="sw-bc-score">94</span>
+                <span className="sw-bc-sub">r/sales</span>
+                <span className="sw-bc-q">What are good HubSpot alternatives for a 6-person team?</span>
+                <span className="sw-bc-meta">Posted 2h ago · 14 replies</span>
+              </div>
+              <div className="sw-bc">
+                <span className="sw-bc-score">88</span>
+                <span className="sw-bc-sub">r/saas</span>
+                <span className="sw-bc-q">Is Salesforce overkill for early-stage B2B?</span>
+                <span className="sw-bc-meta">Posted yesterday · 41 replies</span>
+              </div>
+              <div className="sw-bc sw-bc-muted">
+                <span className="sw-bc-score">71</span>
+                <span className="sw-bc-sub">r/startups</span>
+                <span className="sw-bc-q">CRM stack for a bootstrapped team — what worked?</span>
+                <span className="sw-bc-meta">Posted 3d ago · 88 replies</span>
               </div>
             </div>
           </aside>
         </CardContent>
       </Card>
     </main>
-  );
-}
-
-function StepDots({ active, total }: { active: number; total: number }) {
-  return (
-    <div className="signup-step-dots">
-      {Array.from({ length: total }).map((_, index) => (
-        <span key={index} className={index === active ? "signup-step-dot-active" : ""} />
-      ))}
-    </div>
   );
 }
