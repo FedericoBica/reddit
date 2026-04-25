@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>RedProwl — Reddit Operator Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<style>
+:root{
+  /* Reddit palette */
+  --orange: #FF4500;
+  --orange-2: #E03D00;
+  --orange-soft: #FFE5D8;
+  --orange-softer: #FFF3EC;
+  --upvote: #FF4500;
+  --downvote: #7193FF;
+  --gold: #FFB000;
+  --gold-soft: #FFF3D6;
+
+  --bg: #DAE0E6;        /* classic reddit redesign bg */
+  --bg-2: #F6F7F8;       /* light surface */
+  --bg-3: #EDEFF1;
+  --paper: #FFFFFF;
+
+  --ink: #1A1A1B;        /* reddit text */
+  --ink-2: #1C1C1C;
+  --ink-3: #7C7C83;
+  --ink-4: #B0B0B5;
+
+  --line: #EDEFF1;
+  --line-2: #DAE0E6;
+  --line-3: #CCCCCC;
+
+  --moss: #46A758;
+  --moss-soft: #DEF2E2;
+  --plum: #7193FF;
+  --plum-soft: #E5EAFF;
+  --sky: #24A0ED;        /* reddit link blue */
+  --sky-soft: #DCEFFB;
+  --rose: #EA0027;
+  --rose-soft: #FBE2E5;
+  --night: #0B1416;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);font-family:"IBM Plex Sans","Helvetica Neue","Segoe UI",sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+.serif{font-family:"IBM Plex Serif",Georgia,serif}
+.mono{font-family:"IBM Plex Mono",ui-monospace,monospace}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+a{color:inherit;text-decoration:none}
+
+/* === Page Stage === */
+.stage{padding:28px;display:grid;gap:28px}
+.stage-head{display:flex;justify-content:space-between;align-items:end;gap:24px;flex-wrap:wrap;padding:0 4px}
+.stage-title{font-family:"IBM Plex Sans",sans-serif;font-size:26px;line-height:1.1;letter-spacing:-0.015em;margin:0;font-weight:700;color:var(--ink)}
+.stage-title em{font-style:italic;font-family:"IBM Plex Serif",serif;color:var(--orange);font-weight:500}
+.stage-sub{color:var(--ink-3);font-size:13px;margin-top:6px;max-width:60ch}
+.stage-eyebrow{font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--orange);font-weight:600;margin-bottom:8px;display:inline-flex;align-items:center;gap:8px}
+.stage-eyebrow::before{content:"";width:8px;height:8px;background:var(--orange);border-radius:50%}
+
+/* === Snoo logo === */
+.snoo{width:24px;height:24px;background:var(--orange);border-radius:50%;display:grid;place-items:center;flex-shrink:0;color:#fff;position:relative}
+.snoo svg{width:18px;height:18px}
+
+/* === App Shell === */
+.app{display:grid;grid-template-columns:240px 1fr;min-height:780px;background:var(--paper);border:1px solid var(--line-2);border-radius:8px;overflow:hidden;box-shadow:0 2px 0 0 var(--line-3)}
+.chrome{height:48px;background:var(--paper);border-bottom:1px solid var(--line-2);display:flex;align-items:center;padding:0 16px;gap:12px;grid-column:1/-1}
+.chrome-brand{display:flex;align-items:center;gap:8px}
+.chrome-brand .nm{font-weight:700;font-size:15px;letter-spacing:-0.01em}
+.chrome-brand .nm span{color:var(--orange)}
+.chrome-search{flex:1;max-width:560px;height:32px;background:var(--bg-2);border:1px solid transparent;border-radius:20px;display:flex;align-items:center;padding:0 12px;gap:8px;font-size:13px;color:var(--ink-3);cursor:text}
+.chrome-search:hover{background:var(--paper);border-color:var(--orange)}
+.chrome-search .ic{font-size:14px}
+.chrome-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.chrome-iconbtn{width:32px;height:32px;border-radius:4px;display:grid;place-items:center;color:var(--ink-3);font-size:16px;cursor:pointer;position:relative}
+.chrome-iconbtn:hover{background:var(--bg-2);color:var(--ink)}
+.chrome-iconbtn .dot{position:absolute;top:6px;right:6px;width:7px;height:7px;background:var(--orange);border-radius:50%;border:1.5px solid var(--paper)}
+.chrome-userpill{display:flex;align-items:center;gap:6px;padding:4px 8px 4px 4px;border:1px solid transparent;border-radius:4px;cursor:pointer}
+.chrome-userpill:hover{border-color:var(--line-2);background:var(--bg-2)}
+.chrome-userpill .av{width:24px;height:24px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:11px;font-weight:700}
+.chrome-userpill .karma{font-size:11px;font-weight:600}
+.chrome-userpill .karma .k{color:var(--ink);display:block}
+.chrome-userpill .karma .lvl{color:var(--ink-3);font-weight:500;font-size:10px}
+
+/* === Sidebar === */
+.side{background:var(--paper);border-right:1px solid var(--line-2);display:flex;flex-direction:column;padding:8px 0}
+.side-section{padding:8px 16px}
+.side-section + .side-section{border-top:1px solid var(--line)}
+.side-label{font-family:"IBM Plex Sans",sans-serif;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding:8px 0 6px;display:flex;justify-content:space-between;align-items:center}
+
+.proj{padding:10px;border:1px solid var(--line-2);border-radius:8px;background:var(--bg-2);cursor:pointer;display:flex;align-items:center;gap:10px;transition:all .15s}
+.proj:hover{background:var(--paper);border-color:var(--ink-3)}
+.proj-icon{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#FF4500,#FFB000);display:grid;place-items:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0;border:2px solid var(--paper);box-shadow:0 0 0 1px var(--line-2)}
+.proj-meta{flex:1;min-width:0}
+.proj-name{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--ink)}
+.proj-stat{font-size:11px;color:var(--ink-3);margin-top:1px}
+.proj-arr{color:var(--ink-3);font-size:11px}
+
+.nav-link{display:grid;grid-template-columns:18px 1fr auto;gap:10px;align-items:center;padding:8px 10px;border-radius:4px;font-size:13.5px;color:var(--ink);cursor:pointer;font-weight:500;margin:0 -8px}
+.nav-link:hover{background:var(--bg-2)}
+.nav-link.active{background:var(--orange-softer);color:var(--orange-2);font-weight:700}
+.nav-link.active .ic{color:var(--orange)}
+.nav-link .ic{color:var(--ink-3);font-size:15px;text-align:center}
+.nav-link .badge{font-size:10.5px;background:var(--orange);color:#fff;padding:1px 7px;border-radius:99px;font-weight:700;letter-spacing:0.02em}
+.nav-link .badge.muted{background:var(--bg-3);color:var(--ink-3)}
+
+.side-foot{margin-top:auto;border-top:1px solid var(--line);padding:12px 16px}
+.refresh{display:grid;grid-template-columns:1fr auto;gap:6px 8px;align-items:center;padding:10px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:6px;margin-bottom:8px}
+.refresh .lbl{font-size:9.5px;letter-spacing:0.1em;text-transform:uppercase;color:var(--ink-3);grid-column:1/-1;font-weight:700}
+.refresh .name{font-size:11px;color:var(--ink-2)}
+.refresh .time{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--orange);font-weight:700}
+.refresh .bar{grid-column:1/-1;height:3px;background:var(--paper);border-radius:99px;overflow:hidden}
+.refresh .bar i{display:block;height:100%;background:var(--orange);border-radius:99px}
+
+.user-row{display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px}
+.user-row .av{width:24px;height:24px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700}
+.user-row .em{flex:1;min-width:0;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn-quiet{width:100%;padding:8px;border:1px solid var(--line-2);border-radius:99px;font-size:12.5px;color:var(--ink);background:var(--paper);text-align:center;font-weight:600;display:block;margin-top:8px}
+.btn-quiet:hover{background:var(--bg-2)}
+
+/* === Main pane === */
+.main{display:flex;flex-direction:column;min-width:0;overflow:hidden;background:var(--bg-2)}
+.topbar{padding:18px 24px;border-bottom:1px solid var(--line-2);background:var(--paper);display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.topbar-left{min-width:0;display:flex;gap:12px;align-items:center}
+.topbar-icon{width:48px;height:48px;border-radius:50%;background:var(--orange);display:grid;place-items:center;color:#fff;font-size:22px;font-weight:700;border:3px solid var(--paper);box-shadow:0 0 0 1px var(--line-2);flex-shrink:0}
+.topbar-titles{min-width:0}
+.topbar-eyebrow{font-size:11px;color:var(--ink-3);font-weight:500;display:flex;align-items:center;gap:6px}
+.topbar-eyebrow b{color:var(--ink);font-weight:700}
+.topbar-title{font-size:22px;line-height:1.2;letter-spacing:-0.01em;margin:0;font-weight:700;color:var(--ink)}
+.topbar-title em{font-style:italic;font-family:"IBM Plex Serif",serif;color:var(--orange);font-weight:500}
+.topbar-sub{font-size:12px;color:var(--ink-3);margin-top:4px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.topbar-sub b{color:var(--ink);font-weight:700}
+.topbar-sub .sep{color:var(--ink-4)}
+.topbar-actions{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border:1px solid var(--line-3);background:var(--paper);border-radius:99px;font-size:12.5px;font-weight:700;color:var(--ink);transition:all .12s;letter-spacing:0.005em}
+.btn:hover{background:var(--bg-2);border-color:var(--ink-3)}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.btn.primary:hover{background:#000}
+.btn.accent{background:var(--orange);color:#fff;border-color:var(--orange)}
+.btn.accent:hover{background:var(--orange-2)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--bg-3)}
+.btn.sm{padding:5px 12px;font-size:11.5px}
+.btn .ic{font-size:13px}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:2px 8px;border-radius:99px;font-size:10.5px;font-weight:700;background:var(--bg-3);color:var(--ink-2);letter-spacing:0.02em;text-transform:uppercase;font-family:"IBM Plex Sans",sans-serif}
+.pill.live{background:var(--moss-soft);color:var(--moss)}
+.pill.live::before{content:"";width:6px;height:6px;background:var(--moss);border-radius:50%;animation:pulse 1.6s ease-in-out infinite}
+.pill.warm{background:var(--gold-soft);color:#A06800}
+.pill.hot{background:var(--orange);color:#fff}
+.pill.cold{background:var(--bg-3);color:var(--ink-3)}
+.pill.plum{background:var(--plum-soft);color:var(--plum)}
+.pill.sky{background:var(--sky-soft);color:var(--sky)}
+.pill.rose{background:var(--rose-soft);color:var(--rose)}
+.pill.gold{background:var(--gold);color:#fff}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.55;transform:scale(.85)}}
+
+.body{flex:1;overflow:auto;padding:16px 20px;background:var(--bg)}
+
+/* === Cards === */
+.card{background:var(--paper);border:1px solid var(--line-2);border-radius:6px}
+.card-pad{padding:16px}
+.card-head{padding:12px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.card-head h4{margin:0;font-size:13px;font-weight:700;letter-spacing:-0.005em;display:flex;align-items:center;gap:8px}
+.card-head h4 .ico{color:var(--orange)}
+.card-head .h-meta{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;font-weight:700;letter-spacing:0.05em}
+
+/* === KPI strip === */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.kpi{background:var(--paper);border:1px solid var(--line-2);border-radius:6px;padding:12px 14px;position:relative}
+.kpi .lbl{font-size:11px;color:var(--ink-3);font-weight:600;display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;letter-spacing:0.04em}
+.kpi .lbl .delta{font-size:10.5px;text-transform:none;letter-spacing:0;color:var(--moss);font-weight:700;display:inline-flex;align-items:center;gap:2px}
+.kpi .lbl .delta.down{color:var(--rose)}
+.kpi .v{font-size:28px;line-height:1.1;letter-spacing:-0.02em;margin-top:4px;font-weight:700;color:var(--ink)}
+.kpi .v small{font-size:13px;color:var(--ink-3);font-weight:500;margin-left:3px}
+.kpi .spark{margin-top:6px}
+
+/* === VOTE COLUMN (Reddit signature) === */
+.vote{display:flex;flex-direction:column;align-items:center;width:36px;padding:8px 0;background:var(--bg-2);border-right:1px solid var(--line);flex-shrink:0;gap:2px;border-radius:6px 0 0 6px}
+.vote .arr{width:24px;height:24px;display:grid;place-items:center;border-radius:2px;color:var(--ink-3);cursor:pointer;font-size:14px}
+.vote .arr.up:hover,.vote .arr.up.on{background:var(--orange-soft);color:var(--orange)}
+.vote .arr.dn:hover,.vote .arr.dn.on{background:var(--plum-soft);color:var(--downvote)}
+.vote .n{font-size:11px;font-weight:700;color:var(--ink-2);font-family:"IBM Plex Sans",sans-serif}
+
+/* === Searchbox === */
+.split{display:grid;grid-template-columns:380px 1fr;gap:12px}
+.list-col{display:flex;flex-direction:column;gap:8px;min-height:0}
+.list-toolbar{display:flex;justify-content:space-between;align-items:center;background:var(--paper);border:1px solid var(--line-2);border-radius:6px;padding:6px 8px}
+.list-toolbar .tabs{display:flex;gap:2px}
+.list-toolbar .tab{padding:6px 10px;font-size:12px;font-weight:700;color:var(--ink-3);border-radius:99px;cursor:pointer;display:flex;align-items:center;gap:5px}
+.list-toolbar .tab:hover{background:var(--bg-2);color:var(--ink)}
+.list-toolbar .tab.active{background:var(--bg-3);color:var(--ink)}
+.list-toolbar .tab.active.hot{color:var(--orange)}
+.list-toolbar select{font:inherit;font-size:11.5px;color:var(--ink-2);background:var(--paper);border:1px solid var(--line-2);border-radius:4px;padding:3px 6px;font-weight:600}
+.list{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:8px;max-height:560px;padding-right:2px}
+.list::-webkit-scrollbar{width:8px}
+.list::-webkit-scrollbar-thumb{background:var(--line-3);border-radius:99px}
+.list::-webkit-scrollbar-track{background:transparent}
+
+.post{display:flex;background:var(--paper);border:1px solid var(--line-2);border-radius:6px;cursor:pointer;transition:border-color .12s;overflow:hidden}
+.post:hover{border-color:var(--ink-3)}
+.post.active{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange)}
+.post.active .vote{background:var(--orange-softer)}
+.post-body{flex:1;padding:8px 12px;min-width:0}
+.post-meta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink-3);margin-bottom:4px;flex-wrap:wrap}
+.post-meta .sub-ico{width:16px;height:16px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:8px;font-weight:700;flex-shrink:0}
+.post-meta .sub{font-weight:700;color:var(--ink);text-decoration:none}
+.post-meta .sub:hover{text-decoration:underline}
+.post-meta .by{color:var(--ink-3)}
+.post-meta .by b{color:var(--ink-2);font-weight:600}
+.post-meta .dot{color:var(--ink-4)}
+.post-title{font-size:13.5px;font-weight:600;line-height:1.3;color:var(--ink);margin-bottom:6px}
+.post-flairs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px}
+.flair{padding:1px 7px;border-radius:2px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.03em}
+.flair.google{background:var(--plum-soft);color:var(--plum)}
+.flair.intent{background:var(--orange);color:#fff}
+.flair.warm{background:var(--gold-soft);color:#A06800}
+.flair.kw{background:var(--bg-3);color:var(--ink-2)}
+.post-snip{font-size:11.5px;line-height:1.45;color:var(--ink-2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-bottom:6px}
+.post-snip mark{background:#FFEFA0;padding:0 2px;border-radius:2px;color:var(--ink)}
+.post-foot{display:flex;align-items:center;gap:14px;font-size:11px;color:var(--ink-3);font-weight:600}
+.post-foot .it{display:inline-flex;align-items:center;gap:4px}
+.post-foot .it:hover{color:var(--ink)}
+.post-foot .score{margin-left:auto;display:inline-flex;align-items:center;gap:5px;color:var(--orange);font-weight:700}
+.post-foot .score b{font-size:13px;color:var(--orange)}
+
+/* Detail card */
+.detail{background:var(--paper);border:1px solid var(--line-2);border-radius:6px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.detail-head{display:flex;background:var(--paper)}
+.detail-vote{background:var(--orange-softer);width:40px}
+.detail-main{flex:1;padding:14px 16px;border-bottom:1px solid var(--line)}
+.detail-meta{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--ink-3);margin-bottom:8px;flex-wrap:wrap}
+.detail-meta .sub-pill{display:inline-flex;align-items:center;gap:5px;font-weight:700;color:var(--ink);text-decoration:none;padding:1px 4px;border-radius:3px}
+.detail-meta .sub-pill:hover{background:var(--bg-3);text-decoration:underline}
+.detail-meta .sub-pill .sub-ico{width:18px;height:18px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:9px;font-weight:700}
+.detail-title{font-size:20px;font-weight:600;line-height:1.25;letter-spacing:-0.01em;margin:0 0 8px;color:var(--ink)}
+.detail-flairs{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:10px;align-items:center}
+.detail-actions-row{display:flex;gap:4px;align-items:center;padding:6px 16px;border-bottom:1px solid var(--line);background:var(--bg-2);font-size:12px;color:var(--ink-3);font-weight:700;flex-wrap:wrap}
+.detail-actions-row .it{padding:5px 10px;border-radius:4px;cursor:pointer;display:inline-flex;align-items:center;gap:5px}
+.detail-actions-row .it:hover{background:var(--bg-3);color:var(--ink-2)}
+.detail-actions-row .it.danger:hover{background:var(--rose-soft);color:var(--rose)}
+.detail-actions-row .it.success{background:var(--moss);color:#fff;margin-left:auto}
+.detail-actions-row .it.success:hover{background:#3a8d49;color:#fff}
+
+.detail-body{padding:16px;flex:1;overflow:auto;display:grid;grid-template-columns:1fr 240px;gap:18px}
+.detail-text{font-size:13.5px;line-height:1.55;color:var(--ink)}
+.detail-text p{margin:0 0 10px}
+.detail-quote{padding:10px 12px;background:var(--bg-2);border-left:3px solid var(--orange);border-radius:0 4px 4px 0;font-size:12.5px;color:var(--ink-2);margin:10px 0}
+
+.score-card{background:var(--paper);border:1px solid var(--line-2);border-radius:6px;padding:12px}
+.score-card .lbl{font-size:10px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+.score-row{display:grid;grid-template-columns:1fr auto;gap:6px;font-size:11.5px;color:var(--ink-2);align-items:center;padding:3px 0}
+.score-row .n{font-weight:700;color:var(--ink)}
+.score-row .b{grid-column:1/-1;height:4px;background:var(--bg-3);border-radius:99px;overflow:hidden;margin-top:2px}
+.score-row .b i{display:block;height:100%;background:var(--orange);border-radius:99px}
+
+.composer{padding:14px 16px;border-top:1px solid var(--line);background:var(--paper)}
+.composer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:11px;color:var(--ink-3);font-weight:700;letter-spacing:0.04em;text-transform:uppercase}
+.composer-toolbar{display:flex;gap:2px;padding:4px;background:var(--bg-2);border:1px solid var(--line-2);border-bottom:0;border-radius:6px 6px 0 0}
+.composer-toolbar .tb{padding:5px 8px;font-size:11px;border-radius:4px;color:var(--ink-3);cursor:pointer;font-weight:700;display:inline-flex;align-items:center;gap:4px}
+.composer-toolbar .tb:hover{background:var(--bg-3);color:var(--ink)}
+.composer-toolbar .tb.on{background:var(--ink);color:#fff}
+.composer-toolbar .sep{width:1px;background:var(--line-2);margin:4px 4px}
+textarea.txa{width:100%;min-height:90px;padding:10px 12px;font:inherit;font-size:13px;line-height:1.5;color:var(--ink);background:var(--paper);border:1px solid var(--line-2);border-top:0;border-radius:0 0 6px 6px;resize:vertical;outline:none}
+textarea.txa:focus{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange)}
+.composer-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;font-size:11px;color:var(--ink-3);font-weight:600}
+.composer-foot .right{display:flex;gap:6px;align-items:center}
+
+/* === Analytics === */
+.ana-grid{display:grid;grid-template-columns:1.5fr 1fr;gap:8px}
+.bar-list{display:flex;flex-direction:column;gap:6px}
+.bar-row{display:grid;grid-template-columns:140px 1fr 50px;gap:10px;align-items:center;font-size:12px}
+.bar-row .lbl{color:var(--ink-2);font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:6px}
+.bar-row .lbl .sub-ico{width:14px;height:14px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:7px;font-weight:700;flex-shrink:0}
+.bar-row .b{height:14px;background:var(--bg-3);border-radius:3px;overflow:hidden;position:relative}
+.bar-row .b i{display:block;height:100%;background:linear-gradient(90deg,var(--orange),var(--gold));border-radius:3px}
+.bar-row .v{font-size:11.5px;color:var(--ink);font-weight:700;text-align:right;font-family:"IBM Plex Mono",monospace}
+
+.heatmap{display:grid;grid-template-columns:50px repeat(14,1fr);gap:3px;font-size:10px}
+.heatmap .day{text-align:right;color:var(--ink-3);font-weight:700;padding-right:4px;display:flex;align-items:center;justify-content:flex-end;text-transform:uppercase;letter-spacing:0.04em}
+.heatmap .cell{height:20px;border-radius:2px;background:var(--bg-3);position:relative;cursor:pointer;border:1px solid var(--line)}
+.heatmap .cell:hover{outline:1.5px solid var(--ink);outline-offset:-1px;z-index:1}
+
+.funnel{display:flex;flex-direction:column;gap:6px}
+.funnel-row{display:grid;grid-template-columns:90px 1fr 60px;gap:10px;align-items:center;font-size:12px}
+.funnel-row > span:first-child{font-size:11.5px;color:var(--ink-2);font-weight:600}
+.funnel-bar{height:32px;border-radius:3px;display:flex;align-items:center;padding:0 12px;color:#fff;font-weight:700;font-size:12px;letter-spacing:0.01em}
+.funnel-row .conv{font-size:11.5px;color:var(--moss);text-align:right;font-weight:700;font-family:"IBM Plex Mono",monospace}
+
+/* === Lead CRM === */
+.kanban{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;height:560px}
+.col{background:var(--paper);border:1px solid var(--line-2);border-radius:6px;display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.col-head{padding:10px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid;background:var(--paper)}
+.col-head .nm{font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:0.03em}
+.col-head .ct{font-size:11px;color:var(--ink-3);background:var(--bg-3);padding:1px 8px;border-radius:99px;font-weight:700}
+.col-body{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:6px;background:var(--bg-2)}
+.col-body::-webkit-scrollbar{width:6px}
+.col-body::-webkit-scrollbar-thumb{background:var(--line-3);border-radius:99px}
+
+.lead{background:var(--paper);border:1px solid var(--line-2);border-radius:4px;cursor:grab;display:flex;overflow:hidden}
+.lead:hover{border-color:var(--ink-3)}
+.lead .lead-vote{width:26px;background:var(--bg-2);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:10px;color:var(--ink-3);font-weight:700;border-right:1px solid var(--line)}
+.lead .lead-vote .ar{font-size:11px;color:var(--orange)}
+.lead .lead-body{flex:1;padding:8px 10px;min-width:0}
+.lead .row1{display:flex;align-items:center;gap:6px;margin-bottom:4px}
+.lead .av{width:18px;height:18px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:8px;font-weight:700;flex-shrink:0}
+.lead .nm{font-size:12px;font-weight:700;line-height:1.2;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lead .meta{font-size:10px;color:var(--ink-3);margin-bottom:6px}
+.lead .why{font-size:11px;color:var(--ink-2);line-height:1.4;background:var(--bg-2);padding:6px 8px;border-radius:4px;margin-bottom:6px;border-left:2px solid var(--orange)}
+.lead .row{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--ink-3);font-weight:600}
+.lead .row b{color:var(--orange);font-weight:700}
+
+/* === Settings === */
+.set-tabs{display:flex;gap:2px;background:var(--paper);border:1px solid var(--line-2);border-radius:99px;padding:4px;margin-bottom:16px;width:fit-content}
+.set-tab{padding:6px 14px;font-size:12.5px;font-weight:700;color:var(--ink-3);border-radius:99px;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.set-tab.active{background:var(--orange);color:#fff}
+.set-tab:hover:not(.active){background:var(--bg-2);color:var(--ink)}
+.set-tab .ic{font-size:13px}
+.set-grid{display:grid;grid-template-columns:240px 1fr;gap:16px}
+.set-aside{position:sticky;top:0;background:var(--paper);border:1px solid var(--line-2);border-radius:6px;padding:8px;height:fit-content}
+.set-aside .nm{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;padding:6px 10px;margin-bottom:2px}
+.set-aside .lk{display:flex;align-items:center;gap:8px;padding:7px 10px;font-size:13px;color:var(--ink-2);border-radius:4px;cursor:pointer;font-weight:600}
+.set-aside .lk:hover{background:var(--bg-2)}
+.set-aside .lk.active{background:var(--orange-softer);color:var(--orange-2);font-weight:700}
+.set-aside .lk .ic{font-size:13px;color:var(--ink-3)}
+.set-aside .lk.active .ic{color:var(--orange)}
+.set-section{background:var(--paper);border:1px solid var(--line-2);border-radius:6px;padding:18px 20px;margin-bottom:10px}
+.set-section h3{margin:0 0 4px;font-size:16px;letter-spacing:-0.005em;font-weight:700;display:flex;align-items:center;gap:8px}
+.set-section h3 .ico{font-size:16px;color:var(--orange)}
+.set-section .desc{color:var(--ink-3);font-size:12.5px;margin-bottom:14px}
+.field{display:grid;grid-template-columns:160px 1fr;gap:14px;align-items:start;padding:10px 0;border-top:1px solid var(--line)}
+.field:first-of-type{border-top:0;padding-top:6px}
+.field .lbl{font-size:12.5px;color:var(--ink);font-weight:700;padding-top:8px}
+.field .lbl .hint{display:block;font-weight:500;color:var(--ink-3);font-size:11px;margin-top:2px}
+.input,.select{width:100%;font:inherit;font-size:13px;padding:8px 10px;background:var(--paper);border:1px solid var(--line-2);border-radius:4px;color:var(--ink);outline:none;font-weight:500}
+.input:focus,.select:focus{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange)}
+.textarea{width:100%;font:inherit;font-size:12.5px;line-height:1.5;padding:10px 12px;background:var(--paper);border:1px solid var(--line-2);border-radius:4px;color:var(--ink);outline:none;min-height:90px;resize:vertical}
+.textarea:focus{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange)}
+.danger{background:var(--rose-soft);border-color:#F2B7BD}
+.danger h3{color:var(--rose)}
+.tag-row{display:flex;flex-wrap:wrap;gap:5px}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;background:var(--orange-softer);border:1px solid var(--orange-soft);border-radius:99px;font-size:11.5px;color:var(--orange-2);font-weight:600}
+.tag .x{color:var(--ink-4);cursor:pointer}
+.tag .x:hover{color:var(--rose)}
+.tag.add{background:transparent;border:1px dashed var(--line-3);color:var(--ink-3);cursor:pointer}
+.tag.add:hover{border-color:var(--orange);color:var(--orange)}
+
+/* === Extension === */
+.ext-stage{display:flex;justify-content:center;padding:32px;background:var(--bg)}
+.ext{width:380px;background:var(--paper);border:1px solid var(--line-3);border-radius:8px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,0.1)}
+.ext-top{height:40px;background:var(--orange);display:flex;align-items:center;justify-content:space-between;padding:0 12px;color:#fff}
+.ext-top .lbl{font-size:11px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.ext-top .ctrl{display:flex;gap:4px}
+.ext-top .ctrl i{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,0.2);font-size:10px;cursor:pointer;font-style:normal;font-weight:700}
+.ext-top .ctrl i:hover{background:rgba(255,255,255,0.35)}
+
+.ext-hero{padding:14px 16px 12px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line-2);background:linear-gradient(135deg,var(--orange-softer),var(--paper))}
+.ext-hero .name{font-size:20px;letter-spacing:-0.01em;line-height:1;font-weight:700;display:flex;align-items:center;gap:8px}
+.ext-hero .name em{font-style:italic;font-family:"IBM Plex Serif",serif;color:var(--orange);font-weight:500}
+.ext-hero .proj{font-size:11px;color:var(--ink-2);background:var(--paper);padding:4px 10px;border-radius:99px;border:1px solid var(--line-2);display:inline-flex;align-items:center;gap:6px;font-weight:700}
+.ext-hero .proj .pi{width:14px;height:14px;border-radius:50%;background:linear-gradient(135deg,#FF4500,#FFB000);color:#fff;display:grid;place-items:center;font-size:7px;font-weight:700}
+
+.ext-tabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--bg-2);border-bottom:1px solid var(--line-2)}
+.ext-tab{padding:10px 8px;text-align:center;font-size:12px;font-weight:700;color:var(--ink-3);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;border-bottom:2px solid transparent}
+.ext-tab .ic{font-size:13px}
+.ext-tab.active{background:var(--paper);color:var(--orange);border-bottom-color:var(--orange)}
+.ext-tab:hover:not(.active){background:var(--paper);color:var(--ink-2)}
+
+.ext-section{padding:14px 16px;border-bottom:1px solid var(--line)}
+.ext-section .lbl{font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-3);font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+
+.acct{padding:14px;background:var(--bg-2);border:1px solid var(--line-2);border-radius:8px;position:relative}
+.acct-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.acct-row .nm{font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.acct-row .nm .av{width:24px;height:24px;border-radius:50%;background:var(--orange);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:700}
+.acct-row .karma{font-size:10px;color:var(--ink-3);font-weight:700;display:flex;align-items:center;gap:4px}
+.acct-row .karma .star{color:var(--gold)}
+.acct .ok{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--moss);font-weight:700;margin-bottom:10px;background:var(--moss-soft);padding:5px 8px;border-radius:4px}
+.acct .ok .dot{width:6px;height:6px;border-radius:50%;background:var(--moss);box-shadow:0 0 0 2px rgba(70,167,88,0.25);animation:pulse 1.6s ease-in-out infinite}
+.acct .grid{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px;font-family:"IBM Plex Mono",monospace;font-size:9.5px}
+.acct .grid .item{background:var(--paper);border:1px solid var(--line-2);border-radius:4px;padding:5px 8px}
+.acct .grid .item .k{color:var(--ink-3);text-transform:uppercase;letter-spacing:0.06em;font-size:9px;display:block;margin-bottom:1px}
+.acct .grid .item .v{color:var(--ink);font-weight:700}
+.acct .grid .item .v.ok{color:var(--moss)}
+.acct .relink{width:100%;padding:8px;background:var(--paper);border:1px solid var(--line-2);border-radius:99px;font-size:11.5px;color:var(--ink);font-weight:700;text-align:center}
+.acct .relink:hover{border-color:var(--orange);color:var(--orange)}
+
+.camp{display:flex;flex-direction:column;gap:8px}
+.camp-card{background:var(--paper);border:1px solid var(--line-2);border-radius:8px;cursor:pointer;transition:border-color .15s;overflow:hidden;display:flex}
+.camp-card:hover{border-color:var(--ink-3)}
+.camp-card.recommended{border-color:var(--orange);box-shadow:0 0 0 1px var(--orange)}
+.camp-card .vmark{width:5px;background:var(--orange)}
+.camp-card.plum .vmark{background:var(--plum)}
+.camp-card.sky .vmark{background:var(--sky)}
+.camp-body{flex:1;padding:12px}
+.camp-row{display:flex;justify-content:space-between;align-items:start;margin-bottom:6px;gap:8px}
+.camp-row .name{font-size:13.5px;font-weight:700;display:flex;align-items:center;gap:8px;color:var(--ink)}
+.camp-row .name .ic{width:24px;height:24px;border-radius:6px;background:var(--orange-softer);color:var(--orange);display:grid;place-items:center;font-size:13px;font-weight:700}
+.camp-card.plum .name .ic{background:var(--plum-soft);color:var(--plum)}
+.camp-card.sky .name .ic{background:var(--sky-soft);color:var(--sky)}
+.camp-card .desc{font-size:11.5px;color:var(--ink-2);line-height:1.4;margin-bottom:8px}
+.camp-card .stats{display:flex;gap:10px;font-size:10px;color:var(--ink-3);padding:6px 8px;background:var(--bg-2);border-radius:4px;margin-bottom:8px;font-weight:600}
+.camp-card .stats b{color:var(--ink);font-weight:700}
+.camp-card .start{width:100%;padding:8px;background:var(--orange);color:#fff;border-radius:99px;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:5px}
+.camp-card.plum .start{background:var(--plum)}
+.camp-card.sky .start{background:var(--sky)}
+.camp-card .start.disabled{background:var(--bg-3);color:var(--ink-4);cursor:not-allowed}
+.camp-card .start:not(.disabled):hover{filter:brightness(0.92)}
+
+.ext-stats{padding:14px 16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;background:var(--bg-2)}
+.ext-stat{padding:10px 8px;background:var(--paper);border:1px solid var(--line-2);border-radius:6px;text-align:center}
+.ext-stat .l{font-size:9px;letter-spacing:0.06em;text-transform:uppercase;color:var(--ink-3);font-weight:700}
+.ext-stat .v{font-size:22px;line-height:1.1;letter-spacing:-0.01em;margin-top:2px;color:var(--ink);font-weight:700}
+.ext-stat .v.accent{color:var(--orange)}
+.ext-stat .v.moss{color:var(--moss)}
+.ext-stat .d{font-size:10px;color:var(--moss);font-weight:700;margin-top:2px}
+
+</style>
+</head>
+<body>
+
+<div class="stage">
+
+  <!-- ============ DASHBOARD: SEARCHBOX ============ -->
+  <div class="stage-head">
+    <div>
+      <div class="stage-eyebrow">01 · OPERATOR DASHBOARD</div>
+      <h2 class="stage-title">Searchbox · <em>inbound triage</em></h2>
+      <p class="stage-sub">Reddit-native triage workspace. Vote columns, sub-icons, flair pills, link-blue accents — built like a power-user reading r/all.</p>
+    </div>
+  </div>
+  <div class="app">
+    <div class="chrome">
+      <div class="chrome-brand">
+        <div class="snoo">
+          <svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="9" fill="#fff"/><circle cx="10" cy="11" r="6.5" fill="#FF4500"/><circle cx="7.6" cy="10.5" r="1" fill="#fff"/><circle cx="12.4" cy="10.5" r="1" fill="#fff"/><path d="M7 13 Q10 15 13 13" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round"/><circle cx="10" cy="3.5" r="1.2" fill="#fff"/><line x1="10" y1="4.5" x2="10" y2="6.5" stroke="#fff" stroke-width="1"/></svg>
+        </div>
+        <span class="nm">red<span>Prowl</span></span>
+      </div>
+      <div class="chrome-search">
+        <span class="ic">⌕</span><span>Search threads, subs, keywords…</span>
+        <span style="margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:10px;background:var(--paper);border:1px solid var(--line-2);padding:1px 5px;border-radius:3px">⌘K</span>
+      </div>
+      <div class="chrome-right">
+        <span class="pill live">LIVE · scraper</span>
+        <button class="chrome-iconbtn">⌬<span class="dot"></span></button>
+        <button class="chrome-iconbtn">✉</button>
+        <button class="chrome-iconbtn">⚙</button>
+        <div class="chrome-userpill">
+          <span class="av">F</span>
+          <div class="karma"><span class="k">12.4k</span><span class="lvl">karma · lv 14</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="side-section">
+        <div class="proj">
+          <span class="proj-icon">A</span>
+          <div class="proj-meta">
+            <div class="proj-name">r/attio</div>
+            <div class="proj-stat">17 kw · 3 comp · 8 subs</div>
+          </div>
+          <span class="proj-arr">▾</span>
+        </div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-label"><span>Inbound</span><span class="pill live" style="font-size:9px;padding:1px 6px;text-transform:none;letter-spacing:0">8 hot</span></div>
+        <div class="nav-link active"><span class="ic">⌕</span><span>Searchbox</span><span class="badge">44</span></div>
+        <div class="nav-link"><span class="ic">✦</span><span>Nuevos</span><span class="badge muted">12</span></div>
+        <div class="nav-link"><span class="ic">@</span><span>Menciones</span><span class="badge muted">6</span></div>
+        <div class="nav-link"><span class="ic">▤</span><span>Analytics</span></div>
+        <div class="nav-link"><span class="ic">⊞</span><span>Archivo</span><span class="ic" style="margin-left:auto">›</span></div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-label">Outbound</div>
+        <div class="nav-link"><span class="ic">◐</span><span>Lead CRM</span><span class="badge">23</span></div>
+        <div class="nav-link"><span class="ic">⚡</span><span>Campaigns</span><span class="badge muted">2</span></div>
+      </div>
+
+      <div class="side-section">
+        <div class="side-label">Subs monitored</div>
+        <div class="nav-link"><span class="ic" style="width:18px;height:18px;border-radius:50%;background:var(--orange);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:700">s</span><span>r/sales</span><span style="font-size:10px;color:var(--ink-3);font-weight:700">1.2M</span></div>
+        <div class="nav-link"><span class="ic" style="width:18px;height:18px;border-radius:50%;background:var(--plum);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:700">C</span><span>r/CRM</span><span style="font-size:10px;color:var(--ink-3);font-weight:700">86k</span></div>
+        <div class="nav-link"><span class="ic" style="width:18px;height:18px;border-radius:50%;background:var(--sky);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:700">S</span><span>r/SaaS</span><span style="font-size:10px;color:var(--ink-3);font-weight:700">432k</span></div>
+        <div class="nav-link"><span class="ic" style="width:18px;height:18px;border-radius:50%;background:var(--moss);color:#fff;font-size:9px;display:grid;place-items:center;font-weight:700">e</span><span>r/Entrepreneur</span><span style="font-size:10px;color:var(--ink-3);font-weight:700">2.4M</span></div>
+      </div>
+
+      <div class="side-foot">
+        <div class="refresh">
+          <span class="lbl">⏱ Next refresh</span>
+          <span class="name">Opportunities</span><span class="time">15h</span>
+          <div class="bar"><i style="width:42%"></i></div>
+          <span class="name">Mentions</span><span class="time">10h</span>
+          <div class="bar"><i style="width:62%"></i></div>
+        </div>
+        <div class="user-row">
+          <span class="av">F</span>
+          <span class="em">u/fede_attio</span>
+          <span style="font-size:10px;color:var(--ink-3);font-weight:700">12.4k</span>
+        </div>
+        <button class="btn-quiet">⚡ Activar push</button>
+      </div>
+    </div>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-icon">r/</div>
+          <div class="topbar-titles">
+            <h1 class="topbar-title">Searchbox · <em>high-intent threads</em></h1>
+            <div class="topbar-sub">
+              <span><b>44</b> matches in 8 subs</span>
+              <span class="sep">·</span>
+              <span><b style="color:var(--orange)">8 hot</b> · <b style="color:#A06800">23 warm</b> · 13 cold</span>
+              <span class="sep">·</span>
+              <span class="mono" style="font-size:11px">scanned 12,412 posts · last 24h</span>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn sm"><span class="ic">⥁</span>Re-score</button>
+          <button class="btn sm"><span class="ic">⤓</span>Export CSV</button>
+          <button class="btn accent sm"><span class="ic">+</span>New keyword</button>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="kpis" style="margin-bottom:10px">
+          <div class="kpi">
+            <div class="lbl"><span>Threads / day</span><span class="delta">▲ 24%</span></div>
+            <div class="v">58</div>
+            <svg class="spark" viewBox="0 0 200 30" style="width:100%;height:24px;display:block"><polyline fill="none" stroke="#FF4500" stroke-width="1.5" points="0,22 15,18 30,20 45,14 60,16 75,10 90,12 105,8 120,11 135,5 150,8 165,6 180,3 200,5"/></svg>
+          </div>
+          <div class="kpi">
+            <div class="lbl"><span>Hot leads</span><span class="delta">▲ 3</span></div>
+            <div class="v">8<small>/44</small></div>
+            <svg class="spark" viewBox="0 0 200 30" style="width:100%;height:24px;display:block"><polyline fill="none" stroke="#FF4500" stroke-width="1.5" points="0,18 20,16 40,20 60,15 80,12 100,18 120,10 140,8 160,12 180,6 200,4"/></svg>
+          </div>
+          <div class="kpi">
+            <div class="lbl"><span>Reply rate</span><span class="delta">▲ 8%</span></div>
+            <div class="v">62<small>%</small></div>
+            <div style="display:flex;gap:2px;margin-top:8px;height:6px">
+              <div style="flex:62;background:var(--orange);border-radius:99px"></div>
+              <div style="flex:38;background:var(--bg-3);border-radius:99px"></div>
+            </div>
+          </div>
+          <div class="kpi">
+            <div class="lbl"><span>Avg score</span><span class="delta">▲ 6</span></div>
+            <div class="v">74<small>/100</small></div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--ink-3);margin-top:8px;font-weight:700"><span>p25 · 58</span><span style="color:var(--orange)">▲ 74</span><span>p75 · 89</span></div>
+          </div>
+        </div>
+
+        <div class="split">
+          <div class="list-col">
+            <div class="list-toolbar">
+              <div class="tabs">
+                <span class="tab active hot"><span style="font-size:14px">🔥</span>Hot</span>
+                <span class="tab"><span style="font-size:14px">★</span>Top</span>
+                <span class="tab"><span style="font-size:14px">⏱</span>New</span>
+                <span class="tab"><span style="font-size:14px">▲</span>Rising</span>
+              </div>
+              <select><option>Score</option><option>Recent</option><option>Karma</option></select>
+            </div>
+            <div class="list" id="thread-list"></div>
+          </div>
+
+          <div id="detail-col"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============ ANALYTICS ============ -->
+  <div class="stage-head">
+    <div>
+      <div class="stage-eyebrow">02 · ANALYTICS</div>
+      <h2 class="stage-title">ROI · <em>at-a-glance</em></h2>
+      <p class="stage-sub">Funnel, sub-rankings, keyword map, 14-day heatmap. Same vibe as Reddit's mod insights but built for outbound.</p>
+    </div>
+  </div>
+  <div class="app" style="min-height:auto">
+    <div class="chrome">
+      <div class="chrome-brand"><div class="snoo"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="9" fill="#fff"/><circle cx="10" cy="11" r="6.5" fill="#FF4500"/><circle cx="7.6" cy="10.5" r="1" fill="#fff"/><circle cx="12.4" cy="10.5" r="1" fill="#fff"/><path d="M7 13 Q10 15 13 13" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round"/><circle cx="10" cy="3.5" r="1.2" fill="#fff"/><line x1="10" y1="4.5" x2="10" y2="6.5" stroke="#fff" stroke-width="1"/></svg></div><span class="nm">red<span>Prowl</span></span></div>
+      <div class="chrome-search"><span class="ic">⌕</span><span>Search…</span></div>
+      <div class="chrome-right"><span class="pill live">scraper active</span><div class="chrome-userpill"><span class="av">F</span><div class="karma"><span class="k">12.4k</span><span class="lvl">karma</span></div></div></div>
+    </div>
+    <div class="side">
+      <div class="side-section"><div class="proj"><span class="proj-icon">A</span><div class="proj-meta"><div class="proj-name">r/attio</div><div class="proj-stat">17 kw · 3 comp</div></div><span class="proj-arr">▾</span></div></div>
+      <div class="side-section">
+        <div class="side-label">Inbound</div>
+        <div class="nav-link"><span class="ic">⌕</span><span>Searchbox</span><span class="badge">44</span></div>
+        <div class="nav-link"><span class="ic">✦</span><span>Nuevos</span></div>
+        <div class="nav-link"><span class="ic">@</span><span>Menciones</span></div>
+        <div class="nav-link active"><span class="ic">▤</span><span>Analytics</span></div>
+      </div>
+      <div class="side-section">
+        <div class="side-label">Outbound</div>
+        <div class="nav-link"><span class="ic">◐</span><span>Lead CRM</span></div>
+      </div>
+      <div class="side-foot"><button class="btn-quiet">⚙ Settings</button></div>
+    </div>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-icon">▤</div>
+          <div class="topbar-titles">
+            <h1 class="topbar-title">ROI · <em>project analytics</em></h1>
+            <div class="topbar-sub">
+              <span>Performance for <b>r/attio</b></span><span class="sep">·</span>
+              <span><b>14 days</b></span><span class="sep">·</span>
+              <span class="mono">last scan 24 abr · 14:40</span>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <select class="btn sm" style="border-radius:99px"><option>Últimos 14 días</option><option>30 días</option><option>90 días</option></select>
+          <button class="btn sm">⤓ Export PDF</button>
+          <button class="btn accent sm">↗ Share</button>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="kpis" style="margin-bottom:10px">
+          <div class="kpi"><div class="lbl"><span>Total leads</span><span class="delta">▲ 28</span></div><div class="v">142</div><svg viewBox="0 0 200 30" class="spark" style="width:100%;height:24px;display:block"><polyline fill="none" stroke="#FF4500" stroke-width="1.5" points="0,25 18,22 35,18 52,21 70,15 88,18 106,12 124,9 142,11 160,6 180,8 200,3"/></svg></div>
+          <div class="kpi"><div class="lbl"><span>Nuevos hoy</span><span class="delta">▲ 5</span></div><div class="v">12</div>
+            <div style="display:flex;gap:2px;margin-top:8px;height:18px;align-items:flex-end"><div style="flex:1;background:var(--bg-3);height:6px;border-radius:2px"></div><div style="flex:1;background:var(--bg-3);height:9px;border-radius:2px"></div><div style="flex:1;background:var(--bg-3);height:5px;border-radius:2px"></div><div style="flex:1;background:var(--orange-soft);height:11px;border-radius:2px"></div><div style="flex:1;background:var(--orange-soft);height:8px;border-radius:2px"></div><div style="flex:1;background:var(--orange-soft);height:14px;border-radius:2px"></div><div style="flex:1;background:var(--orange);height:18px;border-radius:2px"></div></div>
+          </div>
+          <div class="kpi"><div class="lbl"><span>Respondidos</span><span class="delta">▲ 12%</span></div><div class="v">88<small>/142</small></div>
+            <div style="display:flex;gap:2px;margin-top:8px;height:6px"><div style="flex:62;background:var(--moss);border-radius:99px"></div><div style="flex:38;background:var(--bg-3);border-radius:99px"></div></div>
+          </div>
+          <div class="kpi"><div class="lbl"><span>Score promedio</span><span class="delta">▲ 6</span></div><div class="v">74<small>/100</small></div>
+            <div style="font-size:10px;color:var(--ink-3);margin-top:8px;display:flex;justify-content:space-between;font-weight:700"><span>p25 · 58</span><span style="color:var(--orange)">▲ 74</span><span>p75 · 89</span></div>
+          </div>
+        </div>
+
+        <div class="ana-grid" style="margin-bottom:10px">
+          <div class="card">
+            <div class="card-head"><h4><span class="ico">⚡</span>Lead → Reply → Won funnel</h4><span class="h-meta">conversion</span></div>
+            <div class="card-pad">
+              <div class="funnel">
+                <div class="funnel-row"><span>Detected</span><div class="funnel-bar" style="width:100%;background:#FF4500">142 threads</div><span class="conv">100%</span></div>
+                <div class="funnel-row"><span>Replied</span><div class="funnel-bar" style="width:62%;background:#E03D00">88 replied</div><span class="conv">62%</span></div>
+                <div class="funnel-row"><span>Engaged</span><div class="funnel-bar" style="width:38%;background:#C13400">54 engaged</div><span class="conv">38%</span></div>
+                <div class="funnel-row"><span>Booked</span><div class="funnel-bar" style="width:14%;background:#A02B00">19 calls</div><span class="conv">14%</span></div>
+                <div class="funnel-row"><span>Won</span><div class="funnel-bar" style="width:5%;background:var(--moss)">7 won</div><span class="conv">5%</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><h4><span class="ico">⌖</span>Top subreddits</h4><span class="h-meta">by score</span></div>
+            <div class="card-pad">
+              <div class="bar-list">
+                <div class="bar-row"><span class="lbl"><span class="sub-ico">s</span>r/sales</span><div class="b"><i style="width:94%"></i></div><span class="v">94</span></div>
+                <div class="bar-row"><span class="lbl"><span class="sub-ico" style="background:var(--plum)">C</span>r/CRM</span><div class="b"><i style="width:88%"></i></div><span class="v">88</span></div>
+                <div class="bar-row"><span class="lbl"><span class="sub-ico" style="background:var(--sky)">S</span>r/SaaS</span><div class="b"><i style="width:82%"></i></div><span class="v">82</span></div>
+                <div class="bar-row"><span class="lbl"><span class="sub-ico" style="background:var(--moss)">s</span>r/startups</span><div class="b"><i style="width:76%"></i></div><span class="v">76</span></div>
+                <div class="bar-row"><span class="lbl"><span class="sub-ico" style="background:#7C7C83">b</span>r/smallbusiness</span><div class="b"><i style="width:65%"></i></div><span class="v">65</span></div>
+                <div class="bar-row"><span class="lbl"><span class="sub-ico" style="background:var(--gold)">e</span>r/Entrepreneur</span><div class="b"><i style="width:58%"></i></div><span class="v">58</span></div>
+                <div class="bar-row"><span class="lbl"><span class="sub-ico" style="background:var(--rose)">m</span>r/marketing</span><div class="b"><i style="width:42%"></i></div><span class="v">42</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ana-grid">
+          <div class="card">
+            <div class="card-head"><h4><span class="ico">⏱</span>Activity heatmap · 14 days</h4><span class="h-meta">posts/day</span></div>
+            <div class="card-pad">
+              <div class="heatmap" id="heatmap"></div>
+              <div style="display:flex;justify-content:flex-end;gap:6px;margin-top:10px;font-size:10px;color:var(--ink-3);font-weight:700;align-items:center"><span>0</span><div style="width:14px;height:10px;background:var(--bg-3);border-radius:2px"></div><div style="width:14px;height:10px;background:#FFE5D8;border-radius:2px"></div><div style="width:14px;height:10px;background:#FFA677;border-radius:2px"></div><div style="width:14px;height:10px;background:var(--orange);border-radius:2px"></div><span>20+</span></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-head"><h4><span class="ico">#</span>Top keywords</h4><span class="h-meta">14d matches</span></div>
+            <div class="card-pad">
+              <div class="bar-list">
+                <div class="bar-row"><span class="lbl">"CRM alternative"</span><div class="b"><i style="width:96%"></i></div><span class="v">96</span></div>
+                <div class="bar-row"><span class="lbl">"sales automation"</span><div class="b"><i style="width:84%"></i></div><span class="v">84</span></div>
+                <div class="bar-row"><span class="lbl">"vs hubspot"</span><div class="b"><i style="width:71%"></i></div><span class="v">71</span></div>
+                <div class="bar-row"><span class="lbl">"vs pipedrive"</span><div class="b"><i style="width:66%"></i></div><span class="v">66</span></div>
+                <div class="bar-row"><span class="lbl">"easy crm"</span><div class="b"><i style="width:48%"></i></div><span class="v">48</span></div>
+                <div class="bar-row"><span class="lbl">"attio review"</span><div class="b"><i style="width:34%"></i></div><span class="v">34</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============ LEAD CRM ============ -->
+  <div class="stage-head">
+    <div>
+      <div class="stage-eyebrow">03 · LEAD CRM · OUTBOUND</div>
+      <h2 class="stage-title">Pipeline · <em>kanban</em></h2>
+      <p class="stage-sub">Mini cards mimic Reddit posts: tiny vote-bar, sub-icon avatar, score, last action.</p>
+    </div>
+  </div>
+  <div class="app" style="min-height:auto">
+    <div class="chrome">
+      <div class="chrome-brand"><div class="snoo"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="9" fill="#fff"/><circle cx="10" cy="11" r="6.5" fill="#FF4500"/><circle cx="7.6" cy="10.5" r="1" fill="#fff"/><circle cx="12.4" cy="10.5" r="1" fill="#fff"/><path d="M7 13 Q10 15 13 13" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round"/><circle cx="10" cy="3.5" r="1.2" fill="#fff"/><line x1="10" y1="4.5" x2="10" y2="6.5" stroke="#fff" stroke-width="1"/></svg></div><span class="nm">red<span>Prowl</span></span></div>
+      <div class="chrome-search"><span class="ic">⌕</span><span>Search…</span></div>
+      <div class="chrome-right"><span class="pill plum">OUTBOUND</span><div class="chrome-userpill"><span class="av">F</span><div class="karma"><span class="k">12.4k</span><span class="lvl">karma</span></div></div></div>
+    </div>
+    <div class="side">
+      <div class="side-section"><div class="proj"><span class="proj-icon">A</span><div class="proj-meta"><div class="proj-name">r/attio</div><div class="proj-stat">17 kw · 3 comp</div></div><span class="proj-arr">▾</span></div></div>
+      <div class="side-section">
+        <div class="side-label">Inbound</div>
+        <div class="nav-link"><span class="ic">⌕</span><span>Searchbox</span><span class="badge">44</span></div>
+        <div class="nav-link"><span class="ic">▤</span><span>Analytics</span></div>
+      </div>
+      <div class="side-section">
+        <div class="side-label">Outbound</div>
+        <div class="nav-link active"><span class="ic">◐</span><span>Lead CRM</span><span class="badge">23</span></div>
+      </div>
+      <div class="side-foot"><button class="btn-quiet">⚙ Settings</button></div>
+    </div>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-icon" style="background:var(--plum)">◐</div>
+          <div class="topbar-titles">
+            <h1 class="topbar-title"><em>Lead</em> CRM</h1>
+            <div class="topbar-sub">
+              <span><b>23</b> contacts</span><span class="sep">·</span>
+              <span><b style="color:var(--moss)">34%</b> response rate</span><span class="sep">·</span>
+              <span><b style="color:var(--orange)">7</b> won</span>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <div class="set-tabs" style="margin:0">
+            <span class="set-tab active"><span class="ic">⊞</span>Kanban</span>
+            <span class="set-tab"><span class="ic">≡</span>Table</span>
+            <span class="set-tab"><span class="ic">⌗</span>Funnel</span>
+          </div>
+          <button class="btn sm">⊞ Filters</button>
+          <button class="btn accent sm">+ New campaign</button>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="kanban" id="kanban"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============ SETTINGS ============ -->
+  <div class="stage-head">
+    <div>
+      <div class="stage-eyebrow">04 · SETTINGS</div>
+      <h2 class="stage-title">Project · <em>configuration</em></h2>
+      <p class="stage-sub">Pills navigation matches the Reddit redesign sub-settings page; danger zone clearly fenced.</p>
+    </div>
+  </div>
+  <div class="app" style="min-height:auto">
+    <div class="chrome">
+      <div class="chrome-brand"><div class="snoo"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="9" fill="#fff"/><circle cx="10" cy="11" r="6.5" fill="#FF4500"/><circle cx="7.6" cy="10.5" r="1" fill="#fff"/><circle cx="12.4" cy="10.5" r="1" fill="#fff"/><path d="M7 13 Q10 15 13 13" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round"/><circle cx="10" cy="3.5" r="1.2" fill="#fff"/><line x1="10" y1="4.5" x2="10" y2="6.5" stroke="#fff" stroke-width="1"/></svg></div><span class="nm">red<span>Prowl</span></span></div>
+      <div class="chrome-search"><span class="ic">⌕</span><span>Search…</span></div>
+      <div class="chrome-right"><div class="chrome-userpill"><span class="av">F</span><div class="karma"><span class="k">12.4k</span><span class="lvl">karma</span></div></div></div>
+    </div>
+    <div class="side">
+      <div class="side-section"><div class="proj"><span class="proj-icon">A</span><div class="proj-meta"><div class="proj-name">r/attio</div><div class="proj-stat">17 kw · 3 comp</div></div><span class="proj-arr">▾</span></div></div>
+      <div class="side-section">
+        <div class="side-label">Inbound</div>
+        <div class="nav-link"><span class="ic">⌕</span><span>Searchbox</span></div>
+        <div class="nav-link"><span class="ic">▤</span><span>Analytics</span></div>
+      </div>
+      <div class="side-section">
+        <div class="side-label">Outbound</div>
+        <div class="nav-link"><span class="ic">◐</span><span>Lead CRM</span></div>
+      </div>
+      <div class="side-foot"><button class="btn-quiet" style="background:var(--orange);color:#fff;border-color:var(--orange)">⚙ Settings</button></div>
+    </div>
+
+    <div class="main">
+      <div class="topbar">
+        <div class="topbar-left">
+          <div class="topbar-icon" style="background:var(--ink-3)">⚙</div>
+          <div class="topbar-titles">
+            <h1 class="topbar-title">attio.com</h1>
+            <div class="topbar-sub">
+              <span><b>17</b> active keywords</span><span class="sep">·</span>
+              <span><b>3</b> competitors</span><span class="sep">·</span>
+              <span><b>8</b> communities monitored</span>
+            </div>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="btn sm">⤴ Discard</button>
+          <button class="btn accent sm">Save changes</button>
+        </div>
+      </div>
+
+      <div class="body">
+        <div class="set-tabs">
+          <span class="set-tab active"><span class="ic">⚙</span>General</span>
+          <span class="set-tab"><span class="ic">⚔</span>Competitors</span>
+          <span class="set-tab"><span class="ic">#</span>Keywords</span>
+          <span class="set-tab"><span class="ic">✎</span>Prompts</span>
+          <span class="set-tab"><span class="ic">⌬</span>Notifications</span>
+          <span class="set-tab"><span class="ic">$</span>Billing</span>
+          <span class="set-tab"><span class="ic">⚡</span>Extension</span>
+        </div>
+
+        <div class="set-grid">
+          <aside class="set-aside">
+            <div class="nm">On this page</div>
+            <a class="lk active"><span class="ic">⊙</span>Identity</a>
+            <a class="lk"><span class="ic">#</span>Keywords</a>
+            <a class="lk"><span class="ic">⚔</span>Competitors</a>
+            <a class="lk"><span class="ic">⌘</span>Language</a>
+            <a class="lk"><span class="ic">⚠</span>Danger zone</a>
+          </aside>
+
+          <div>
+            <div class="set-section">
+              <h3><span class="ico">⊙</span>Project identity</h3>
+              <div class="desc">Used across classification, mentions and reply generation by the LLM.</div>
+              <div class="field"><div class="lbl">Project name<span class="hint">Internal label only</span></div><input class="input" value="attio.com"/></div>
+              <div class="field"><div class="lbl">Website</div><input class="input" value="https://attio.com/"/></div>
+              <div class="field"><div class="lbl">Region</div><input class="input" value="US, LATAM, Global"/></div>
+              <div class="field"><div class="lbl">Company info<span class="hint">LLM context</span></div><textarea class="textarea">Attio is an AI-powered CRM platform that lets companies customize their customer relationship management. It helps sales and marketing teams automate processes, integrate data and generate detailed reports.</textarea></div>
+            </div>
+
+            <div class="set-section">
+              <h3><span class="ico">#</span>Tracked keywords</h3>
+              <div class="desc">Up to 60 keywords per project. Match counts auto-update every 4 hours.</div>
+              <div class="tag-row">
+                <span class="tag">CRM alternative <span class="x">×</span></span>
+                <span class="tag">sales automation <span class="x">×</span></span>
+                <span class="tag">vs hubspot <span class="x">×</span></span>
+                <span class="tag">vs pipedrive <span class="x">×</span></span>
+                <span class="tag">easy crm <span class="x">×</span></span>
+                <span class="tag">attio review <span class="x">×</span></span>
+                <span class="tag">notion alternative <span class="x">×</span></span>
+                <span class="tag add">+ Add keyword</span>
+              </div>
+            </div>
+
+            <div class="set-section">
+              <h3><span class="ico">⌘</span>App language</h3>
+              <div class="desc">Overrides automatic browser detection.</div>
+              <div class="field"><div class="lbl">Idioma</div><select class="select"><option>Español</option><option>English</option><option>Português</option></select></div>
+            </div>
+
+            <div class="set-section danger">
+              <h3>⚠ Danger zone</h3>
+              <div class="desc">Delete this project and all its keywords, leads, replies, suggestions and scraping history.</div>
+              <div class="field">
+                <div class="lbl">Type DELETE<span class="hint">to confirm deletion</span></div>
+                <div style="display:flex;gap:8px;align-items:center">
+                  <input class="input" placeholder="DELETE" style="background:var(--paper)"/>
+                  <button class="btn" style="background:var(--rose);color:#fff;border-color:var(--rose);white-space:nowrap">Delete project</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============ EXTENSION PANEL ============ -->
+  <div class="stage-head">
+    <div>
+      <div class="stage-eyebrow">05 · CHROME EXTENSION</div>
+      <h2 class="stage-title">Outbound · <em>launcher</em></h2>
+      <p class="stage-sub">Compact panel with Reddit-orange header, account verification badge, 3 typed campaigns. Native 380px width.</p>
+    </div>
+  </div>
+  <div class="ext-stage">
+    <div class="ext">
+      <div class="ext-top">
+        <div class="lbl">
+          <div class="snoo" style="width:18px;height:18px"><svg viewBox="0 0 20 20" fill="currentColor"><circle cx="10" cy="10" r="9" fill="#fff"/><circle cx="10" cy="11" r="6.5" fill="#FF4500"/><circle cx="7.6" cy="10.5" r="1" fill="#fff"/><circle cx="12.4" cy="10.5" r="1" fill="#fff"/><path d="M7 13 Q10 15 13 13" stroke="#fff" stroke-width="1" fill="none" stroke-linecap="round"/></svg></div>
+          REDPROWL · v2.4
+        </div>
+        <div class="ctrl"><i>—</i><i>×</i></div>
+      </div>
+      <div class="ext-hero">
+        <div class="name">red<em>Prowl</em></div>
+        <span class="proj"><span class="pi">A</span>r/attio</span>
+      </div>
+      <div class="ext-tabs">
+        <div class="ext-tab active"><span class="ic">⌂</span>Home</div>
+        <div class="ext-tab"><span class="ic">⚡</span>Campaign</div>
+        <div class="ext-tab"><span class="ic">⚙</span>Settings</div>
+      </div>
+
+      <div class="ext-section">
+        <div class="lbl"><span>Reddit account</span><span class="pill live" style="font-size:9px;padding:1px 6px">verified</span></div>
+        <div class="acct">
+          <div class="acct-row">
+            <div class="nm"><span class="av">N</span>u/Negative_Wing4480</div>
+            <span class="karma"><span class="star">★</span>12.4k karma</span>
+          </div>
+          <div class="ok"><span class="dot"></span>Linked from active Reddit session</div>
+          <div class="grid">
+            <div class="item"><span class="k">PROFILE</span><span class="v ok">verified</span></div>
+            <div class="item"><span class="k">DOM</span><span class="v ok">attached</span></div>
+            <div class="item"><span class="k">PAGE</span><span class="v">reddit.com</span></div>
+            <div class="item"><span class="k">REGEX</span><span class="v ok">match · 3</span></div>
+          </div>
+          <button class="relink">↻ Relink current account</button>
+        </div>
+      </div>
+
+      <div class="ext-section">
+        <div class="lbl"><span>Start a campaign</span><span style="font-size:9.5px;color:var(--ink-3);font-weight:700">3 types</span></div>
+        <div class="camp">
+          <div class="camp-card recommended">
+            <div class="vmark"></div>
+            <div class="camp-body">
+              <div class="camp-row">
+                <div class="name"><span class="ic">⌖</span>Thread campaign</div>
+                <span class="pill" style="background:var(--ink);color:#fff;font-size:9px">RECOMMENDED</span>
+              </div>
+              <div class="desc">Open a Reddit post and target the commenters in that thread.</div>
+              <div class="stats"><span><b>last run:</b> 2d</span><span>·</span><span><b>17</b> sent</span><span>·</span><span><b>4</b> replied</span></div>
+              <button class="start">Start campaign →</button>
+            </div>
+          </div>
+          <div class="camp-card plum">
+            <div class="vmark"></div>
+            <div class="camp-body">
+              <div class="camp-row">
+                <div class="name"><span class="ic">⊕</span>Subreddit campaign</div>
+                <span class="pill plum" style="font-size:9px">community</span>
+              </div>
+              <div class="desc">Target users in an entire subreddit by activity, karma and recent posts.</div>
+              <div class="stats"><span><b>last run:</b> 5d</span><span>·</span><span><b>42</b> sent</span><span>·</span><span><b>11</b> replied</span></div>
+              <button class="start">Start campaign →</button>
+            </div>
+          </div>
+          <div class="camp-card sky">
+            <div class="vmark"></div>
+            <div class="camp-body">
+              <div class="camp-row">
+                <div class="name"><span class="ic">☰</span>List campaign</div>
+                <span class="pill sky" style="font-size:9px">CRM list</span>
+              </div>
+              <div class="desc">Message users from your saved Lead CRM lists in this project.</div>
+              <div class="stats" style="font-family:'IBM Plex Mono',monospace">23 leads in CRM · 0 messaged yet</div>
+              <button class="start">Start campaign →</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ext-stats">
+        <div class="ext-stat"><div class="l">Active</div><div class="v accent">2</div><div class="d">▲ 1</div></div>
+        <div class="ext-stat"><div class="l">DMs sent</div><div class="v">183</div><div class="d">+12 today</div></div>
+        <div class="ext-stat"><div class="l">Reply rate</div><div class="v moss">34<span style="font-size:14px">%</span></div><div class="d">▲ 4%</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script type="text/babel">
+const { useState } = React;
+
+const THREADS = [
+  { id:1, sub:'r/techsales', subColor:'#FF4500', subIc:'t', author:'jasonmkt_dev', karma:'4.1k', when:'2d', google:'#3', t:'Which are the 5 Best CRM for sales automation in 2026 ...', rel:90, score:284, comments:47, snip:'Comparing Pipedrive\'s features for sales automation ... <mark>Actively evaluating CRM options</mark>, direct opportunity to introduce Attio.', tags:['Pipedrive vs Attio','sales automation'], hot:true, body:'Pipedrive — Very clean pipeline management. Automation is decent but slightly limited unless you upgrade. Good if you want something simple and ready out of the box.\n\nFolk — Newer player. Strong on AI features and Notion-style UI. Pricing is competitive. Lacks deeper integrations though.\n\nAttio — Best balance of customization + AI. Has the cleanest UX for teams that came from Notion or Linear. Worth checking the new automation builder.\n\nClose — Built for sales teams. Calling/SMS is great. Less flexible if you want to model anything outside a sales pipeline.\n\nHubspot — The default. Powerful but expensive past free tier. Use it if you need everything in one place.' },
+  { id:2, sub:'r/sales', subColor:'#FF4500', subIc:'s', author:'kate_thomp', karma:'2.8k', when:'3d', google:'#4', t:'What CRM isn\'t terrible for small sales teams?', rel:90, score:512, comments:128, snip:'Comparing Pipedrive and Hubspot for small sales teams... <mark>strong opportunity</mark> for a relevant reply', tags:['small teams','Pipedrive','Hubspot'], hot:true },
+  { id:3, sub:'r/hubspot', subColor:'#FF7B0F', subIc:'h', author:'luke_p1', karma:'6.2k', when:'3d', google:'#6', t:'whats hubspot bad at', rel:90, score:218, comments:84, snip:'Discussing HubSpot\'s limitations in complex custom workflows ... <mark>clear opportunity</mark> to suggest Attio as a flexible alternative', tags:['HubSpot pain','workflows'], hot:true },
+  { id:4, sub:'r/CRMSoftware', subColor:'#7193FF', subIc:'C', author:'maria_rios', karma:'1.9k', when:'2d', google:'#9', t:'Easy to set up CRM for small business? Would still like…', rel:90, score:142, comments:36, snip:'Comparing Pipedrive with Attio for small sales teams. <mark>Actively evaluating CRM options</mark>, strong opportunity for a helpful reply.', tags:['setup','small biz'], hot:true },
+  { id:5, sub:'r/CRM', subColor:'#7193FF', subIc:'C', author:'sdvkv', karma:'12.1k', when:'2d', google:'#10', t:'what are experiences with new CRMs like Attio and Folk?', rel:84, score:96, comments:24, snip:'Open thread asking for opinions about Attio, Folk, and others. Any reply with a real workflow scores high here.', tags:['open Q','attio','folk'], warm:true },
+  { id:6, sub:'r/SaaS', subColor:'#24A0ED', subIc:'S', author:'kj_growth', karma:'5.6k', when:'5h', google:'—', t:'Founders: what\'s your go-to lightweight CRM in 2026?', rel:78, score:67, comments:41, snip:'Mid-MRR founder thread, ~80% asking for alternatives to Hubspot. <mark>5 commenters</mark> already mentioned Attio.', tags:['founder thread'], warm:true },
+  { id:7, sub:'r/startups', subColor:'#46A758', subIc:'s', author:'tj_hart', karma:'1.1k', when:'8h', google:'—', t:'Cheapest CRM that doesn\'t feel like 2014?', rel:71, score:43, comments:18, snip:'Budget-conscious thread. Worth replying with a free-tier comparison.', tags:['budget'], warm:true },
+  { id:8, sub:'r/marketing', subColor:'#EA0027', subIc:'m', author:'parkers', karma:'2.1k', when:'1d', google:'—', t:'Anyone tried Attio? worth switching from Pipedrive?', rel:65, score:88, comments:27, snip:'Direct brand mention. Author already evaluating, score capped because question is rhetorical.', tags:['mention'], warm:true },
+];
+
+function ThreadList({ active, setActive }){
+  return (
+    <>
+      {THREADS.map(t => (
+        <div key={t.id} className={`post ${active===t.id?'active':''}`} onClick={() => setActive(t.id)}>
+          <div className="vote">
+            <div className={`arr up ${t.hot?'on':''}`}>▲</div>
+            <div className="n">{t.score}</div>
+            <div className="arr dn">▼</div>
+          </div>
+          <div className="post-body">
+            <div className="post-meta">
+              <span className="sub-ico" style={{background:t.subColor}}>{t.subIc}</span>
+              <a className="sub">{t.sub}</a>
+              <span className="dot">·</span>
+              <span className="by">posted by <b>u/{t.author}</b> · {t.karma}</span>
+              <span className="dot">·</span>
+              <span>{t.when} ago</span>
+            </div>
+            <div className="post-title">{t.t}</div>
+            <div className="post-flairs">
+              {t.google !== '—' && <span className="flair google">Google {t.google}</span>}
+              <span className={`flair ${t.hot?'intent':'warm'}`}>Score {t.rel}</span>
+              {t.tags.slice(0,2).map(g => <span key={g} className="flair kw">{g}</span>)}
+            </div>
+            <div className="post-snip" dangerouslySetInnerHTML={{__html:t.snip}}/>
+            <div className="post-foot">
+              <span className="it">💬 {t.comments}</span>
+              <span className="it">↗ Share</span>
+              <span className="it">⊞ Save</span>
+              <span className="score">⌖<b>{t.rel}</b>/100</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  );
+}
+
+function Detail({ id }){
+  const t = THREADS.find(x => x.id===id) || THREADS[0];
+  return (
+    <div className="detail">
+      <div className="detail-head">
+        <div className="vote detail-vote">
+          <div className="arr up on">▲</div>
+          <div className="n">{t.score}</div>
+          <div className="arr dn">▼</div>
+        </div>
+        <div className="detail-main">
+          <div className="detail-meta">
+            <a className="sub-pill"><span className="sub-ico" style={{background:t.subColor}}>{t.subIc}</span>{t.sub}</a>
+            <span style={{color:'var(--ink-4)'}}>·</span>
+            <span>posted by <b style={{color:'var(--ink-2)'}}>u/{t.author}</b></span>
+            <span style={{color:'var(--ink-4)'}}>·</span>
+            <span>{t.when} ago</span>
+            {t.google !== '—' && <><span style={{color:'var(--ink-4)'}}>·</span><span className="flair google" style={{padding:'2px 7px'}}>Google {t.google}</span></>}
+            <span className="pill live" style={{marginLeft:'auto',fontSize:9,padding:'1px 6px'}}>indexed</span>
+          </div>
+          <h2 className="detail-title">{t.t}</h2>
+          <div className="detail-flairs">
+            <span className={`flair ${t.hot?'intent':'warm'}`}>Match {t.rel}/100</span>
+            {t.tags.map(g => <span key={g} className="flair kw">{g}</span>)}
+          </div>
+        </div>
+      </div>
+
+      <div className="detail-actions-row">
+        <span className="it">💬 {t.comments} comments</span>
+        <span className="it">↗ Share</span>
+        <span className="it">⊞ Save</span>
+        <span className="it">🏆 Award</span>
+        <span className="it">⤓ Fetch comments</span>
+        <span className="it">↗ Open in Reddit</span>
+        <span className="it danger">✕ Reject</span>
+        <span className="it success">✓ Mark Replied</span>
+      </div>
+
+      <div className="detail-body">
+        <div className="detail-text">
+          {(t.body || THREADS[0].body).split('\n\n').map((p, i) => <p key={i}>{p}</p>)}
+          <div className="detail-quote">
+            <b>OP context:</b> u/{t.author} has {t.karma} karma, posts mostly in r/sales and r/CRMSoftware. Last 5 comments mention pipeline cost — high buyer signal.
+          </div>
+        </div>
+
+        <div style={{display:'flex',flexDirection:'column',gap:10}}>
+          <div className="score-card">
+            <div className="lbl"><span>Match score</span><span className="pill hot" style={{fontSize:9}}>HIGH</span></div>
+            <div style={{display:'flex',alignItems:'baseline',gap:6,marginBottom:10}}>
+              <span style={{fontSize:30,lineHeight:1,letterSpacing:'-0.02em',fontWeight:700,color:'var(--orange)'}}>{t.rel}</span>
+              <span style={{color:'var(--ink-3)',fontSize:11,fontWeight:600}}>/100</span>
+            </div>
+            <div className="score-row"><span>Intent</span><span className="n">96</span><div className="b"><i style={{width:'96%'}}></i></div></div>
+            <div className="score-row"><span>Audience fit</span><span className="n">88</span><div className="b"><i style={{width:'88%'}}></i></div></div>
+            <div className="score-row"><span>Recency</span><span className="n">82</span><div className="b"><i style={{width:'82%'}}></i></div></div>
+            <div className="score-row"><span>Comp mention</span><span className="n">94</span><div className="b"><i style={{width:'94%'}}></i></div></div>
+          </div>
+          <div className="score-card">
+            <div className="lbl">Stay safe</div>
+            <div style={{fontSize:11.5,color:'var(--ink-2)',lineHeight:1.45}}>
+              <div style={{display:'flex',gap:6,padding:'4px 0'}}><span style={{color:'var(--moss)',fontWeight:700}}>✓</span><span>Sub allows brand mentions in Q&A</span></div>
+              <div style={{display:'flex',gap:6,padding:'4px 0'}}><span style={{color:'var(--moss)',fontWeight:700}}>✓</span><span>Self-promo ratio: 1/14</span></div>
+              <div style={{display:'flex',gap:6,padding:'4px 0'}}><span style={{color:'var(--gold)',fontWeight:700}}>!</span><span>You replied here 12d ago — vary tone</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="composer">
+        <div className="composer-head"><span>Reply draft · u/fede_attio</span><span style={{color:'var(--orange)'}}>tone: helpful</span></div>
+        <div className="composer-toolbar">
+          <span className="tb on">Helpful</span>
+          <span className="tb">Technical</span>
+          <span className="tb">Contrarian</span>
+          <span className="tb">Brief</span>
+          <span className="sep"></span>
+          <span className="tb"><b>B</b></span>
+          <span className="tb"><i>I</i></span>
+          <span className="tb">⌗</span>
+          <span className="tb">↗</span>
+          <span className="tb">{'<>'}</span>
+        </div>
+        <textarea className="txa" defaultValue="Pipedrive is fine if you only need a clean pipeline view. We moved off it last year because the automation builder hit a ceiling around ~8 sales reps. Looked at Folk and Attio — Attio won for us because the data model is actually flexible (you can model accounts, deals, contacts however you want). The new automation builder closed the last gap with HubSpot for a fraction of the cost. Happy to share our setup if useful."/>
+        <div className="composer-foot">
+          <span>234 chars · 51 words · est. read 14s</span>
+          <div className="right">
+            <button className="btn sm">⥁ Regenerate</button>
+            <button className="btn sm">Save draft</button>
+            <button className="btn accent sm">Copy & open Reddit ↗</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ListApp(){
+  const [active, setActive] = useState(1);
+  React.useEffect(() => {
+    const root = window.__detailRoot;
+    if (root) root.render(<Detail id={active}/>);
+  }, [active]);
+  return <ThreadList active={active} setActive={setActive}/>;
+}
+
+const list = document.getElementById('thread-list');
+const detailEl = document.getElementById('detail-col');
+window.__detailRoot = ReactDOM.createRoot(detailEl);
+window.__detailRoot.render(<Detail id={1}/>);
+ReactDOM.createRoot(list).render(<ListApp/>);
+
+// Heatmap
+const heat = document.getElementById('heatmap');
+if (heat){
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const mat = days.map(() => Array.from({length:14}, () => Math.random()));
+  let html = '';
+  for (let r=0; r<7; r++){
+    html += `<div class="day">${days[r]}</div>`;
+    for (let c=0; c<14; c++){
+      const v = mat[r][c];
+      const bg = v < 0.2 ? 'var(--bg-3)' : v < 0.5 ? '#FFE5D8' : v < 0.8 ? '#FFA677' : '#FF4500';
+      html += `<div class="cell" style="background:${bg}" title="${Math.round(v*22)} posts"></div>`;
+    }
+  }
+  heat.innerHTML = html;
+}
+
+// Kanban
+const COLS = [
+  { id:'queued', name:'Queued', color:'#7C7C83', subIc:'⏱' },
+  { id:'sent', name:'Sent', color:'#FF4500', subIc:'⮕' },
+  { id:'replied', name:'Replied', color:'#24A0ED', subIc:'💬' },
+  { id:'interested', name:'Interested', color:'#7193FF', subIc:'★' },
+  { id:'won', name:'Won', color:'#46A758', subIc:'🏆' },
+];
+const LEADS = [
+  { col:'queued', av:'JM', nm:'u/jasonmkt_dev', meta:'r/sales · 4.1k karma', why:'Asked about CRM with custom fields. Match: 91/100', last:'queued 1h', score:91 },
+  { col:'queued', av:'KT', nm:'u/kate_thomp', meta:'r/SaaS · 2.8k', why:'Open thread evaluating Pipedrive vs Attio.', last:'queued 4h', score:87 },
+  { col:'queued', av:'LP', nm:'u/luke_p1', meta:'r/CRMSoftware · 6.2k', why:'Explicit ask for "easy to set up CRM"', last:'queued 6h', score:84 },
+  { col:'queued', av:'MR', nm:'u/maria_rios', meta:'r/Entrepreneur · 1.9k', why:'Ranking for "vs hubspot" — Google #4', last:'queued 11h', score:82 },
+  { col:'queued', av:'SD', nm:'u/sdvkv', meta:'r/marketing · 12.1k', why:'Mentioned Attio in passing.', last:'queued 19h', score:74 },
+
+  { col:'sent', av:'AB', nm:'u/akash_b', meta:'r/sales · 8.4k', why:'High-intent thread, comp mention.', last:'sent 32m ago', score:94 },
+  { col:'sent', av:'NM', nm:'u/nm_growth', meta:'r/SaaS · 5.6k', why:'Explicit Pipedrive frustration.', last:'sent 2h', score:90 },
+  { col:'sent', av:'CD', nm:'u/codydev', meta:'r/founderlife · 3.2k', why:'Asked about hubspot alternatives.', last:'sent 4h', score:88 },
+  { col:'sent', av:'EF', nm:'u/eflux', meta:'r/sales · 7.7k', why:'Manual data entry pain.', last:'sent 9h', score:85 },
+  { col:'sent', av:'GK', nm:'u/gk_ops', meta:'r/CRM · 4.1k', why:'Looking for Notion-like CRM.', last:'sent 14h', score:81 },
+
+  { col:'replied', av:'WV', nm:'u/wvlk', meta:'r/sales · 6.4k', why:'Replied with thoughtful counter.', last:'replied 18m', score:92 },
+  { col:'replied', av:'OP', nm:'u/op_marie', meta:'r/SaaS · 4.0k', why:'"Will check it out" 👀', last:'replied 1h', score:89 },
+  { col:'replied', av:'RT', nm:'u/rt_dev', meta:'r/founderlife · 9.2k', why:'Asked for pricing details.', last:'replied 3h', score:85 },
+  { col:'replied', av:'DM', nm:'u/dm_sales', meta:'r/CRM · 5.5k', why:'Wants demo link.', last:'replied 6h', score:81 },
+
+  { col:'interested', av:'XY', nm:'u/xy_zone', meta:'r/SaaS · 14.2k', why:'Asked for trial — high intent.', last:'reply 34m', score:96 },
+  { col:'interested', av:'IF', nm:'u/i_freeman', meta:'r/sales · 7.1k', why:'"DM me the calendar link"', last:'reply 2h', score:93 },
+  { col:'interested', av:'VL', nm:'u/vletsky', meta:'r/marketing · 3.4k', why:'Compared with Folk, leaning Attio', last:'reply 5h', score:88 },
+
+  { col:'won', av:'ZA', nm:'u/zanon', meta:'r/CRMSoftware · 6.7k', why:'Signed up · Growth plan', last:'won 1d', score:98 },
+];
+
+const kb = document.getElementById('kanban');
+if (kb){
+  let html = '';
+  COLS.forEach(c => {
+    const items = LEADS.filter(l => l.col===c.id);
+    html += `<div class="col">
+      <div class="col-head" style="border-bottom-color:${c.color}">
+        <div class="nm" style="color:${c.color}">${c.subIc} ${c.name}</div>
+        <span class="ct">${items.length}</span>
+      </div>
+      <div class="col-body">
+        ${items.map(l => `<div class="lead">
+          <div class="lead-vote"><span class="ar">▲</span>${l.score}<span class="ar" style="color:#7C7C83">▼</span></div>
+          <div class="lead-body">
+            <div class="row1"><span class="av" style="background:${c.color}">${l.av}</span><div class="nm">${l.nm}</div></div>
+            <div class="meta">${l.meta}</div>
+            <div class="why">${l.why}</div>
+            <div class="row"><span>${l.last}</span><span><b style="color:${c.color}">${l.score}</b>/100</span></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  });
+  kb.innerHTML = html;
+}
+</script>
+</body>
+</html>

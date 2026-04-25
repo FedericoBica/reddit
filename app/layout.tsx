@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Outfit, Instrument_Serif, Geist, Geist_Mono } from "next/font/google";
+import { Outfit, Instrument_Serif, Geist, Geist_Mono, IBM_Plex_Sans, IBM_Plex_Mono, IBM_Plex_Serif } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { AgentationDev } from "./components/agentation-dev";
@@ -32,6 +32,28 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  variable: "--font-plex-sans",
+  display: "swap",
+  weight: ["400", "500", "600", "700"],
+});
+
+const ibmPlexMono = IBM_Plex_Mono({
+  subsets: ["latin"],
+  variable: "--font-plex-mono",
+  display: "swap",
+  weight: ["400", "500", "600"],
+});
+
+const ibmPlexSerif = IBM_Plex_Serif({
+  subsets: ["latin"],
+  variable: "--font-plex-serif",
+  display: "swap",
+  style: ["normal", "italic"],
+  weight: ["400", "500", "600"],
+});
+
 export const metadata: Metadata = {
   title: { default: "ReddProwl", template: "%s — ReddProwl" },
   description: "Detect buying intent on Reddit and close more sales.",
@@ -46,7 +68,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${outfit.variable} ${instrumentSerif.variable} ${geist.variable} ${geistMono.variable} font-sans`}>
+    <html lang={locale} className={`${outfit.variable} ${instrumentSerif.variable} ${geist.variable} ${geistMono.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} ${ibmPlexSerif.variable} font-sans`}>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           {children}

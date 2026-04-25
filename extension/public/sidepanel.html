@@ -4,469 +4,723 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ReddProwl Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
   <style>
-    *, *::before, *::after { box-sizing: border-box; }
-    html, body { margin: 0; min-height: 100%; }
-    body {
-      background: linear-gradient(180deg, #f6f2ea 0%, #f9f7f2 100%);
-      color: #141414;
-      font: 13px/1.45 "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
-      padding: 10px;
+    :root {
+      --orange:        #FF4500;
+      --orange-2:      #E03D00;
+      --orange-soft:   #FFE5D8;
+      --orange-softer: #FFF3EC;
+      --bg:            #DAE0E6;
+      --bg-2:          #F6F7F8;
+      --bg-3:          #EDEFF1;
+      --paper:         #FFFFFF;
+      --ink:           #1A1A1B;
+      --ink-2:         #1C1C1C;
+      --ink-3:         #7C7C83;
+      --ink-4:         #B0B0B5;
+      --line:          #EDEFF1;
+      --line-2:        #DAE0E6;
+      --line-3:        #CCCCCC;
+      --moss:          #46A758;
+      --moss-soft:     #DEF2E2;
+      --plum:          #7193FF;
+      --plum-soft:     #E5EAFF;
+      --sky:           #24A0ED;
+      --sky-soft:      #DCEFFB;
+      --rose:          #EA0027;
+      --rose-soft:     #FBE2E5;
+      --gold:          #FFB000;
+      --gold-soft:     #FFF3D6;
     }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: "IBM Plex Sans", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── Screen visibility ───────────────────────────── */
     .screen { display: none; }
-    .shell {
-      min-height: calc(100vh - 20px);
-      border: 1px solid #ded8ce;
-      border-radius: 22px;
-      background: rgba(255, 255, 255, 0.94);
-      box-shadow: 0 14px 40px rgba(17, 17, 17, 0.08);
+    .screen.active { display: block; }
+    .panel-view { display: none; }
+    .panel-view.active { display: block; }
+
+    /* ── Shell ───────────────────────────────────────── */
+    .ext-shell {
+      min-height: 100vh;
+      background: var(--paper);
+      border: 1px solid var(--line-3);
+      border-radius: 0;
       overflow: hidden;
     }
-    .screen.active { display: block; }
-    .connect {
-      padding: 18px;
-      display: grid;
-      gap: 14px;
-    }
-    .eyebrow {
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-size: 10px;
-      color: #8b6f56;
-      font-weight: 800;
-    }
-    .brand {
-      font-size: 28px;
-      line-height: 1;
-      font-weight: 800;
-      letter-spacing: -0.05em;
-    }
-    .muted { color: #6b665f; }
-    .field { display: grid; gap: 6px; }
-    .label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #9a9488;
-      font-weight: 700;
-    }
-    .input, .select, .textarea {
-      width: 100%;
-      border: 1px solid #ddd7ce;
-      border-radius: 14px;
-      background: #fcfbf9;
-      padding: 11px 12px;
-      font: inherit;
-      color: inherit;
-      outline: none;
-    }
-    .input:focus, .select:focus, .textarea:focus {
-      border-color: #e07000;
-      box-shadow: 0 0 0 3px rgba(224, 112, 0, 0.12);
-      background: #fff;
-    }
-    .textarea { min-height: 124px; resize: vertical; }
-    .btn {
-      appearance: none;
-      border: 0;
-      border-radius: 14px;
-      padding: 11px 14px;
-      font: inherit;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 160ms ease, opacity 160ms ease, background 160ms ease;
-    }
-    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
-    .btn:hover:not(:disabled) { transform: translateY(-1px); }
-    .btn-primary {
-      background: linear-gradient(135deg, #111111 0%, #2f2f2f 100%);
-      color: #fff;
-    }
-    .btn-secondary {
-      background: #f1ece4;
-      color: #1d1d1d;
-      border: 1px solid #e1dbd0;
-    }
-    .btn-danger {
-      background: #fff;
-      color: #b42318;
-      border: 1px solid #f0c7c2;
-    }
-    .error, .feedback {
-      display: none;
-      border-radius: 14px;
-      padding: 11px 12px;
-      font-size: 12px;
-    }
-    .error, .feedback.error {
-      background: #fff4f3;
-      border: 1px solid #f1c6c2;
-      color: #b42318;
-    }
-    .feedback.success {
-      display: block;
-      background: #f3fbf5;
-      border: 1px solid #c7e6cf;
-      color: #166534;
-    }
-    .feedback.muted {
-      display: block;
-      background: #faf8f4;
-      border: 1px solid #e7dfd4;
-      color: #625b51;
-    }
-    .app-header {
-      padding: 16px 16px 12px;
-      border-bottom: 1px solid #ebe4d8;
-      background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,244,238,0.98) 100%);
-    }
-    .header-row {
+
+    /* ── Orange top bar ──────────────────────────────── */
+    .ext-top {
+      height: 40px;
+      background: var(--orange);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
+      padding: 0 14px;
+      color: #fff;
+      flex-shrink: 0;
     }
-    .header-brand {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .header-brand .title {
-      font-size: 24px;
-      font-weight: 800;
-      letter-spacing: -0.05em;
-      line-height: 1;
-    }
-    .plan-badge {
-      border: 1px solid #e3dbce;
-      background: #f3eee5;
-      color: #6d665d;
-      border-radius: 999px;
-      padding: 5px 10px;
+    .ext-top-lbl {
       font-size: 11px;
       font-weight: 700;
-    }
-    .nav {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      display: flex;
+      align-items: center;
       gap: 8px;
-      margin-top: 14px;
     }
-    .nav-btn {
-      border: 1px solid #e5ded2;
-      background: #fbfaf7;
-      color: #5d564d;
-      border-radius: 12px;
-      padding: 10px 12px;
-      font: inherit;
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .nav-btn.active {
-      background: #111111;
-      color: #fff;
-      border-color: #111111;
-    }
-    .panel-body {
-      padding: 14px;
-      display: none;
+
+    /* ── Connect screen ──────────────────────────────── */
+    .ext-connect {
+      padding: 20px 16px;
+      display: grid;
       gap: 14px;
     }
-    .panel-body.active { display: grid; }
-    .card {
-      border: 1px solid #ebe4d8;
-      border-radius: 18px;
-      background: #fff;
-      padding: 14px;
-      box-shadow: 0 2px 10px rgba(17, 17, 17, 0.03);
+    .ext-eyebrow {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--orange);
+      font-weight: 600;
     }
-    .stack { display: grid; gap: 10px; }
-    .split-2 {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-    .metric-number {
-      font-size: 30px;
+    .ext-connect-title {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       line-height: 1;
-      font-weight: 800;
-      letter-spacing: -0.05em;
+      color: var(--ink);
     }
-    .progress-track {
-      height: 10px;
-      background: #f0ebe4;
-      border-radius: 999px;
+    .ext-connect-desc {
+      font-size: 12.5px;
+      color: var(--ink-3);
+      line-height: 1.5;
+    }
+
+    /* ── Hero ────────────────────────────────────────── */
+    .ext-hero {
+      padding: 12px 14px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--line-2);
+      background: linear-gradient(135deg, var(--orange-softer), var(--paper));
+    }
+    .ext-hero-name {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      line-height: 1;
+      color: var(--ink);
+    }
+    .ext-hero-name em {
+      font-style: italic;
+      font-family: "IBM Plex Serif", Georgia, serif;
+      color: var(--orange);
+      font-weight: 500;
+    }
+    .ext-hero-proj {
+      font-size: 11px;
+      color: var(--ink-2);
+      background: var(--paper);
+      padding: 4px 10px;
+      border-radius: 99px;
+      border: 1px solid var(--line-2);
+      font-weight: 700;
+      max-width: 150px;
       overflow: hidden;
-      margin-top: 8px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
+
+    /* ── Tabs ────────────────────────────────────────── */
+    .ext-tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      background: var(--bg-2);
+      border-bottom: 1px solid var(--line-2);
+    }
+    .nav-btn {
+      padding: 10px 8px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ink-3);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      border: none;
+      border-bottom: 2px solid transparent;
+      background: none;
+      font-family: inherit;
+      transition: background 0.12s, color 0.12s;
+    }
+    .nav-btn:hover:not(.active) { background: var(--paper); color: var(--ink-2); }
+    .nav-btn.active { background: var(--paper); color: var(--orange); border-bottom-color: var(--orange); }
+
+    /* ── Sections ────────────────────────────────────── */
+    .ext-section {
+      padding: 13px 14px;
+      border-bottom: 1px solid var(--line);
+    }
+    .ext-section-lbl {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      font-weight: 700;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+    }
+
+    /* ── Account card ────────────────────────────────── */
+    .acct {
+      padding: 12px;
+      background: var(--bg-2);
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+    }
+    .acct-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .acct-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .acct-av {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--orange);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .acct-status {
+      font-size: 11.5px;
+      color: var(--ink-3);
+      line-height: 1.4;
+      margin-bottom: 8px;
+    }
+    .acct-mismatch {
+      display: none;
+      background: var(--gold-soft);
+      border: 1px solid var(--gold);
+      border-radius: 4px;
+      padding: 7px 10px;
+      font-size: 11px;
+      color: #92400e;
+      line-height: 1.5;
+      margin-bottom: 8px;
+    }
+
+    /* ── Campaign cards ──────────────────────────────── */
+    .camp { display: flex; flex-direction: column; gap: 8px; }
+    .camp-card {
+      background: var(--paper);
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      transition: border-color 0.12s;
+    }
+    .camp-card:hover { border-color: var(--ink-3); }
+    .camp-card.recommended { border-color: var(--orange); box-shadow: 0 0 0 1px var(--orange); }
+    .vmark { width: 4px; flex-shrink: 0; background: var(--orange); }
+    .camp-card.plum .vmark { background: var(--plum); }
+    .camp-card.sky  .vmark { background: var(--sky);  }
+    .camp-body { flex: 1; padding: 11px; }
+    .camp-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .camp-title { font-size: 13px; font-weight: 700; color: var(--ink); }
+    .camp-badge {
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 2px 6px;
+      border-radius: 99px;
+      background: var(--orange);
+      color: #fff;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .camp-badge.plum { background: var(--plum); }
+    .camp-badge.sky  { background: var(--sky);  }
+    .camp-ctx  { font-size: 11px; color: var(--ink-3); margin-bottom: 3px; line-height: 1.4; }
+    .camp-sub  { font-size: 11px; color: var(--ink-2); margin-bottom: 8px; line-height: 1.4; }
+    .camp-start {
+      width: 100%;
+      padding: 7px 10px;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      border-radius: 99px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      transition: filter 0.12s;
+    }
+    .camp-card.plum .camp-start { background: var(--plum); }
+    .camp-card.sky  .camp-start { background: var(--sky);  }
+    .camp-start:hover:not(:disabled) { filter: brightness(0.92); }
+    .camp-start:disabled { background: var(--bg-3); color: var(--ink-4); cursor: not-allowed; }
+
+    /* ── Stats strip ─────────────────────────────────── */
+    .ext-stats {
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+      background: var(--bg-2);
+      border-top: 1px solid var(--line-2);
+    }
+    .ext-stat {
+      padding: 8px;
+      background: var(--paper);
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      text-align: center;
+    }
+    .ext-stat-l {
+      font-size: 9px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--ink-3);
+      font-weight: 700;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    .ext-stat-v {
+      font-size: 20px;
+      line-height: 1.1;
+      letter-spacing: -0.01em;
+      margin-top: 2px;
+      color: var(--ink);
+      font-weight: 700;
+    }
+    .ext-stat-v.accent { color: var(--orange); }
+    .ext-stat-v.moss   { color: var(--moss);   }
+
+    /* ── Progress bar ────────────────────────────────── */
+    .progress-block { padding: 8px 14px 10px; background: var(--bg-2); }
+    .progress-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 5px;
+      font-size: 11px;
+      color: var(--ink-3);
+      font-weight: 600;
+    }
+    .progress-track { height: 4px; background: var(--line-2); border-radius: 99px; overflow: hidden; }
     .progress-fill {
       height: 100%;
       width: 0;
-      background: linear-gradient(90deg, #111111 0%, #e07000 100%);
+      background: var(--orange);
       border-radius: inherit;
       transition: width 220ms ease;
     }
-    .campaign-card {
-      border: 1px solid #ebe4d8;
-      border-radius: 18px;
-      overflow: hidden;
-      background: #fff;
+
+    /* ── Sync status ─────────────────────────────────── */
+    .sync-row {
+      padding: 9px 14px;
+      font-size: 10.5px;
+      color: var(--ink-3);
+      line-height: 1.5;
+      border-top: 1px solid var(--line);
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
     }
-    .campaign-summary {
-      padding: 14px;
-      display: grid;
-      gap: 6px;
+
+    /* ── Campaign form ───────────────────────────────── */
+    .ext-form { padding: 13px 14px; display: grid; gap: 12px; }
+    .ext-field { display: grid; gap: 5px; }
+    .ext-label {
+      font-size: 10.5px;
+      font-weight: 700;
+      color: var(--ink-3);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
     }
-    .campaign-meta {
-      font-size: 12px;
-      color: #6b665f;
+    .ext-input, .ext-select, .ext-textarea {
+      width: 100%;
+      border: 1px solid var(--line-2);
+      border-radius: 4px;
+      background: var(--paper);
+      padding: 8px 10px;
+      font: inherit;
+      color: var(--ink);
+      outline: none;
+      font-size: 12.5px;
+      transition: border-color 0.12s, box-shadow 0.12s;
     }
-    .campaign-target {
-      border-top: 1px solid #f0ebe4;
-      background: #faf8f4;
-      padding: 12px 14px;
-      display: grid;
-      gap: 4px;
+    .ext-input:focus, .ext-select:focus, .ext-textarea:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 1px var(--orange);
     }
-    .campaign-actions {
-      padding: 12px 14px 14px;
+    .ext-textarea { min-height: 96px; resize: vertical; }
+    .ext-helper { font-size: 11px; color: var(--ink-3); line-height: 1.5; }
+    .ext-helper code {
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
+      background: var(--bg-3);
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 10.5px;
     }
-    .small { font-size: 12px; }
-    .tiny { font-size: 11px; color: #7b756d; }
-    .toggle {
+    .ext-toggle {
       display: flex;
       align-items: center;
-      gap: 10px;
-      border: 1px solid #e8e1d6;
-      border-radius: 14px;
-      padding: 10px 12px;
-      background: #fcfbf8;
+      gap: 8px;
+      padding: 8px 10px;
+      border: 1px solid var(--line-2);
+      border-radius: 4px;
+      background: var(--bg-2);
+      font-size: 12px;
+      color: var(--ink-2);
+      cursor: pointer;
     }
-    .toggle input { accent-color: #111111; }
-    .disabled {
-      opacity: 0.55;
-      pointer-events: none;
+    .ext-toggle input { accent-color: var(--orange); }
+    .ext-toggle.disabled { opacity: 0.5; pointer-events: none; }
+
+    /* ── Target card (campaign view) ─────────────────── */
+    .target-card {
+      background: var(--paper);
+      border: 1px solid var(--line-2);
+      border-radius: 6px;
+      padding: 12px 13px;
     }
-    .helper {
-      font-size: 11px;
-      color: #7c766d;
-      line-height: 1.5;
+    .target-card-type {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--ink-3);
+      font-weight: 700;
+      margin-bottom: 4px;
+      font-family: "IBM Plex Mono", ui-monospace, monospace;
     }
+    .target-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+      margin-bottom: 3px;
+    }
+    .target-card-sub { font-size: 11.5px; color: var(--ink-3); }
+
+    /* ── Buttons ─────────────────────────────────────── */
+    .ext-btn {
+      width: 100%;
+      border: none;
+      border-radius: 99px;
+      padding: 10px 14px;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: filter 0.12s;
+    }
+    .ext-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .ext-btn:hover:not(:disabled) { filter: brightness(0.92); }
+    .ext-btn-accent { background: var(--orange); color: #fff; }
+    .ext-btn-dark   { background: var(--ink);    color: var(--paper); }
+    .ext-btn-quiet  { background: var(--paper);  color: var(--ink);   border: 1px solid var(--line-3); }
+    .ext-btn-danger {
+      background: var(--paper);
+      color: var(--rose);
+      border: 1px solid var(--rose-soft);
+    }
+    .ext-btn-danger:hover:not(:disabled) { background: var(--rose-soft); filter: none; }
+
+    /* ── Settings section ────────────────────────────── */
+    .settings-section { padding: 14px; border-bottom: 1px solid var(--line); }
+    .settings-title {
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+      margin-bottom: 5px;
+    }
+    .settings-desc { font-size: 12px; color: var(--ink-3); line-height: 1.5; margin-bottom: 12px; }
+
+    /* ── Error / feedback ────────────────────────────── */
+    .error, .feedback { display: none; border-radius: 4px; padding: 10px 12px; font-size: 12px; line-height: 1.45; }
+    #connect-error, #app-error {
+      background: var(--rose-soft);
+      border: 1px solid #f0b7bd;
+      color: var(--rose);
+    }
+    #app-error { margin-bottom: 10px; }
+    .feedback.error   { display: block; background: var(--rose-soft); border: 1px solid #f0b7bd; color: var(--rose); }
+    .feedback.success { display: block; background: var(--moss-soft); border: 1px solid #b3ddb9; color: #166534; }
+    .feedback.muted   { display: block; background: var(--bg-2);      border: 1px solid var(--line-2); color: var(--ink-3); }
   </style>
 </head>
 <body>
-  <div class="shell">
+  <div class="ext-shell">
+
+    <!-- ══ CONNECT SCREEN ══════════════════════════════ -->
     <div class="screen active" id="screen-connect">
-      <div class="connect">
-        <div class="eyebrow">Chrome Extension</div>
-        <div class="brand">ReddProwl</div>
-        <div class="muted">Paste the connect token from ReddProwl Settings → Extension.</div>
+      <div class="ext-top">
+        <div class="ext-top-lbl">ReddProwl Extension</div>
+      </div>
+      <div class="ext-connect">
+        <div class="ext-eyebrow">Chrome Extension</div>
+        <div class="ext-connect-title">ReddProwl</div>
+        <div class="ext-connect-desc">Paste the connect token from ReddProwl Settings → Extension.</div>
 
-        <div class="field">
-          <label class="label" for="connect-token-input">Connect token</label>
-          <input class="input" id="connect-token-input" type="password" placeholder="Paste token here" />
+        <div class="ext-field">
+          <label class="ext-label" for="connect-token-input">Connect token</label>
+          <input class="ext-input" id="connect-token-input" type="password" placeholder="Paste token here" />
         </div>
 
-        <div class="field">
-          <label class="label" for="connect-label-input">Device label</label>
-          <input class="input" id="connect-label-input" type="text" placeholder="e.g. Chrome on MacBook" />
+        <div class="ext-field">
+          <label class="ext-label" for="connect-label-input">Device label</label>
+          <input class="ext-input" id="connect-label-input" type="text" placeholder="e.g. Chrome on MacBook" />
         </div>
 
-        <button class="btn btn-primary" id="connect-btn">Connect</button>
+        <button class="ext-btn ext-btn-accent" id="connect-btn">Connect</button>
         <div class="error" id="connect-error"></div>
       </div>
     </div>
 
+    <!-- ══ APP SCREEN ══════════════════════════════════ -->
     <div class="screen" id="screen-app">
-      <div class="app-header">
-        <div class="header-row">
-          <div class="header-brand">
-            <div class="eyebrow">ReddProwl</div>
-            <div class="title">redProwl</div>
-          </div>
-          <div class="plan-badge" id="project-name">Project . Plan</div>
-        </div>
 
-        <div class="nav">
-          <button class="nav-btn active" data-view="home">Home</button>
-          <button class="nav-btn" data-view="campaign">Campaign</button>
-          <button class="nav-btn" data-view="settings">Settings</button>
-        </div>
+      <div class="ext-top">
+        <div class="ext-top-lbl">ReddProwl</div>
       </div>
 
-      <section class="panel-body panel-view active" id="view-home">
-        <div class="feedback error" id="app-error"></div>
+      <div class="ext-hero">
+        <div class="ext-hero-name">red<em>Prowl</em></div>
+        <span class="ext-hero-proj" id="project-name">Project · Plan</span>
+      </div>
 
-        <div class="card stack">
-          <div class="label">Reddit account</div>
-          <div id="reddit-account-name" style="font-size:18px;font-weight:800;letter-spacing:-0.04em;">Not detected</div>
-          <div class="muted" id="reddit-account-status">Could not verify Reddit session</div>
-          <div id="account-mismatch-warning" style="display:none;background:#fff8f0;border:1px solid #f5c97a;border-radius:10px;padding:9px 11px;font-size:11px;color:#92400e;line-height:1.5;">
-            ⚠️ Reddit account changed. Campaigns paused to avoid sending from the wrong account.
-          </div>
-          <button class="btn btn-secondary" id="link-reddit-btn" style="font-size:11px;padding:8px 12px;">Link current account</button>
-        </div>
+      <div class="ext-tabs">
+        <button class="nav-btn active" data-view="home">⌂ Home</button>
+        <button class="nav-btn" data-view="campaign">⚡ Campaign</button>
+        <button class="nav-btn" data-view="settings">⚙ Settings</button>
+      </div>
 
-        <div class="stack">
-          <div class="label">Start a campaign</div>
+      <!-- ── Home ──────────────────────────────────── -->
+      <section class="panel-view active" id="view-home">
 
-          <div class="campaign-card">
-            <div class="campaign-summary">
-              <div style="font-size:16px;font-weight:800;letter-spacing:-0.04em;">Thread campaign</div>
-              <div class="campaign-meta">Target commentaries in a Reddit post</div>
+        <div class="ext-section">
+          <div class="error" id="app-error"></div>
+          <div class="ext-section-lbl"><span>Reddit account</span></div>
+          <div class="acct">
+            <div class="acct-row">
+              <div class="acct-name">
+                <span class="acct-av">u</span>
+                <span id="reddit-account-name">Not detected</span>
+              </div>
             </div>
-            <div class="campaign-target">
-              <div class="tiny" id="thread-context-label">Open a Reddit post to start from that thread.</div>
-              <div class="small" id="thread-context-subtitle">Target commenters in a Reddit post</div>
+            <div class="acct-status" id="reddit-account-status">Could not verify Reddit session</div>
+            <div class="acct-mismatch" id="account-mismatch-warning">
+              ⚠️ Reddit account changed. Campaigns paused to avoid sending from the wrong account.
             </div>
-            <div class="campaign-actions">
-              <button class="btn btn-primary" id="start-thread-campaign">Start campaign</button>
-            </div>
-          </div>
-
-          <div class="campaign-card">
-            <div class="campaign-summary">
-              <div style="font-size:16px;font-weight:800;letter-spacing:-0.04em;">Subreddit campaign</div>
-              <div class="campaign-meta">Target users in entire subreddit</div>
-            </div>
-            <div class="campaign-target">
-              <div class="tiny" id="subreddit-context-label">Open a subreddit or post to detect the target community.</div>
-              <div class="small" id="subreddit-context-subtitle">Will navigate to subreddit homepage first</div>
-            </div>
-            <div class="campaign-actions">
-              <button class="btn btn-primary" id="start-subreddit-campaign">Start campaign</button>
-            </div>
-          </div>
-
-          <div class="campaign-card">
-            <div class="campaign-summary">
-              <div style="font-size:16px;font-weight:800;letter-spacing:-0.04em;">List campaign</div>
-              <div class="campaign-meta">Message users from your lead lists</div>
-            </div>
-            <div class="campaign-target">
-              <div class="tiny" id="lead-context-label">Current project leads</div>
-              <div class="small" id="lead-context-subtitle">Uses your ReddProwl lead list for this project</div>
-            </div>
-            <div class="campaign-actions">
-              <button class="btn btn-primary" id="start-lead-campaign">Start campaign</button>
-            </div>
+            <button class="ext-btn ext-btn-quiet" id="link-reddit-btn" style="font-size:11px;padding:7px 12px;margin-top:8px;">Link current account</button>
           </div>
         </div>
 
-        <div class="split-2">
-          <div class="card stack">
-            <div class="label">Active campaigns</div>
-            <div class="metric-number" id="metric-active-campaigns">0</div>
+        <div class="ext-section">
+          <div class="ext-section-lbl">
+            <span>Start a campaign</span>
+            <span style="font-size:9.5px;color:var(--ink-4);font-weight:700">3 types</span>
           </div>
-          <div class="card stack">
-            <div class="label">Total DMs sent</div>
-            <div class="metric-number" id="metric-total-dms">0</div>
+          <div class="camp">
+            <div class="camp-card recommended">
+              <div class="vmark"></div>
+              <div class="camp-body">
+                <div class="camp-row">
+                  <div class="camp-title">Thread campaign</div>
+                  <span class="camp-badge">Hot</span>
+                </div>
+                <div class="camp-ctx" id="thread-context-label">Open a Reddit post to target commenters in that thread.</div>
+                <div class="camp-sub" id="thread-context-subtitle">Target commenters in a Reddit post</div>
+                <button class="camp-start" id="start-thread-campaign">Start campaign →</button>
+              </div>
+            </div>
+
+            <div class="camp-card plum">
+              <div class="vmark"></div>
+              <div class="camp-body">
+                <div class="camp-row">
+                  <div class="camp-title">Subreddit campaign</div>
+                  <span class="camp-badge plum">Community</span>
+                </div>
+                <div class="camp-ctx" id="subreddit-context-label">Open a subreddit or post to detect the target community.</div>
+                <div class="camp-sub" id="subreddit-context-subtitle">Will navigate to subreddit homepage first</div>
+                <button class="camp-start" id="start-subreddit-campaign">Start campaign →</button>
+              </div>
+            </div>
+
+            <div class="camp-card sky">
+              <div class="vmark"></div>
+              <div class="camp-body">
+                <div class="camp-row">
+                  <div class="camp-title">List campaign</div>
+                  <span class="camp-badge sky">CRM list</span>
+                </div>
+                <div class="camp-ctx" id="lead-context-label">Current project leads</div>
+                <div class="camp-sub" id="lead-context-subtitle">Uses your ReddProwl lead list for this project</div>
+                <button class="camp-start" id="start-lead-campaign">Start campaign →</button>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="card">
-          <div class="label">Today's DMs</div>
-          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-            <div class="muted">Daily limit progress</div>
-            <div style="font-weight:800;" id="todays-dms-label">0/25</div>
+        <div class="ext-stats">
+          <div class="ext-stat">
+            <div class="ext-stat-l">Active</div>
+            <div class="ext-stat-v accent" id="metric-active-campaigns">0</div>
+          </div>
+          <div class="ext-stat">
+            <div class="ext-stat-l">DMs sent</div>
+            <div class="ext-stat-v" id="metric-total-dms">0</div>
+          </div>
+          <div class="ext-stat">
+            <div class="ext-stat-l">Today</div>
+            <div class="ext-stat-v" id="todays-dms-label">0/25</div>
+          </div>
+        </div>
+
+        <div class="progress-block">
+          <div class="progress-row">
+            <span>Daily limit progress</span>
           </div>
           <div class="progress-track">
             <div class="progress-fill" id="todays-dms-fill"></div>
           </div>
         </div>
 
-        <div class="card stack">
-          <div class="label">Sync status</div>
-          <div class="muted" id="sync-status-copy">Checking current Reddit context…</div>
-        </div>
+        <div class="sync-row" id="sync-status-copy">Checking current Reddit context…</div>
       </section>
 
-      <section class="panel-body panel-view" id="view-campaign">
-        <div class="card stack">
-          <div class="label" id="campaign-context-type">Thread campaign</div>
-          <div style="font-size:20px;font-weight:800;letter-spacing:-0.05em;" id="campaign-target-title">Targeting this Reddit post</div>
-          <div class="muted" id="campaign-target-subline">Open a Reddit post to continue</div>
+      <!-- ── Campaign ───────────────────────────────── -->
+      <section class="panel-view" id="view-campaign">
+        <div class="ext-section">
+          <div class="target-card">
+            <div class="target-card-type" id="campaign-context-type">Thread campaign</div>
+            <div class="target-card-title" id="campaign-target-title">Targeting this Reddit post</div>
+            <div class="target-card-sub" id="campaign-target-subline">Open a Reddit post to continue</div>
+          </div>
         </div>
 
-        <div class="card stack">
-          <div class="field">
-            <label class="label" for="campaign-picker">Your campaign</label>
-            <select class="select" id="campaign-picker">
+        <div class="ext-form">
+          <div class="ext-field">
+            <label class="ext-label" for="campaign-picker">Your campaign</label>
+            <select class="ext-select" id="campaign-picker">
               <option value="new">New campaign</option>
             </select>
           </div>
-
-          <div class="field">
-            <label class="label" for="campaign-name">Campaign name</label>
-            <input class="input" id="campaign-name" type="text" placeholder="Campaign name" />
+          <div class="ext-field">
+            <label class="ext-label" for="campaign-name">Campaign name</label>
+            <input class="ext-input" id="campaign-name" type="text" placeholder="Campaign name" />
           </div>
-
-          <div class="field">
-            <label class="label" for="campaign-message">Campaign message</label>
-            <textarea class="textarea" id="campaign-message" placeholder="{Hello|Hi|Hey} {{username}}"></textarea>
-            <div class="helper">Supports template variables <code>{{username}}</code>, <code>{{subreddit}}</code>, <code>{{post_title}}</code> and spintax like <code>{Hello|Hi|Hey}</code>.</div>
+          <div class="ext-field">
+            <label class="ext-label" for="campaign-message">Campaign message</label>
+            <textarea class="ext-textarea" id="campaign-message" placeholder="{Hello|Hi|Hey} {{username}}"></textarea>
+            <div class="ext-helper">Supports <code>{{username}}</code>, <code>{{subreddit}}</code>, <code>{{post_title}}</code> and spintax like <code>{Hello|Hi|Hey}</code>.</div>
           </div>
-
-          <div class="field">
-            <label class="label" for="campaign-dm-limit">DM limit</label>
-            <input class="input" id="campaign-dm-limit" type="number" min="1" value="25" />
-            <div class="helper">Maximum DMs sent per run. Daily limits and delays are configured in Settings.</div>
+          <div class="ext-field">
+            <label class="ext-label" for="campaign-dm-limit">DM limit</label>
+            <input class="ext-input" id="campaign-dm-limit" type="number" min="1" value="25" />
+            <div class="ext-helper">Maximum DMs sent per run. Daily limits and delays are configured in Settings.</div>
           </div>
         </div>
 
-        <div class="card stack" id="thread-settings">
-          <div class="label">Campaign behavior</div>
-          <label class="toggle">
-            <input id="behavior-skip-author" type="checkbox" checked />
-            <span>Skip post author</span>
-          </label>
-          <label class="toggle">
-            <input id="behavior-first-level" type="checkbox" />
-            <span>Only DM first level comments</span>
-          </label>
-          <label class="toggle disabled">
-            <input id="behavior-skip-reddit" type="checkbox" disabled />
-            <span>Skip if already DMed by my Reddit account</span>
-          </label>
-          <label class="toggle disabled">
-            <input id="behavior-skip-project" type="checkbox" checked disabled />
-            <span>Skip if already DMed in this project</span>
-          </label>
+        <div class="ext-section" id="thread-settings">
+          <div class="ext-section-lbl">Campaign behavior</div>
+          <div style="display:grid;gap:6px">
+            <label class="ext-toggle">
+              <input id="behavior-skip-author" type="checkbox" checked />
+              <span>Skip post author</span>
+            </label>
+            <label class="ext-toggle">
+              <input id="behavior-first-level" type="checkbox" />
+              <span>Only DM first level comments</span>
+            </label>
+            <label class="ext-toggle disabled">
+              <input id="behavior-skip-reddit" type="checkbox" disabled />
+              <span>Skip if already DMed by my Reddit account</span>
+            </label>
+            <label class="ext-toggle disabled">
+              <input id="behavior-skip-project" type="checkbox" checked disabled />
+              <span>Skip if already DMed in this project</span>
+            </label>
+          </div>
         </div>
 
-        <div class="card stack" id="subreddit-settings" style="display:none;">
-          <div class="label">Campaign behavior</div>
-          <label class="toggle disabled">
+        <div class="ext-section" id="subreddit-settings" style="display:none">
+          <div class="ext-section-lbl">Campaign behavior</div>
+          <label class="ext-toggle disabled">
             <input type="checkbox" checked disabled />
             <span>Skip if already DMed in this project</span>
           </label>
-          <div class="helper">Subreddit campaigns use the detected subreddit from the current Reddit tab.</div>
+          <div class="ext-helper" style="margin-top:8px">Subreddit campaigns use the detected subreddit from the current Reddit tab.</div>
         </div>
 
-        <div class="card stack" id="lead-settings" style="display:none;">
-          <div class="label">Campaign behavior</div>
-          <div class="helper">Lead list campaigns use the current project's lead inbox as the source list.</div>
+        <div class="ext-section" id="lead-settings" style="display:none">
+          <div class="ext-section-lbl">Campaign behavior</div>
+          <div class="ext-helper">Lead list campaigns use the current project's lead inbox as the source list.</div>
         </div>
 
-        <button class="btn btn-primary" id="campaign-start-btn">Start campaign</button>
-        <div class="feedback" id="campaign-feedback"></div>
-      </section>
-
-      <section class="panel-body panel-view" id="view-settings">
-        <div class="card stack">
-          <div class="label">Settings</div>
-          <div style="font-size:18px;font-weight:800;letter-spacing:-0.04em;">Daily limits &amp; delays</div>
-          <div class="muted">Daily limits and delay timing are configured from the ReddProwl app. This panel focuses on selecting context and launching campaigns from Reddit.</div>
-        </div>
-
-        <div class="card stack">
-          <div class="label">Connection</div>
-          <div class="muted">Extension connected to the current project. Disconnect if you want to re-link another workspace.</div>
-          <button class="btn btn-danger" id="disconnect-btn">Disconnect</button>
+        <div style="padding:12px 14px;display:grid;gap:8px">
+          <button class="ext-btn ext-btn-accent" id="campaign-start-btn">Start campaign</button>
+          <div class="feedback" id="campaign-feedback"></div>
         </div>
       </section>
-    </div>
-  </div>
+
+      <!-- ── Settings ───────────────────────────────── -->
+      <section class="panel-view" id="view-settings">
+        <div class="settings-section">
+          <div class="settings-title">Settings</div>
+          <div class="settings-desc">Daily limits and delay timing are configured from the ReddProwl app. This panel focuses on selecting context and launching campaigns from Reddit.</div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-title">Connection</div>
+          <div class="settings-desc">Extension connected to the current project. Disconnect if you want to re-link another workspace.</div>
+          <button class="ext-btn ext-btn-danger" id="disconnect-btn">Disconnect</button>
+        </div>
+      </section>
+
+    </div><!-- /screen-app -->
+  </div><!-- /ext-shell -->
 
   <script src="sidepanel.js"></script>
 </body>

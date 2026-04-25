@@ -58,19 +58,12 @@ export function SidebarLinks({
           <Link
             key={item.href}
             href={`${item.href}?projectId=${currentProjectId}`}
-            className="sidebar-link"
-            style={{
-              fontWeight: active ? 700 : 500,
-              color: active ? "#1C1C1E" : "#6B6B6E",
-              background: active ? "#EAEAE8" : "transparent",
-            }}
+            className={`sidebar-link${active ? " sidebar-link-active" : ""}`}
           >
             <Icon className="sidebar-icon" />
             <span style={{ flex: 1 }}>{item.label}</span>
             {item.badge > 0 && (
-              <span style={{ background: "#E07000", color: "#FFF", fontSize: 9, fontWeight: 700, padding: "2px 6px", borderRadius: 5, lineHeight: 1.4 }}>
-                {item.badge}
-              </span>
+              <span className="ds-nav-badge">{item.badge}</span>
             )}
           </Link>
         );
@@ -80,13 +73,11 @@ export function SidebarLinks({
       <button
         type="button"
         onClick={() => setArchiveOpen((v) => !v)}
-        className="sidebar-link"
+        className={`sidebar-link${inArchive ? " sidebar-link-active" : ""}`}
         style={{
           width: "100%",
-          background: "transparent",
+          background: inArchive ? undefined : "transparent",
           border: "none",
-          fontWeight: inArchive ? 700 : 500,
-          color: inArchive ? "#1C1C1E" : "#6B6B6E",
           cursor: "pointer",
           textAlign: "left",
         }}
@@ -100,27 +91,15 @@ export function SidebarLinks({
         <>
           <Link
             href={`/archive/replied?projectId=${currentProjectId}`}
-            className="sidebar-link"
-            style={{
-              paddingLeft: 34,
-              fontWeight: pathname === "/archive/replied" ? 700 : 500,
-              color: pathname === "/archive/replied" ? "#1C1C1E" : "#6B6B6E",
-              background: pathname === "/archive/replied" ? "#EAEAE8" : "transparent",
-              fontSize: 13,
-            }}
+            className={`sidebar-link${pathname === "/archive/replied" ? " sidebar-link-active" : ""}`}
+            style={{ paddingLeft: 32 }}
           >
             Respondidos
           </Link>
           <Link
             href={`/archive/rejected?projectId=${currentProjectId}`}
-            className="sidebar-link"
-            style={{
-              paddingLeft: 34,
-              fontWeight: pathname === "/archive/rejected" ? 700 : 500,
-              color: pathname === "/archive/rejected" ? "#1C1C1E" : "#6B6B6E",
-              background: pathname === "/archive/rejected" ? "#EAEAE8" : "transparent",
-              fontSize: 13,
-            }}
+            className={`sidebar-link${pathname === "/archive/rejected" ? " sidebar-link-active" : ""}`}
+            style={{ paddingLeft: 32 }}
           >
             Rechazados
           </Link>
@@ -137,12 +116,7 @@ export function SidebarLinks({
           <Link
             key={item.href}
             href={`${item.href}?projectId=${currentProjectId}`}
-            className="sidebar-link"
-            style={{
-              fontWeight: active ? 700 : 500,
-              color: active ? "#1C1C1E" : "#6B6B6E",
-              background: active ? "#EAEAE8" : "transparent",
-            }}
+            className={`sidebar-link${active ? " sidebar-link-active" : ""}`}
           >
             <Icon className="sidebar-icon" />
             <span style={{ flex: 1 }}>{item.label}</span>
@@ -154,12 +128,7 @@ export function SidebarLinks({
       <div style={{ marginTop: "auto", paddingTop: 8 }}>
         <Link
           href={`/settings?projectId=${currentProjectId}`}
-          className="sidebar-link"
-          style={{
-            fontWeight: isActive("/settings") ? 700 : 500,
-            color: isActive("/settings") ? "#1C1C1E" : "#6B6B6E",
-            background: isActive("/settings") ? "#EAEAE8" : "transparent",
-          }}
+          className={`sidebar-link${isActive("/settings") ? " sidebar-link-active" : ""}`}
         >
           <GearIcon className="sidebar-icon" />
           <span style={{ flex: 1 }}>{t("settings")}</span>
@@ -245,15 +214,7 @@ function CrmIcon({ className }: { className?: string }) {
 
 function GroupLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <p style={{
-      fontSize: 9,
-      fontWeight: 800,
-      color: "#AEAEB2",
-      textTransform: "uppercase",
-      letterSpacing: "0.07em",
-      padding: "6px 8px 2px",
-      ...style,
-    }}>
+    <p className="ds-nav-group" style={style}>
       {children}
     </p>
   );

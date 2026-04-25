@@ -48,7 +48,7 @@ function RefreshCountdowns({
   const CYCLE_HOURS = 24;
 
   function computeBar(lastAt: string | null) {
-    if (!lastAt) return { pct: 0, label: "Pending", color: "#DDDDD9" };
+    if (!lastAt) return { pct: 0, label: "Pending", color: "#B0B0B5" };
     const hoursSince = (nowMs - new Date(lastAt).getTime()) / 3_600_000;
     const hoursLeft = Math.max(0, CYCLE_HOURS - hoursSince);
     const pct = Math.max(0, Math.min(100, (hoursLeft / CYCLE_HOURS) * 100));
@@ -56,7 +56,7 @@ function RefreshCountdowns({
     if (hoursLeft < 0.5) label = "Soon";
     else if (hoursLeft < 1) label = "< 1h";
     else label = `${Math.round(hoursLeft)}h`;
-    const color = pct > 50 ? "#16A34A" : pct > 20 ? "#E07000" : "#AEAEB2";
+    const color = pct > 50 ? "#46A758" : pct > 20 ? "#FF4500" : "#B0B0B5";
     return { pct, label, color };
   }
 
@@ -64,10 +64,8 @@ function RefreshCountdowns({
   const men = computeBar(lastMentionsAt);
 
   return (
-    <div style={{ padding: "10px 14px 8px", borderBottom: "1px solid #EEEEED", display: "grid", gap: 8 }}>
-      <p style={{ fontSize: 9, fontWeight: 800, color: "#AEAEB2", textTransform: "uppercase", letterSpacing: "0.07em", marginBottom: 2 }}>
-        Next refresh
-      </p>
+    <div className="ds-refresh-block">
+      <p className="ds-refresh-label">Next refresh</p>
       <RefreshBar label="Opportunities" bar={opp} />
       <RefreshBar label="Mentions" bar={men} />
     </div>
@@ -83,18 +81,18 @@ function RefreshBar({
 }) {
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color: "#6B6B6E" }}>{label}</span>
-        <span style={{ fontSize: 9, fontWeight: 800, color: bar.color }}>{bar.label}</span>
+      <div className="ds-refresh-bar-row">
+        <span style={{ fontSize: 10, fontWeight: 600, color: "#7C7C83" }}>{label}</span>
+        <span style={{ fontSize: 9, fontWeight: 700, color: bar.color }}>{bar.label}</span>
       </div>
-      <div style={{ height: 4, borderRadius: 99, background: "#E8E8E6", overflow: "hidden" }}>
-        <div style={{
-          height: "100%",
-          width: `${bar.pct}%`,
-          borderRadius: 99,
-          background: bar.color,
-          transition: "width 400ms ease",
-        }} />
+      <div className="ds-refresh-bar-track">
+        <div
+          className="ds-refresh-bar-fill"
+          style={{
+            width: `${bar.pct}%`,
+            background: bar.color,
+          }}
+        />
       </div>
     </div>
   );
@@ -129,39 +127,16 @@ async function DashboardShellContent({
   const refreshNowMs = Number(new Date());
 
   return (
-    <div
-      style={{
-        display: "flex",
-        height: "100vh",
-        overflow: "hidden",
-        background: "#FAFAF8",
-      }}
-    >
+    <div className="ds-shell">
       {/* ── SIDEBAR ── */}
-      <aside
-        style={{
-          width: 224,
-          background: "#F7F7F5",
-          borderRight: "1px solid #EEEEED",
-          display: "flex",
-          flexDirection: "column",
-          flexShrink: 0,
-          overflow: "hidden",
-        }}
-      >
+      <aside className="ds-sidebar">
         {/* Logo + project selector */}
-        <div
-          style={{
-            padding: "16px 14px 14px",
-            borderBottom: "1px solid #EEEEED",
-          }}
-        >
+        <div className="ds-sidebar-head">
           <BrandLink
             logoSize={22}
             wordmarkSize={14}
             style={{ gap: 6, marginBottom: 12, padding: "0 3px" }}
           />
-
           <ProjectSwitcher currentProject={currentProject} />
         </div>
 
@@ -173,7 +148,7 @@ async function DashboardShellContent({
         />
 
         {/* Footer */}
-        <div style={{ borderTop: "1px solid #EEEEED", background: "#F2F2F0" }}>
+        <div className="ds-sidebar-foot">
           {/* Refresh countdown bars */}
           <RefreshCountdowns
             lastOpportunitiesAt={currentProject.last_scraped_at}
@@ -182,36 +157,28 @@ async function DashboardShellContent({
           />
 
           {/* User profile row */}
-          <div style={{ padding: "10px 14px 12px" }}>
+          <div className="ds-user-row">
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
               <div style={{
-                width: 26, height: 26, borderRadius: 999,
-                background: "#E07000", display: "flex", alignItems: "center", justifyContent: "center",
+                width: 24, height: 24, borderRadius: 999,
+                background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center",
                 flexShrink: 0,
               }}>
-                <span style={{ fontSize: 11, fontWeight: 800, color: "#FFF" }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: "#FFF" }}>
                   {(user.email?.[0] ?? "?").toUpperCase()}
                 </span>
               </div>
               <p style={{
-                fontSize: 11, fontWeight: 600, color: "#6B6B6E",
+                fontSize: 11, fontWeight: 500, color: "#7C7C83",
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
               }}>
                 {user.email}
               </p>
             </div>
 
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
               <form action={signOut} style={{ flex: 1 }}>
-                <button
-                  type="submit"
-                  style={{
-                    fontSize: 10, fontWeight: 700, color: "#8E8E93",
-                    background: "none", border: "1px solid #DDDDD9", borderRadius: 5,
-                    cursor: "pointer", padding: "3px 8px", width: "100%",
-                    transition: "border-color 150ms ease, color 150ms ease",
-                  }}
-                >
+                <button type="submit" className="ds-btn-quiet">
                   Sign out
                 </button>
               </form>
@@ -219,9 +186,9 @@ async function DashboardShellContent({
                 <Link
                   href="/admin"
                   style={{
-                    fontSize: 10, fontWeight: 700, color: "#E07000",
-                    textDecoration: "none", padding: "3px 8px", borderRadius: 5,
-                    background: "#FFF4E6", border: "1px solid rgba(224,112,0,0.2)",
+                    fontSize: 10, fontWeight: 700, color: "#FF4500",
+                    textDecoration: "none", padding: "3px 10px", borderRadius: 99,
+                    background: "#FFF3EC", border: "1px solid rgba(255,69,0,0.2)",
                     whiteSpace: "nowrap",
                   }}
                 >
