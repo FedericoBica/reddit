@@ -76,7 +76,7 @@ export default async function SignupCompanyPage({ searchParams }: CompanyPagePro
                       required
                     />
                   </label>
-                  <Button className="h-11 rounded-[10px] font-bold text-sm" type="submit">
+                  <Button className="sw-btn-primary w-full" type="submit">
                     Continue →
                   </Button>
                 </form>

@@ -96,7 +96,7 @@ export function PlanSelector({ projectId }: PlanSelectorProps) {
           <input type="hidden" name="plan" value={selected} />
           <Button
             type="submit"
-            className="h-11 w-full rounded-[10px] font-bold text-sm"
+            className="sw-btn-primary w-full"
           >
             Start with {plan.name} — {plan.price}/mo →
           </Button>

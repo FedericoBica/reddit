@@ -110,7 +110,7 @@ function AnalyzeButton() {
 
   return (
     <Button
-      className="h-11 rounded-[10px] font-bold text-sm"
+      className="sw-btn-primary w-full"
       disabled={pending}
       type="submit"
     >

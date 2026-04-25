@@ -71,13 +71,13 @@ export function TutorialCard({ projectId }: TutorialCardProps) {
           {isLast ? (
             <Button
               asChild
-              className="h-11 w-full rounded-[10px] font-bold text-sm"
+              className="sw-btn-primary w-full"
             >
               <a href={`/dashboard?projectId=${projectId}`}>Open my dashboard →</a>
             </Button>
           ) : (
             <Button
-              className="h-11 w-full rounded-[10px] font-bold text-sm"
+              className="sw-btn-primary w-full"
               type="button"
               onClick={() => setStep((v) => v + 1)}
             >

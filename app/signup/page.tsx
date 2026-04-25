@@ -106,7 +106,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
                   required
                 />
               </label>
-              <Button className="h-11 rounded-[10px] font-bold text-sm" type="submit">
+              <Button className="sw-btn-primary w-full" type="submit">
                 Create account →
               </Button>
             </form>

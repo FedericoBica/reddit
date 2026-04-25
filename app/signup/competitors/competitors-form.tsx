@@ -54,11 +54,11 @@ function CompetitorSubmitButton() {
 
   return (
     <Button
-      className="h-11 rounded-[8px] font-extrabold"
+      className="sw-btn-primary"
       disabled={pending}
       type="submit"
     >
-      {pending ? "Checking websites..." : "Next"}
+      {pending ? "Checking websites..." : "Next →"}
     </Button>
   );
 }

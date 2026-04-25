@@ -64,7 +64,7 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
             <form action={continueToPlan}>
               <input type="hidden" name="projectId" value={projectId} />
               <Button
-                className="h-11 w-full rounded-[10px] font-bold text-sm"
+                className="sw-btn-primary w-full"
                 type="submit"
               >
                 Continue →
