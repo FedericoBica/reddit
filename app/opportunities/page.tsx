@@ -96,11 +96,6 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
 
         <div className="searchbox-body">
           <section className="opportunity-column" aria-label="Fresh leads">
-            <div className="opportunity-toolbar">
-              <div className="opportunity-count">
-                <span>{freshLeads.length} posts found</span>
-              </div>
-            </div>
 
             <div className="opportunity-list">
               {freshLeads.length > 0 ? (

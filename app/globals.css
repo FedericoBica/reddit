@@ -89,7 +89,7 @@ textarea:focus-visible {
 /* Inside the DS shell, app-page uses the DS background */
 .ds-shell main .app-page,
 .ds-shell main section.app-page {
-  background: var(--ds-bg-2, #F6F7F8);
+  background: var(--ds-bg, #DAE0E6);
   min-height: 100%;
 }
 

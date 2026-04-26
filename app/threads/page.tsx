@@ -72,13 +72,6 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
         <div className="searchbox-body">
           {/* ── Thread list ── */}
           <section className="opportunity-column" aria-label="Threads">
-            <div className="opportunity-toolbar">
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#7C7C83" }}>
-                {threads.length > 0
-                  ? `${threads.length} conversación${threads.length !== 1 ? "es" : ""} activa${threads.length !== 1 ? "s" : ""}`
-                  : "Sin threads aún"}
-              </p>
-            </div>
 
             <div className="opportunity-list">
               {threads.length > 0 ? (

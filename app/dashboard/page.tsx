@@ -118,11 +118,6 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
 
         <div className="searchbox-body">
           <section className="opportunity-column" aria-label="Searchbox results">
-            <div className="opportunity-toolbar">
-              <div className="opportunity-count">
-                <span>{displayResults.length} posts found</span>
-              </div>
-            </div>
 
             <div className="opportunity-list">
               {allResults.length > 0 ? (
