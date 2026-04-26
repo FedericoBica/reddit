@@ -116,16 +116,16 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
                     {safePage > 0 ? (
                       <Link
                         href={buildHref({ projectId: currentProject.id, target: selectedTarget, sentiment: selectedSentiment === "all" ? undefined : selectedSentiment, sort: selectedSort === "recent" ? "recent" : undefined, page: safePage - 1 })}
-                        style={{ fontSize: 12, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid #E07000" }}
+                        style={{ fontSize: 12, fontWeight: 800, color: "#FF4500", textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid #E07000" }}
                       >
                         ← Prev
                       </Link>
                     ) : <span />}
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#6B6B6E" }}>{safePage + 1} / {totalPages}</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#7C7C83" }}>{safePage + 1} / {totalPages}</span>
                     {safePage < totalPages - 1 ? (
                       <Link
                         href={buildHref({ projectId: currentProject.id, target: selectedTarget, sentiment: selectedSentiment === "all" ? undefined : selectedSentiment, sort: selectedSort === "recent" ? "recent" : undefined, page: safePage + 1 })}
-                        style={{ fontSize: 12, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid #E07000" }}
+                        style={{ fontSize: 12, fontWeight: 800, color: "#FF4500", textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid #E07000" }}
                       >
                         Next →
                       </Link>
@@ -187,8 +187,8 @@ function TargetBadge({ type, label }: { type: string; label: string }) {
         fontWeight: 800,
         padding: "2px 7px",
         borderRadius: 5,
-        background: isCompany ? "#FFF3E8" : "#F3F4F6",
-        color: isCompany ? "#E07000" : "#6B6B6E",
+        background: isCompany ? "#FFF3EC" : "#F3F4F6",
+        color: isCompany ? "#FF4500" : "#7C7C83",
         border: isCompany ? "1px solid rgba(224,112,0,0.2)" : "1px solid #E5E7EB",
       }}
     >
@@ -200,7 +200,7 @@ function TargetBadge({ type, label }: { type: string; label: string }) {
 const SENTIMENT_CONFIG: Record<BrandMentionSentiment, { label: string; color: string; bg: string }> = {
   positive: { label: "Positive", color: "#059669", bg: "#ECFDF5" },
   negative: { label: "Negative", color: "#DC2626", bg: "#FEF2F2" },
-  neutral: { label: "Neutral", color: "#6B6B6E", bg: "#F8F8F7" },
+  neutral: { label: "Neutral", color: "#7C7C83", bg: "#F8F8F7" },
 };
 
 function SentimentPill({ sentiment }: { sentiment: BrandMentionSentiment }) {
@@ -226,7 +226,7 @@ function SentimentBar({
   stats: Record<string, number>;
 }) {
   const items: Array<{ value: BrandMentionSentiment | "all"; label: string; color: string; bg: string }> = [
-    { value: "all", label: "All", color: "#6B6B6E", bg: "#F3F4F6" },
+    { value: "all", label: "All", color: "#7C7C83", bg: "#F3F4F6" },
     { value: "positive", ...SENTIMENT_CONFIG.positive },
     { value: "neutral", ...SENTIMENT_CONFIG.neutral },
     { value: "negative", ...SENTIMENT_CONFIG.negative },
@@ -271,7 +271,7 @@ function SortControl({ projectId, target, sentiment, selectedSort }: { projectId
 
 function MentionCountBadge({ count }: { count: number }) {
   return (
-    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "#FFF3E8", border: "1px solid rgba(224,112,0,0.15)", fontSize: 13, fontWeight: 800, color: "#E07000" }}>
+    <div style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", borderRadius: 8, background: "#FFF3EC", border: "1px solid rgba(224,112,0,0.15)", fontSize: 13, fontWeight: 800, color: "#FF4500" }}>
       {count} mentions
     </div>
   );
@@ -292,10 +292,10 @@ function EmptyState() {
 function MonitorIcon() {
   return (
     <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true" style={{ margin: "0 auto", display: "block" }}>
-      <rect width="44" height="44" rx="12" fill="#FFF3E8" />
-      <circle cx="22" cy="19" r="7" stroke="#E07000" strokeWidth="1.8" />
-      <path d="M22 16v3l2 2" stroke="#E07000" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M14 33c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#E07000" strokeWidth="1.8" strokeLinecap="round" />
+      <rect width="44" height="44" rx="12" fill="#FFF3EC" />
+      <circle cx="22" cy="19" r="7" stroke="#FF4500" strokeWidth="1.8" />
+      <path d="M22 16v3l2 2" stroke="#FF4500" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M14 33c0-4.418 3.582-8 8-8s8 3.582 8 8" stroke="#FF4500" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

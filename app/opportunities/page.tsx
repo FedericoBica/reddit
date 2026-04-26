@@ -80,17 +80,17 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
       {isGenerating && <AutoRefresh intervalMs={4000} />}
 
       <section className="searchbox-workspace">
-        <header className="searchbox-header">
-          <div>
-            <h1 className="searchbox-title">
-              <FlashIcon />
-              New Opportunities
-            </h1>
-            <p className="searchbox-description">
-              Reddit posts that matched your keywords —{" "}
-              {windowHours >= 168 ? "last 7 days" : "last 24 hours"}.
-              Replying to these posts gets your product in front of buyers actively looking for a solution.
-            </p>
+        <header className="ds-topbar">
+          <div className="ds-topbar-left">
+            <div className="ds-topbar-icon">✦</div>
+            <div className="ds-topbar-titles">
+              <h1 className="ds-topbar-title">New <em>Opportunities</em></h1>
+              <div className="ds-topbar-sub">
+                <span><strong>{freshLeads.length}</strong> posts matched</span>
+                <span className="ds-topbar-sep">·</span>
+                <span>{windowHours >= 168 ? "last 7 days" : "last 24 hours"}</span>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -118,20 +118,20 @@ export default async function OpportunitiesPage({ searchParams }: OpportunitiesP
             </div>
 
             {totalPages > 1 && (
-              <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
+              <div style={{ borderTop: "1px solid #DAE0E6", padding: "10px 14px", display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
                 {currentPage > 0 ? (
                   <Link
                     href={`/opportunities?projectId=${currentProject.id}&page=${currentPage - 1}`}
-                    style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 8px", borderRadius: 5, border: "1px solid #E07000" }}
+                    style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none", padding: "2px 8px", borderRadius: 99, border: "1px solid #FF4500" }}
                   >
                     ←
                   </Link>
                 ) : <span style={{ width: 30 }} />}
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6E" }}>{currentPage + 1} / {totalPages}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#7C7C83" }}>{currentPage + 1} / {totalPages}</span>
                 {currentPage < totalPages - 1 ? (
                   <Link
                     href={`/opportunities?projectId=${currentProject.id}&page=${currentPage + 1}`}
-                    style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 8px", borderRadius: 5, border: "1px solid #E07000" }}
+                    style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none", padding: "2px 8px", borderRadius: 99, border: "1px solid #FF4500" }}
                   >
                     →
                   </Link>
@@ -172,8 +172,8 @@ function LeadCard({
           className="opportunity-dot"
           style={{
             background:
-              lead.status === "new" ? "#E07000" :
-              lead.status === "replied" ? "#16A34A" : "#AEAEB2",
+              lead.status === "new" ? "#FF4500" :
+              lead.status === "replied" ? "#46A758" : "#B0B0B5",
           }}
         />
         <span>r/{lead.subreddit}</span>
@@ -185,10 +185,10 @@ function LeadCard({
 
       {lead.classification_reason && (
         <div style={{ marginTop: 5 }}>
-          <span style={{ fontSize: 10, fontWeight: 800, color: "#16A34A" }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#46A758" }}>
             Relevance: {lead.intent_score ?? "–"}
           </span>
-          <p style={{ fontSize: 11, color: "#16A34A", fontWeight: 500, lineHeight: 1.4, marginTop: 2 }}>
+          <p style={{ fontSize: 11, color: "#46A758", fontWeight: 500, lineHeight: 1.4, marginTop: 2 }}>
             {lead.classification_reason.slice(0, 120)}
           </p>
         </div>
@@ -198,7 +198,7 @@ function LeadCard({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
           {lead.status !== "new" ? <StatusPill status={lead.status} /> : <span />}
           {(lead.score ?? 0) > 0 && (
-            <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>▲ {lead.score}</span>
+            <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 700 }}>▲ {lead.score}</span>
           )}
         </div>
       )}
@@ -243,7 +243,7 @@ function LeadDetail({
       <div className="detail-topbar">
         <div className="opportunity-meta">
           <span className="opportunity-dot" style={{
-            background: lead.status === "new" ? "#E07000" : lead.status === "replied" ? "#16A34A" : "#AEAEB2",
+            background: lead.status === "new" ? "#FF4500" : lead.status === "replied" ? "#46A758" : "#B0B0B5",
           }} />
           <span>r/{lead.subreddit}</span>
           {lead.created_utc && <span>{formatDate(lead.created_utc)}</span>}
@@ -272,12 +272,12 @@ function LeadDetail({
 
       {/* Detail content */}
       <div className="detail-content">
-        <h2 style={{ fontSize: 22, lineHeight: 1.2, letterSpacing: "-0.03em", fontWeight: 900, color: "#1C1C1E" }}>
+        <h2 style={{ fontSize: 22, lineHeight: 1.2, letterSpacing: "-0.02em", fontWeight: 700, color: "#1A1A1B" }}>
           {lead.title}
         </h2>
 
         {lead.keywords_matched?.length > 0 && (
-          <p style={{ fontSize: 11, color: "#6B6B6E", fontWeight: 700, marginTop: 10 }}>
+          <p style={{ fontSize: 11, color: "#7C7C83", fontWeight: 600, marginTop: 10 }}>
             Keywords: {lead.keywords_matched.slice(0, 3).join(", ")}{lead.keywords_matched.length > 3 ? ` +${lead.keywords_matched.length - 3}` : ""}
           </p>
         )}
@@ -305,13 +305,13 @@ function LeadDetail({
         <p className="section-title" style={{ fontSize: 14, marginBottom: 12 }}>Write a comment:</p>
 
         {hasFailed && (
-          <div style={{ padding: "10px 12px", borderRadius: 8, background: "#FEF2F2", border: "1px solid #FEE2E2", color: "#991B1B", fontSize: 12, marginBottom: 12 }}>
+          <div style={{ padding: "10px 12px", borderRadius: 4, background: "#FBE2E5", border: "1px solid #F2B7BD", color: "#EA0027", fontSize: 12, marginBottom: 12 }}>
             {hasFailed}
           </div>
         )}
 
         {isGenerating ? (
-          <div style={{ padding: "14px 0", color: "#6B6B6E", fontSize: 13, fontWeight: 600 }}>
+          <div style={{ padding: "14px 0", color: "#7C7C83", fontSize: 13, fontWeight: 600 }}>
             Generating replies…
           </div>
         ) : (
@@ -329,7 +329,7 @@ function LeadDetail({
                 <Button
                   className="h-8 rounded-[8px] px-3 font-extrabold text-xs"
                   variant={replies.length > 0 ? "outline" : "default"}
-                  style={replies.length === 0 ? { background: "#E07000" } : undefined}
+                  style={replies.length === 0 ? { background: "#FF4500" } : undefined}
                   type="submit"
                 >
                   {replies.length > 0 ? "Regenerate" : "Generate Reply Suggestions"}
@@ -346,9 +346,9 @@ function LeadDetail({
 
 function StatusPill({ status }: { status: LeadDTO["status"] }) {
   const styles: Record<string, { bg: string; color: string }> = {
-    new:        { bg: "#FFF3E8", color: "#C96500" },
-    replied:    { bg: "#F0FDF4", color: "#15803D" },
-    irrelevant: { bg: "#F5F5F3", color: "#8E8E93" },
+    new:        { bg: "#FFF3EC", color: "#E03D00" },
+    replied:    { bg: "#DEF2E2", color: "#46A758" },
+    irrelevant: { bg: "#EDEFF1", color: "#7C7C83" },
   };
   const s = styles[status] ?? styles.irrelevant;
   return (
@@ -374,14 +374,6 @@ function CheckIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
       <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function FlashIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M13 2L4.5 13.5H11L10 22L20 10H13.5L13 2Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

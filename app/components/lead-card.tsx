@@ -5,9 +5,9 @@ const STATUS_CONFIG: Record<
   string,
   { label: string; bg: string; color: string }
 > = {
-  new:       { label: "Nuevo",       bg: "#DBEAFE", color: "#1E40AF" },
-  replied:   { label: "Respondido",  bg: "#EDE9FE", color: "#4C1D95" },
-  irrelevant:{ label: "Irrelevante", bg: "#F3F4F6", color: "#6B6B6E" },
+  new:       { label: "Nuevo",       bg: "#FFF3EC", color: "#E03D00" },
+  replied:   { label: "Respondido",  bg: "#DEF2E2", color: "#46A758" },
+  irrelevant:{ label: "Irrelevante", bg: "#EDEFF1", color: "#7C7C83" },
 };
 
 function timeAgo(dateStr: string | null): string {
@@ -22,10 +22,10 @@ function timeAgo(dateStr: string | null): string {
 }
 
 function scoreColor(score: number | null): string {
-  if (!score) return "#AEAEB2";
-  if (score >= 80) return "#E07000";
-  if (score >= 60) return "#F59E0B";
-  return "#AEAEB2";
+  if (!score) return "#B0B0B5";
+  if (score >= 80) return "#FF4500";
+  if (score >= 60) return "#FFB000";
+  return "#B0B0B5";
 }
 
 export function LeadCard({
@@ -48,7 +48,7 @@ export function LeadCard({
           style={{
             fontSize: 14,
             fontWeight: 600,
-            color: "#1C1C1E",
+            color: "#1A1A1B",
             overflow: "hidden",
             textOverflow: "ellipsis",
             whiteSpace: "nowrap",
@@ -63,7 +63,7 @@ export function LeadCard({
             alignItems: "center",
             gap: 6,
             fontSize: 12,
-            color: "#AEAEB2",
+            color: "#B0B0B5",
           }}
         >
           <span>r/{lead.subreddit}</span>
@@ -72,7 +72,7 @@ export function LeadCard({
           {lead.keywords_matched.length > 0 && (
             <>
               <span>·</span>
-              <span style={{ color: "#E07000", fontWeight: 500 }}>
+              <span style={{ color: "#FF4500", fontWeight: 500 }}>
                 {lead.keywords_matched[0]}
               </span>
             </>
@@ -87,7 +87,7 @@ export function LeadCard({
                       ? "#059669"
                       : lead.sentiment === "negative"
                         ? "#DC2626"
-                        : "#6B6B6E",
+                        : "#7C7C83",
                 }}
               >
                 {lead.sentiment === "positive"

@@ -57,20 +57,15 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
     >
       <section className="searchbox-workspace">
         {/* Header */}
-        <header className="searchbox-header">
-          <div>
-            <h1 className="searchbox-title">
-              <ThreadsIcon />
-              Threads
-            </h1>
-            <p className="searchbox-description">
-              Conversaciones donde ya generaste respuestas. Usá el Ghostwriter para seguir cada hilo hasta el DM.
-            </p>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
-              {threads.length} threads
-            </Badge>
+        <header className="ds-topbar">
+          <div className="ds-topbar-left">
+            <div className="ds-topbar-icon">◈</div>
+            <div className="ds-topbar-titles">
+              <h1 className="ds-topbar-title">Threads · <em>conversations</em></h1>
+              <div className="ds-topbar-sub">
+                <span><strong>{threads.length}</strong> active threads</span>
+              </div>
+            </div>
           </div>
         </header>
 
@@ -78,7 +73,7 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
           {/* ── Thread list ── */}
           <section className="opportunity-column" aria-label="Threads">
             <div className="opportunity-toolbar">
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#6B6B6E" }}>
+              <p style={{ fontSize: 12, fontWeight: 700, color: "#7C7C83" }}>
                 {threads.length > 0
                   ? `${threads.length} conversación${threads.length !== 1 ? "es" : ""} activa${threads.length !== 1 ? "s" : ""}`
                   : "Sin threads aún"}
@@ -106,7 +101,7 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
                 padding: "10px 14px",
                 fontSize: 11,
                 fontWeight: 700,
-                color: "#AEAEB2",
+                color: "#B0B0B5",
                 background: "#FFFFFF",
               }}
             >
@@ -146,7 +141,7 @@ function ThreadCard({
   active: boolean;
 }) {
   const statusColor: Record<LeadDTO["status"], string> = {
-    new: "#E07000",
+    new: "#FF4500",
     reviewing: "#3B82F6",
     replied: "#8B5CF6",
     won: "#22C55E",
@@ -190,7 +185,7 @@ function ThreadCard({
             fontWeight: 900,
             padding: "3px 8px",
             borderRadius: 6,
-            background: (thread.intent_score ?? 0) >= 80 ? "#E07000" : "#8E8E93",
+            background: (thread.intent_score ?? 0) >= 80 ? "#FF4500" : "#8E8E93",
             color: "#FFF",
           }}
         >
@@ -250,7 +245,7 @@ function ThreadDetail({
             lineHeight: 1.15,
             letterSpacing: "-0.03em",
             fontWeight: 900,
-            color: "#1C1C1E",
+            color: "#1A1A1B",
             marginBottom: 14,
           }}
         >
@@ -264,7 +259,7 @@ function ThreadDetail({
               <Badge
                 key={kw}
                 variant="secondary"
-                className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]"
+                className="rounded-[7px] bg-[#FFF3EC] font-extrabold text-[#FF4500]"
               >
                 {kw}
               </Badge>
@@ -297,17 +292,17 @@ function ThreadDetail({
               borderTop: "1px solid #F0F0EE",
             }}
           >
-            <span style={{ color: "#6B6B6E", fontSize: 12, fontWeight: 700 }}>
+            <span style={{ color: "#7C7C83", fontSize: 12, fontWeight: 700 }}>
               {thread.score ?? 0} score Reddit
             </span>
-            <span style={{ color: "#6B6B6E", fontSize: 12, fontWeight: 700 }}>
+            <span style={{ color: "#7C7C83", fontSize: 12, fontWeight: 700 }}>
               {thread.num_comments ?? 0} comentarios
             </span>
             <a
               href={toRedditUrl(thread.permalink)}
               target="_blank"
               rel="noreferrer"
-              style={{ color: "#E07000", fontSize: 12, fontWeight: 800, textDecoration: "none", marginLeft: "auto" }}
+              style={{ color: "#FF4500", fontSize: 12, fontWeight: 800, textDecoration: "none", marginLeft: "auto" }}
             >
               Ver en Reddit →
             </a>
@@ -369,7 +364,7 @@ function ThreadDetail({
             <Button
               asChild
               variant="secondary"
-              className="h-8 rounded-[8px] bg-[#1C1C1E] px-3 font-extrabold text-white hover:bg-[#2D2D30]"
+              className="h-8 rounded-[8px] bg-[#1A1A1B] px-3 font-extrabold text-white hover:bg-[#2D2D30]"
             >
               <a
                 href={toRedditUrl(thread.permalink)}
@@ -418,8 +413,8 @@ function ReplyCard({ reply, thread }: { reply: LeadReplyDTO; thread: LeadDTO }) 
               fontWeight: 800,
               padding: "2px 8px",
               borderRadius: 5,
-              background: "#FFF3E8",
-              color: "#E07000",
+              background: "#FFF3EC",
+              color: "#FF4500",
             }}
           >
             {styleLabel[reply.style] ?? reply.style}
@@ -440,7 +435,7 @@ function ReplyCard({ reply, thread }: { reply: LeadReplyDTO; thread: LeadDTO }) 
           )}
         </div>
         {reply.cost_usd && (
-          <span style={{ fontSize: 10, color: "#AEAEB2", fontWeight: 700 }}>
+          <span style={{ fontSize: 10, color: "#B0B0B5", fontWeight: 700 }}>
             ${(reply.cost_usd * 1000).toFixed(2)}‰
           </span>
         )}
@@ -472,7 +467,7 @@ function EmptyThreads() {
             display: "inline-flex",
             alignItems: "center",
             gap: 7,
-            background: "#E07000",
+            background: "#FF4500",
             color: "#FFF",
             padding: "9px 18px",
             borderRadius: 9,
@@ -522,21 +517,12 @@ function formatRelative(dateStr: string) {
 
 // ── Icons ─────────────────────────────────────────────────────
 
-function ThreadsIcon() {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M5 7.5A3.5 3.5 0 0 1 8.5 4h7A3.5 3.5 0 0 1 19 7.5v3A3.5 3.5 0 0 1 15.5 14H12l-4 3v-3.1A3.5 3.5 0 0 1 5 10.5v-3Z" stroke="currentColor" strokeWidth="1.9" strokeLinejoin="round" />
-      <path d="M9 8h6M9 11h4" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
-    </svg>
-  );
-}
-
 function GhostwriterIcon() {
   return (
     <svg width="44" height="44" viewBox="0 0 44 44" fill="none" aria-hidden="true" style={{ margin: "0 auto", display: "block" }}>
-      <rect width="44" height="44" rx="12" fill="#FFF3E8" />
-      <path d="M13 17.5A4.5 4.5 0 0 1 17.5 13h9A4.5 4.5 0 0 1 31 17.5v4A4.5 4.5 0 0 1 26.5 26H23l-5 4v-4.1A4.5 4.5 0 0 1 13 21.5v-4Z" stroke="#E07000" strokeWidth="1.8" strokeLinejoin="round" />
-      <path d="M17 18h10M17 21.5h7" stroke="#E07000" strokeWidth="1.8" strokeLinecap="round" />
+      <rect width="44" height="44" rx="12" fill="#FFF3EC" />
+      <path d="M13 17.5A4.5 4.5 0 0 1 17.5 13h9A4.5 4.5 0 0 1 31 17.5v4A4.5 4.5 0 0 1 26.5 26H23l-5 4v-4.1A4.5 4.5 0 0 1 13 21.5v-4Z" stroke="#FF4500" strokeWidth="1.8" strokeLinejoin="round" />
+      <path d="M17 18h10M17 21.5h7" stroke="#FF4500" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

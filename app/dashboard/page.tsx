@@ -94,16 +94,25 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
       {(isGenerating || isNew) && <AutoRefresh intervalMs={isNew ? 15000 : 4000} />}
 
       <section className="searchbox-workspace">
-        <header className="searchbox-header">
-          <div>
-            <h1 className="searchbox-title">
-              <SearchIcon />
-              Searchbox
-            </h1>
-            <p className="searchbox-description">
-              Reddit posts ranking on Google for your keywords. These have the highest intent —
-              Google already validated them. Replying puts your product in front of buyers searching right now.
-            </p>
+        <header className="ds-topbar">
+          <div className="ds-topbar-left">
+            <div className="ds-topbar-icon">⌕</div>
+            <div className="ds-topbar-titles">
+              <h1 className="ds-topbar-title">Searchbox · <em>high-intent threads</em></h1>
+              <div className="ds-topbar-sub">
+                <span><strong>{displayResults.length}</strong> posts found</span>
+                <span className="ds-topbar-sep">·</span>
+                <span>sorted by {sort === "recent" ? "date" : "intent"}</span>
+              </div>
+            </div>
+          </div>
+          <div className="ds-topbar-actions">
+            <Link
+              href={`/dashboard?projectId=${currentProject.id}&sort=${sort === "recent" ? "relevance" : "recent"}`}
+              className="ds-btn-sm"
+            >
+              {sort === "recent" ? "Sort by Intent" : "Sort by Recent"}
+            </Link>
           </div>
         </header>
 
@@ -112,12 +121,6 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
             <div className="opportunity-toolbar">
               <div className="opportunity-count">
                 <span>{displayResults.length} posts found</span>
-                <Link
-                  href={`/dashboard?projectId=${currentProject.id}&sort=${sort === "recent" ? "relevance" : "recent"}`}
-                  style={{ color: "#E07000", fontSize: 11, fontWeight: 700, textDecoration: "none" }}
-                >
-                  {sort === "recent" ? "Sort by Intent" : "Sort by Recent"}
-                </Link>
               </div>
             </div>
 
@@ -137,20 +140,20 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
             </div>
 
             {totalPages > 1 && (
-              <div style={{ borderTop: "1px solid #F0F0EE", padding: "10px 14px", display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
+              <div style={{ borderTop: "1px solid #DAE0E6", padding: "10px 14px", display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
                 {currentPage > 0 ? (
                   <Link
                     href={`/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}&page=${currentPage - 1}`}
-                    style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 8px", borderRadius: 5, border: "1px solid #E07000" }}
+                    style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none", padding: "2px 8px", borderRadius: 99, border: "1px solid #FF4500" }}
                   >
                     ←
                   </Link>
                 ) : <span style={{ width: 30 }} />}
-                <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6E" }}>{currentPage + 1} / {totalPages}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#7C7C83" }}>{currentPage + 1} / {totalPages}</span>
                 {currentPage < totalPages - 1 ? (
                   <Link
                     href={`/dashboard?projectId=${currentProject.id}${sort === "recent" ? "&sort=recent" : ""}&page=${currentPage + 1}`}
-                    style={{ fontSize: 11, fontWeight: 800, color: "#E07000", textDecoration: "none", padding: "2px 8px", borderRadius: 5, border: "1px solid #E07000" }}
+                    style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none", padding: "2px 8px", borderRadius: 99, border: "1px solid #FF4500" }}
                   >
                     →
                   </Link>
@@ -189,13 +192,13 @@ function ResultCard({
         <span
           className="opportunity-dot"
           style={{
-            background: result.status === "new" ? "#E07000" : result.status === "replied" ? "#16A34A" : "#AEAEB2",
+            background: result.status === "new" ? "#FF4500" : result.status === "replied" ? "#46A758" : "#B0B0B5",
           }}
         />
         <span>r/{result.subreddit}</span>
         <span>{formatRelative(result.created_at)}</span>
         {result.reddit_num_comments !== null && <span>{result.reddit_num_comments} comments</span>}
-        <span style={{ display: "inline-flex", padding: "1px 6px", borderRadius: 5, fontSize: 9, fontWeight: 800, background: "#EEF2FF", color: "#4338CA" }}>
+        <span style={{ display: "inline-flex", padding: "1px 6px", borderRadius: 3, fontSize: 9, fontWeight: 700, background: "#E5EAFF", color: "#7193FF" }}>
           Google #{result.google_rank}
         </span>
       </div>
@@ -204,10 +207,10 @@ function ResultCard({
 
       {result.classification_reason && (
         <div>
-          <span style={{ fontSize: 10, fontWeight: 800, color: "#16A34A" }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#46A758" }}>
             Relevance: {result.intent_score ?? "–"}
           </span>
-          <p style={{ fontSize: 11, color: "#16A34A", fontWeight: 500, lineHeight: 1.4, marginTop: 2 }}>
+          <p style={{ fontSize: 11, color: "#46A758", fontWeight: 500, lineHeight: 1.4, marginTop: 2 }}>
             {result.classification_reason.slice(0, 120)}
           </p>
         </div>
@@ -217,7 +220,7 @@ function ResultCard({
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
           {result.status !== "new" ? <StatusPill status={result.status} /> : <span />}
           {result.reddit_score !== null && (
-            <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>▲ {result.reddit_score}</span>
+            <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 700 }}>▲ {result.reddit_score}</span>
           )}
         </div>
       )}
@@ -261,7 +264,7 @@ function ResultDetail({
       <div className="detail-topbar">
         <div className="opportunity-meta">
           <span className="opportunity-dot" style={{
-            background: result.status === "new" ? "#E07000" : result.status === "replied" ? "#16A34A" : "#AEAEB2",
+            background: result.status === "new" ? "#FF4500" : result.status === "replied" ? "#46A758" : "#B0B0B5",
           }} />
           <span>r/{result.subreddit}</span>
           {result.reddit_created_utc && <span>{formatDate(result.reddit_created_utc)}</span>}
@@ -289,12 +292,12 @@ function ResultDetail({
 
       {/* Detail content */}
       <div className="detail-content">
-        <h2 style={{ fontSize: 22, lineHeight: 1.2, letterSpacing: "-0.03em", fontWeight: 900, color: "#1C1C1E" }}>
+        <h2 style={{ fontSize: 22, lineHeight: 1.2, letterSpacing: "-0.02em", fontWeight: 700, color: "#1A1A1B" }}>
           {result.title}
         </h2>
 
         <div style={{ display: "flex", gap: 8, marginTop: 12, flexWrap: "wrap", alignItems: "center" }}>
-          <span style={{ display: "inline-flex", padding: "4px 10px", borderRadius: 8, fontSize: 12, fontWeight: 800, background: "#EEF2FF", color: "#4338CA" }}>
+          <span style={{ display: "inline-flex", padding: "3px 9px", borderRadius: 3, fontSize: 11, fontWeight: 700, background: "#E5EAFF", color: "#7193FF" }}>
             Google #{result.google_rank}
           </span>
           <KeywordsPill keywords={result.google_keywords?.length ? result.google_keywords : [result.google_keyword]} expanded />
@@ -312,7 +315,7 @@ function ResultDetail({
         <div className="post-stats-bar">
           {result.reddit_score !== null && <span>▲ {result.reddit_score} upvotes</span>}
           {result.reddit_num_comments !== null && <span>💬 {result.reddit_num_comments} comments</span>}
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#4338CA", background: "#EEF2FF", padding: "2px 8px", borderRadius: 6 }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#7193FF", background: "#E5EAFF", padding: "2px 8px", borderRadius: 3 }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2.2" />
               <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
@@ -330,13 +333,13 @@ function ResultDetail({
         <p className="section-title" style={{ fontSize: 14, marginBottom: 12 }}>Write a comment:</p>
 
         {hasFailed && (
-          <div style={{ padding: "10px 12px", borderRadius: 8, background: "#FEF2F2", border: "1px solid #FEE2E2", color: "#991B1B", fontSize: 12, marginBottom: 12 }}>
+          <div style={{ padding: "10px 12px", borderRadius: 4, background: "#FBE2E5", border: "1px solid #F2B7BD", color: "#EA0027", fontSize: 12, marginBottom: 12 }}>
             {hasFailed}
           </div>
         )}
 
         {isGenerating ? (
-          <div style={{ padding: "14px 0", color: "#6B6B6E", fontSize: 13, fontWeight: 600 }}>
+          <div style={{ padding: "14px 0", color: "#7C7C83", fontSize: 13, fontWeight: 600 }}>
             Generating replies…
           </div>
         ) : (
@@ -353,7 +356,7 @@ function ResultDetail({
                 <Button
                   className="h-8 rounded-[8px] px-3 font-extrabold text-xs"
                   variant={replies.length > 0 ? "outline" : "default"}
-                  style={replies.length === 0 ? { background: "#E07000" } : undefined}
+                  style={replies.length === 0 ? { background: "#FF4500" } : undefined}
                   type="submit"
                 >
                   {replies.length > 0 ? "Regenerate" : "Generate Reply Suggestions"}
@@ -376,7 +379,7 @@ function KeywordsPill({ keywords, expanded = false }: { keywords: string[]; expa
     return (
       <div style={{ display: "flex", gap: 5, flexWrap: "wrap" }}>
         {keywords.map((kw) => (
-          <span key={kw} style={{ display: "inline-flex", padding: "3px 9px", borderRadius: 6, fontSize: 11, fontWeight: 700, background: "#F5F5F3", color: "#6B6B6E" }}>
+          <span key={kw} style={{ display: "inline-flex", padding: "3px 9px", borderRadius: 3, fontSize: 11, fontWeight: 700, background: "#EDEFF1", color: "#7C7C83" }}>
             {kw}
           </span>
         ))}
@@ -389,9 +392,9 @@ function KeywordsPill({ keywords, expanded = false }: { keywords: string[]; expa
 
 function StatusPill({ status }: { status: SearchboxResultDTO["status"] }) {
   const styles = {
-    new:       { bg: "#FFF3E8", color: "#C96500" },
-    replied:   { bg: "#F0FDF4", color: "#15803D" },
-    dismissed: { bg: "#F5F5F3", color: "#8E8E93" },
+    new:       { bg: "#FFF3EC", color: "#E03D00" },
+    replied:   { bg: "#DEF2E2", color: "#46A758" },
+    dismissed: { bg: "#EDEFF1", color: "#7C7C83" },
   };
   const s = styles[status];
   return (
@@ -426,15 +429,6 @@ function CheckIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
       <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function SearchIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="1.9" />
-      <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" />
     </svg>
   );
 }

@@ -8,35 +8,39 @@ export function ProjectSwitcher({ currentProject }: { currentProject: ProjectDTO
         alignItems: "center",
         gap: 8,
         fontSize: 12,
-        fontWeight: 800,
-        color: "#1C1C1E",
+        fontWeight: 700,
+        color: "#1A1A1B",
         padding: "8px 10px",
-        background: "#FFFFFF",
+        background: "#F6F7F8",
         borderRadius: 8,
-        border: "1px solid #EEEEED",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+        border: "1px solid #DAE0E6",
+        cursor: "pointer",
       }}
     >
       <span
         style={{
-          width: 7,
-          height: 7,
-          borderRadius: 999,
-          background: "#E07000",
+          width: 28,
+          height: 28,
+          borderRadius: "50%",
+          background: "linear-gradient(135deg, #FF4500, #FFB000)",
+          color: "#fff",
+          display: "grid",
+          placeItems: "center",
+          fontSize: 11,
+          fontWeight: 700,
           flexShrink: 0,
-        }}
-      />
-      <span
-        style={{
-          minWidth: 0,
-          flex: 1,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
+          border: "2px solid #FFFFFF",
+          boxShadow: "0 0 0 1px #DAE0E6",
         }}
       >
-        {currentProject.name}
+        {currentProject.name?.[0]?.toUpperCase() ?? "?"}
       </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: 13, fontWeight: 700, color: "#1A1A1B" }}>
+          {currentProject.name}
+        </div>
+      </div>
+      <span style={{ color: "#B0B0B5", fontSize: 11 }}>▾</span>
     </div>
   );
 }
