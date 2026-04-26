@@ -27,19 +27,19 @@ export function Wordmark({ size = 18 }: { size?: number }) {
       <span
         style={{
           fontSize: size,
-          fontWeight: 800,
-          color: "#1C1C1E",
-          letterSpacing: "-0.03em",
+          fontWeight: 700,
+          color: "#1A1A1B",
+          letterSpacing: "-0.01em",
         }}
       >
-        Red
+        red
       </span>
       <span
         style={{
           fontSize: size,
-          fontWeight: 800,
-          color: "#E07000",
-          letterSpacing: "-0.03em",
+          fontWeight: 700,
+          color: "#FF4500",
+          letterSpacing: "-0.01em",
         }}
       >
         Prowl

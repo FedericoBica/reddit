@@ -1983,7 +1983,7 @@ textarea:focus-visible {
   border-right: 1px solid #DAE0E6;
   background: #DAE0E6;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: 1fr auto;
 }
 
 .opportunity-toolbar {
