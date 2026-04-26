@@ -15,6 +15,7 @@
     "extension:release": "npm run extension:build && npm run extension:zip",
     "extension:version": "node scripts/extension_version.mjs",
     "lint": "eslint",
+    "test:apify-provider": "tsc -p tsconfig.apify-tests.json && node --require ./scripts/register-path-alias.cjs --test .test-dist/apify/src/modules/discovery/reddit/apify-reddit-provider.test.js",
     "test:outbound": "tsc -p tsconfig.outbound-tests.json && node --test .test-dist/outbound/src/modules/outbound/*.test.js",
     "test:outbound:integration": "mkdir -p .test-dist && npx supabase status -o env --override-name api.url=NEXT_PUBLIC_SUPABASE_URL > .test-dist/outbound-integration.env && tsc -p tsconfig.outbound-integration.json && node --require ./scripts/register-path-alias.cjs --test .test-dist/outbound-integration/src/modules/outbound/integration.test.js",
     "typecheck": "tsc --noEmit",

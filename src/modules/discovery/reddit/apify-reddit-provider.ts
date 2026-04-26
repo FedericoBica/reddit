@@ -1,6 +1,7 @@
 import "server-only";
 
 import { requireEnv } from "@/lib/env";
+import type { Json } from "@/db/schemas/database.types";
 import type {
   RedditBatchSearchInput,
   RedditDiscoveryProvider,
@@ -42,6 +43,9 @@ type ApifyRedditItem = {
   dataType?: string;
   type?: string;
   searchTerm?: string;
+  posts?: unknown;
+  post?: unknown;
+  data?: unknown;
 };
 
 export class ApifyRedditProvider implements RedditDiscoveryProvider {
@@ -56,7 +60,13 @@ export class ApifyRedditProvider implements RedditDiscoveryProvider {
       maxCommentsPerPost: 0,
     });
 
-    return items.flatMap((item) => mapApifyItem(item, subreddit)).slice(0, maxPostsCount);
+    const posts = items.flatMap((item) => mapApifyItem(item, subreddit)).slice(0, maxPostsCount);
+    warnIfItemsUnmapped({
+      context: `subreddit:new:${subreddit}`,
+      items,
+      mappedPosts: posts.length,
+    });
+    return posts;
   }
 
   async searchPosts(input: RedditSearchInput): Promise<RedditPost[]> {
@@ -88,45 +98,44 @@ export class ApifyRedditProvider implements RedditDiscoveryProvider {
     }
 
     const items = await this.runActor(body);
-    return items.flatMap((item) => mapApifyItem(item, ""));
+    const posts = items.flatMap((item) => mapApifyItem(item, ""));
+    warnIfItemsUnmapped({
+      context: `search:${input.queries.join(", ")}`,
+      items,
+      mappedPosts: posts.length,
+    });
+    return posts;
   }
 
   private async runActor(body: Record<string, unknown>): Promise<ApifyRedditItem[]> {
     const actorId = process.env.APIFY_REDDIT_ACTOR_ID ?? "harshmaur/reddit-scraper";
     const token = requireEnv("APIFY_API_TOKEN");
-    // How long to wait for the actor to finish before returning whatever it has collected.
-    // Default 300s (5 min). Set APIFY_REDDIT_TIMEOUT_SECS higher if the actor is slow.
-    const waitSecs = readPositiveIntEnv("APIFY_REDDIT_TIMEOUT_SECS", 300);
+    // Apify's synchronous endpoint waits for the run and returns dataset items directly.
+    // The API supports up to 300s for this request.
+    const waitSecs = Math.min(readPositiveIntEnv("APIFY_REDDIT_TIMEOUT_SECS", 300), 300);
+    const syncUrl = new URL(`https://api.apify.com/v2/acts/${encodeURIComponent(actorId)}/run-sync-get-dataset-items`);
+    syncUrl.searchParams.set("token", token);
+    syncUrl.searchParams.set("timeout", String(waitSecs));
+    syncUrl.searchParams.set("format", "json");
 
-    // Start the actor run (non-blocking — returns immediately with a run ID).
-    const startUrl = new URL(`https://api.apify.com/v2/acts/${encodeURIComponent(actorId)}/runs`);
-    startUrl.searchParams.set("token", token);
-
-    const startResp = await fetch(startUrl, {
+    const response = await fetch(syncUrl, {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
-    if (!startResp.ok) {
-      throw new Error(`Apify run start failed: ${startResp.status}`);
+    if (!response.ok) {
+      throw new Error(`Apify sync run failed: ${response.status}`);
     }
-    const { data: run } = await startResp.json() as { data: { id: string } };
-
-    // Fetch dataset items, blocking until the actor finishes or waitSecs elapses.
-    // If the actor is still running at that point, Apify returns whatever it has collected so far.
-    const itemsUrl = new URL(`https://api.apify.com/v2/actor-runs/${run.id}/dataset/items`);
-    itemsUrl.searchParams.set("token", token);
-    itemsUrl.searchParams.set("waitForFinish", String(waitSecs));
-
-    const itemsResp = await fetch(itemsUrl);
-    if (!itemsResp.ok) {
-      throw new Error(`Apify dataset fetch failed: ${itemsResp.status}`);
-    }
-    return itemsResp.json() as Promise<ApifyRedditItem[]>;
+    return response.json() as Promise<ApifyRedditItem[]>;
   }
 }
 
 function mapApifyItem(item: ApifyRedditItem, fallbackSubreddit: string): RedditPost[] {
+  const nestedItems = extractNestedPostItems(item);
+  if (nestedItems.length > 0) {
+    return nestedItems.flatMap((nested) => mapApifyItem(nested, fallbackSubreddit));
+  }
+
   if (!isPostItem(item)) {
     return [];
   }
@@ -167,14 +176,70 @@ function mapApifyItem(item: ApifyRedditItem, fallbackSubreddit: string): RedditP
         item.numComments ??
         item.num_comments ??
         null,
-      rawData: item,
+      rawData: item as unknown as Json,
     },
   ];
+}
+
+export function mapApifyItemsForTesting(items: unknown[], fallbackSubreddit = ""): RedditPost[] {
+  return items.flatMap((item) => mapApifyItem(item as ApifyRedditItem, fallbackSubreddit));
 }
 
 function isPostItem(item: ApifyRedditItem) {
   const type = (item.dataType ?? item.type ?? "").toLocaleLowerCase();
   return !type || type.includes("post") || type.includes("thread");
+}
+
+function extractNestedPostItems(item: ApifyRedditItem): ApifyRedditItem[] {
+  const nested: ApifyRedditItem[] = [];
+
+  collectNestedPostItems(item.posts, nested);
+  collectNestedPostItems(item.post, nested);
+
+  if (item.data && typeof item.data === "object") {
+    for (const value of Object.values(item.data as Record<string, unknown>)) {
+      collectNestedPostItems(value, nested);
+    }
+  }
+
+  return nested;
+}
+
+function collectNestedPostItems(value: unknown, output: ApifyRedditItem[], depth = 0) {
+  if (!value || depth > 4) return;
+
+  if (Array.isArray(value)) {
+    for (const entry of value) {
+      collectNestedPostItems(entry, output, depth + 1);
+    }
+    return;
+  }
+
+  if (typeof value !== "object") return;
+
+  const record = value as Record<string, unknown>;
+
+  if (looksLikePostRecord(record)) {
+    output.push(record as ApifyRedditItem);
+    return;
+  }
+
+  if ("posts" in record) collectNestedPostItems(record.posts, output, depth + 1);
+  if ("post" in record) collectNestedPostItems(record.post, output, depth + 1);
+  if ("data" in record) collectNestedPostItems(record.data, output, depth + 1);
+}
+
+function looksLikePostRecord(record: Record<string, unknown>) {
+  return typeof record.title === "string"
+    && (
+      typeof record.id === "string"
+      || typeof record.postId === "string"
+      || typeof record.parsedId === "string"
+      || typeof record.name === "string"
+      || typeof record.postUrl === "string"
+      || typeof record.permalink === "string"
+      || typeof record.url === "string"
+    );
 }
 
 function normalizePostId(value?: string) {
@@ -204,4 +269,19 @@ function readPositiveIntEnv(name: string, fallback: number) {
   const rawValue = process.env[name];
   const value = rawValue ? Number.parseInt(rawValue, 10) : fallback;
   return !Number.isFinite(value) || value < 1 ? fallback : value;
+}
+
+function warnIfItemsUnmapped(input: {
+  context: string;
+  items: ApifyRedditItem[];
+  mappedPosts: number;
+}) {
+  if (input.mappedPosts > 0 || input.items.length === 0) return;
+
+  const sample = input.items.slice(0, 2).map((item) => ({
+    type: item.type ?? item.dataType ?? null,
+    keys: Object.keys(item).slice(0, 20),
+  }));
+
+  console.warn(`[apify] Received ${input.items.length} items for ${input.context}, but mapped 0 posts. Sample:`, sample);
 }

@@ -111,6 +111,12 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
             ),
           ).then((r) => r.flat());
 
+      if (posts.length === 0) {
+        console.warn(
+          `[scrape/opportunities] Project ${target.project.id} returned 0 posts for ${queries.length} queries using time window ${target.plan.keywordSearchTimeWindow}.`,
+        );
+      }
+
       for (const post of posts) {
         if (seenPostIds.has(post.id)) continue;
         seenPostIds.add(post.id);

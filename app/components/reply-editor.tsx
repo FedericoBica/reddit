@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import type { LeadReplyDTO } from "@/db/schemas/domain";
 import { useLeadReplyFromForm } from "@/modules/leads/actions";
 import { CopyButton } from "./copy-button";
@@ -31,45 +30,32 @@ export function ReplyEditor({
   const [activeId, setActiveId] = useState<string | null>(replies[0]?.id ?? null);
 
   const activeReply = replies.find((r) => r.id === activeId) ?? null;
+  const activeLabel = activeReply ? (STYLE_LABELS[activeReply.style] ?? activeReply.style) : null;
+  const wordCount = text.trim() ? text.trim().split(/\s+/).length : 0;
 
   return (
     <div>
+      <div className="composer-head">
+        <span>Reply draft</span>
+        {activeLabel && <span className="composer-tone">tone: {activeLabel}</span>}
+      </div>
+
       {replies.length > 0 && (
-        <div style={{ marginBottom: 10 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: "#B0B0B5", marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            AI Suggestions
-          </p>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
-            {replies.map((reply) => {
-              const isActive = activeId === reply.id;
-              return (
-                <button
-                  key={reply.id}
-                  type="button"
-                  onClick={() => { setText(reply.content); setActiveId(reply.id); }}
-                  style={{
-                    padding: "5px 12px",
-                    borderRadius: 20,
-                    border: `1.5px solid ${isActive ? "#FF4500" : "#E5E5EA"}`,
-                    background: isActive ? "#FFF3EC" : "#FAFAF8",
-                    color: isActive ? "#FF4500" : "#7C7C83",
-                    fontSize: 11,
-                    fontWeight: 800,
-                    cursor: "pointer",
-                    transition: "all 120ms ease",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 5,
-                  }}
-                >
-                  {STYLE_LABELS[reply.style] ?? reply.style}
-                  {reply.was_used && (
-                    <span style={{ color: "#46A758", fontSize: 10, fontWeight: 900 }}>✓</span>
-                  )}
-                </button>
-              );
-            })}
-          </div>
+        <div className="composer-toolbar">
+          {replies.map((reply) => {
+            const isActive = activeId === reply.id;
+            return (
+              <button
+                key={reply.id}
+                type="button"
+                onClick={() => { setText(reply.content); setActiveId(reply.id); }}
+                className={`composer-tb${isActive ? " composer-tb-active" : ""}`}
+              >
+                {STYLE_LABELS[reply.style] ?? reply.style}
+                {reply.was_used && <span className="composer-tb-check">✓</span>}
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -78,33 +64,14 @@ export function ReplyEditor({
         onChange={(e) => setText(e.target.value)}
         placeholder="Reply with a genuine and informative response subtly mentioning your product..."
         rows={5}
-        style={{
-          width: "100%",
-          padding: "12px 14px",
-          border: "1px solid #EBEBEA",
-          borderRadius: 10,
-          fontSize: 13,
-          lineHeight: 1.6,
-          color: "#1A1A1B",
-          background: "#FAFAF8",
-          resize: "vertical",
-          fontFamily: "inherit",
-          outline: "none",
-          boxSizing: "border-box",
-          transition: "border-color 160ms ease, box-shadow 160ms ease",
-        }}
-        onFocus={(e) => {
-          e.currentTarget.style.borderColor = "#D8D8D5";
-          e.currentTarget.style.boxShadow = "0 2px 10px rgba(0,0,0,0.04)";
-        }}
-        onBlur={(e) => {
-          e.currentTarget.style.borderColor = "#EBEBEA";
-          e.currentTarget.style.boxShadow = "none";
-        }}
+        className={`composer-txa${replies.length > 0 ? " composer-txa-attached" : ""}`}
       />
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+      <div className="composer-foot">
+        <span className="composer-foot-meta">
+          {text.length} chars · {wordCount} {wordCount === 1 ? "word" : "words"}
+        </span>
+        <div className="composer-foot-right">
           {generateForm}
           {activeReply && !activeReply.was_used && (
             <form action={useLeadReplyFromForm}>
@@ -112,13 +79,13 @@ export function ReplyEditor({
               <input type="hidden" name="leadId" value={leadId} />
               <input type="hidden" name="replyId" value={activeReply.id} />
               <input type="hidden" name="returnTo" value={returnTo} />
-              <Button variant="outline" className="h-8 rounded-[8px] font-extrabold text-xs" type="submit">
-                Marcar como usada
-              </Button>
+              <button className="composer-btn" type="submit">
+                Mark as Used
+              </button>
             </form>
           )}
+          <CopyButton text={text || " "} permalink={permalink} />
         </div>
-        <CopyButton text={text || " "} permalink={permalink} />
       </div>
     </div>
   );

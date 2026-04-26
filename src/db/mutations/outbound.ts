@@ -194,6 +194,16 @@ export async function getNextQueueItem(
 
   if ((todaySent ?? 0) >= campaign.daily_limit) return null;
 
+  // Reset items stuck in "sending" for more than 5 minutes — service worker
+  // may have been killed mid-flight before reportQueueResult could run.
+  const stuckCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  await supabase
+    .from("dm_queue")
+    .update({ status: "pending" })
+    .eq("campaign_id", campaignId)
+    .eq("status", "sending")
+    .lt("updated_at", stuckCutoff);
+
   // Find the oldest eligible pending item.
   const { data: candidate, error: selectError } = await supabase
     .from("dm_queue")

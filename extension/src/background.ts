@@ -76,13 +76,6 @@ async function runCycle(): Promise<void> {
       return;
     }
 
-    // Random delay between min and max.
-    const delayMs = randomBetween(
-      (item.delay_min_sec ?? 30) * 1000,
-      (item.delay_max_sec ?? 120) * 1000,
-    );
-    await sleep(delayMs);
-
     const result = await sendDmViaTab(item.contact.reddit_username, item.interpolatedMessage);
 
     const success = result.success;

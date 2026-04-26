@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".test-dist/apify",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "rootDir": ".",
+    "incremental": false
+  },
+  "include": [
+    "src/lib/env.ts",
+    "src/db/schemas/database.types.ts",
+    "src/modules/discovery/reddit/types.ts",
+    "src/modules/discovery/reddit/common.ts",
+    "src/modules/discovery/reddit/apify-reddit-provider.ts",
+    "src/modules/discovery/reddit/apify-reddit-provider.test.ts"
+  ],
+  "exclude": []
+}

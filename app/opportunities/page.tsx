@@ -5,7 +5,6 @@ import { AutoRefresh } from "@/app/components/auto-refresh";
 import { ReplyEditor } from "@/app/components/reply-editor";
 import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
-import { Button } from "@/components/ui/button";
 import { getLeadById, listFreshProjectLeads, listProjectLeads } from "@/db/queries/leads";
 import { listLeadReplies } from "@/db/queries/lead-replies";
 import type { LeadDTO, LeadReplyDTO } from "@/db/schemas/domain";
@@ -297,8 +296,6 @@ function LeadDetail({
 
       {/* Reply section */}
       <div className="lead-comment-box">
-        <p className="section-title" style={{ fontSize: 14, marginBottom: 12 }}>Write a comment:</p>
-
         {hasFailed && (
           <div style={{ padding: "10px 12px", borderRadius: 4, background: "#FBE2E5", border: "1px solid #F2B7BD", color: "#EA0027", fontSize: 12, marginBottom: 12 }}>
             {hasFailed}
@@ -321,14 +318,12 @@ function LeadDetail({
                 <input type="hidden" name="projectId" value={projectId} />
                 <input type="hidden" name="leadId" value={lead.id} />
                 <input type="hidden" name="returnTo" value={returnTo} />
-                <Button
-                  className="h-8 rounded-[8px] px-3 font-extrabold text-xs"
-                  variant={replies.length > 0 ? "outline" : "default"}
-                  style={replies.length === 0 ? { background: "#FF4500" } : undefined}
+                <button
                   type="submit"
+                  className={`composer-btn${replies.length === 0 ? " composer-btn-accent" : ""}`}
                 >
-                  {replies.length > 0 ? "Regenerate" : "Generate Reply Suggestions"}
-                </Button>
+                  {replies.length > 0 ? "⥁ Regenerate" : "✦ Generate Reply Suggestions"}
+                </button>
               </form>
             }
           />

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { toRedditUrl } from "@/lib/utils";
 
 export function CopyButton({
@@ -23,30 +22,23 @@ export function CopyButton({
   };
 
   return (
-    <Button
+    <button
       onClick={handleCopy}
-      className="h-9 rounded-[8px] px-4 font-extrabold"
-      style={{ background: copied ? "#059669" : undefined }}
+      className={`composer-btn composer-btn-accent${copied ? " composer-btn-copied" : ""}`}
       type="button"
     >
       {copied ? (
         <>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path
-              d="M2.5 7L5.5 10L11.5 4"
-              stroke="#FFF"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
+          <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          ¡Copiado!
+          Copied!
         </>
       ) : permalink ? (
-        "Copiar y abrir Reddit →"
+        "Copy & open Reddit ↗"
       ) : (
-        "Copiar"
+        "Copy"
       )}
-    </Button>
+    </button>
   );
 }

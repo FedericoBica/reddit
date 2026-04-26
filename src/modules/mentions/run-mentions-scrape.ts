@@ -88,6 +88,12 @@ export async function runMentionsScrapeWithCompetitors(
     return 0;
   }
 
+  if (posts.length === 0) {
+    console.warn(
+      `[scrape/mentions] Project ${projectId} returned 0 posts for ${queries.length} mention targets in window ${MENTIONS_TIME_WINDOW}.`,
+    );
+  }
+
   const { saved, errors } = await processAndSavePosts(posts, targets, projectId);
 
   if (errors > 0) {
