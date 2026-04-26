@@ -185,7 +185,7 @@ function ThreadCard({
             fontWeight: 900,
             padding: "3px 8px",
             borderRadius: 6,
-            background: (thread.intent_score ?? 0) >= 80 ? "#FF4500" : "#8E8E93",
+            background: (thread.intent_score ?? 0) >= 80 ? "#FF4500" : "#7C7C83",
             color: "#FFF",
           }}
         >
@@ -392,7 +392,7 @@ function ReplyCard({ reply, thread }: { reply: LeadReplyDTO; thread: LeadDTO }) 
   return (
     <div
       style={{
-        background: reply.was_used ? "#F0FDF4" : "#FAFAF8",
+        background: reply.was_used ? "#DEF2E2" : "#FAFAF8",
         border: `1px solid ${reply.was_used ? "#BBF7D0" : "#F0F0EE"}`,
         borderRadius: 10,
         padding: "14px 16px",

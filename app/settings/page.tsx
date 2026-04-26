@@ -313,21 +313,21 @@ function SettingsSection({
             style={{
               fontSize: 14,
               fontWeight: 700,
-              color: "#1C1C1E",
+              color: "#1A1A1B",
               marginBottom: 3,
             }}
           >
             {title}
           </h2>
-          <p style={{ fontSize: 12, color: "#6B6B6E", lineHeight: 1.5 }}>{description}</p>
+          <p style={{ fontSize: 12, color: "#7C7C83", lineHeight: 1.5 }}>{description}</p>
         </div>
         {badge && (
           <span
             style={{
               fontSize: 11,
               fontWeight: 600,
-              color: "#E07000",
-              background: "#FFF3E8",
+              color: "#FF4500",
+              background: "#FFF3EC",
               border: "1px solid #FFD9AD",
               borderRadius: 6,
               padding: "2px 8px",
@@ -443,7 +443,7 @@ function FieldRow({
         style={{
           fontSize: 12,
           fontWeight: 600,
-          color: "#6B6B6E",
+          color: "#7C7C83",
         }}
       >
         {label}
@@ -458,7 +458,7 @@ function EmptyHint({ children }: { children: React.ReactNode }) {
     <p
       style={{
         fontSize: 12,
-        color: "#AEAEB2",
+        color: "#B0B0B5",
         padding: "12px 0",
         marginBottom: 4,
       }}
@@ -484,8 +484,8 @@ function KeywordGroup({
   return (
     <div style={{ marginTop: title === "Suggested by AI" ? 0 : 18 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-        <p style={{ fontSize: 12, fontWeight: 800, color: "#1C1C1E" }}>{title}</p>
-        <span style={{ fontSize: 11, fontWeight: 700, color: "#8E8E93" }}>{keywords.length}</span>
+        <p style={{ fontSize: 12, fontWeight: 800, color: "#1A1A1B" }}>{title}</p>
+        <span style={{ fontSize: 11, fontWeight: 700, color: "#7C7C83" }}>{keywords.length}</span>
       </div>
       <div style={{ display: "grid", gap: 0 }}>
         {keywords.length === 0 ? (
@@ -509,7 +509,7 @@ function KeywordRow({
   projectId: string;
   editable?: boolean;
 }) {
-  const typeBadgeColor = keyword.type === "ai_suggested" ? "#6B6B6E" : "#1C1C1E";
+  const typeBadgeColor = keyword.type === "ai_suggested" ? "#7C7C83" : "#1A1A1B";
   const typeLabel = keyword.type === "ai_suggested" ? "AI" : keyword.type === "competitor" ? "Comp" : "Custom";
 
   return (
@@ -519,7 +519,7 @@ function KeywordRow({
         alignItems: "center",
         gap: 10,
         padding: "9px 0",
-        borderBottom: "1px solid #F5F5F3",
+        borderBottom: "1px solid #EDEFF1",
       }}
     >
       {/* Toggle */}
@@ -537,7 +537,7 @@ function KeywordRow({
             border: "none",
             cursor: "pointer",
             padding: 0,
-            background: keyword.is_active ? "#E07000" : "#D1D1D6",
+            background: keyword.is_active ? "#FF4500" : "#D1D1D6",
             position: "relative",
             flexShrink: 0,
             transition: "background 0.15s",
@@ -578,7 +578,7 @@ function KeywordRow({
             flex: 1,
             fontSize: 13,
             fontWeight: 500,
-            color: keyword.is_active ? "#1C1C1E" : "#AEAEB2",
+            color: keyword.is_active ? "#1A1A1B" : "#B0B0B5",
           }}
         >
           {keyword.term}
@@ -591,7 +591,7 @@ function KeywordRow({
           fontSize: 10,
           fontWeight: 600,
           color: typeBadgeColor,
-          background: "#F5F5F3",
+          background: "#EDEFF1",
           borderRadius: 4,
           padding: "2px 6px",
           letterSpacing: "0.02em",
@@ -605,8 +605,8 @@ function KeywordRow({
         <span
           style={{
             fontSize: 10,
-            color: "#8E8E93",
-            background: "#F5F5F3",
+            color: "#7C7C83",
+            background: "#EDEFF1",
             borderRadius: 4,
             padding: "2px 6px",
           }}
@@ -651,7 +651,7 @@ function NotificationChannel({ label, enabled }: { label: string; enabled: boole
   return (
     <div className="metric">
       <div className="metric-label">{label}</div>
-      <div className="metric-value" style={{ fontSize: 18, color: enabled ? "#15803D" : "#8E8E93" }}>
+      <div className="metric-value" style={{ fontSize: 18, color: enabled ? "#46A758" : "#7C7C83" }}>
         {enabled ? "Enabled" : "Locked"}
       </div>
     </div>
@@ -660,9 +660,9 @@ function NotificationChannel({ label, enabled }: { label: string; enabled: boole
 
 function FrequencyRow({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderBottom: "1px solid #F5F5F3" }}>
-      <span style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E" }}>{label}</span>
-      <span style={{ fontSize: 13, fontWeight: 800, color: "#E07000" }}>{value}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "10px 0", borderBottom: "1px solid #EDEFF1" }}>
+      <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1B" }}>{label}</span>
+      <span style={{ fontSize: 13, fontWeight: 800, color: "#FF4500" }}>{value}</span>
     </div>
   );
 }
@@ -678,9 +678,9 @@ function BillingMetric({ label, value }: { label: string; value: string }) {
 
 function PlanLimit({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "9px 0", borderBottom: "1px solid #F5F5F3" }}>
-      <span style={{ fontSize: 13, color: "#6B6B6E", fontWeight: 700 }}>{label}</span>
-      <span style={{ fontSize: 13, color: "#1C1C1E", fontWeight: 800 }}>{value}</span>
+    <div style={{ display: "flex", justifyContent: "space-between", gap: 12, padding: "9px 0", borderBottom: "1px solid #EDEFF1" }}>
+      <span style={{ fontSize: 13, color: "#7C7C83", fontWeight: 700 }}>{label}</span>
+      <span style={{ fontSize: 13, color: "#1A1A1B", fontWeight: 800 }}>{value}</span>
     </div>
   );
 }
@@ -705,10 +705,10 @@ function ExtensionSection({
           borderRadius: 10,
           padding: "16px 18px",
         }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#15803D", marginBottom: 6 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: "#46A758", marginBottom: 6 }}>
             Connect token generated — copy it now, it won&apos;t be shown again.
           </p>
-          <p style={{ fontSize: 11, color: "#6B6B6E", marginBottom: 10 }}>
+          <p style={{ fontSize: 11, color: "#7C7C83", marginBottom: 10 }}>
             Expires in 15 minutes. Paste it in the Chrome Extension to connect.
           </p>
           <code style={{
@@ -719,7 +719,7 @@ function ExtensionSection({
             padding: "10px 12px",
             fontSize: 12,
             fontFamily: "monospace",
-            color: "#1C1C1E",
+            color: "#1A1A1B",
             wordBreak: "break-all",
             userSelect: "all",
           }}>
@@ -746,7 +746,7 @@ function ExtensionSection({
         badge={tokens.length > 0 ? `${tokens.length} active` : undefined}
       >
         {tokens.length === 0 ? (
-          <p style={{ fontSize: 12, color: "#AEAEB2", padding: "8px 0" }}>
+          <p style={{ fontSize: 12, color: "#B0B0B5", padding: "8px 0" }}>
             No active sessions. Generate a connect token and use it in the extension to pair a device.
           </p>
         ) : (
@@ -759,14 +759,14 @@ function ExtensionSection({
                   alignItems: "center",
                   gap: 12,
                   padding: "10px 0",
-                  borderBottom: "1px solid #F5F5F3",
+                  borderBottom: "1px solid #EDEFF1",
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E" }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1B" }}>
                     {token.label ?? "Extension"}
                   </p>
-                  <p style={{ fontSize: 11, color: "#8E8E93", marginTop: 2 }}>
+                  <p style={{ fontSize: 11, color: "#7C7C83", marginTop: 2 }}>
                     Connected {formatRelativeDate(token.created_at)}
                     {token.last_used_at && ` · Last used ${formatRelativeDate(token.last_used_at)}`}
                   </p>

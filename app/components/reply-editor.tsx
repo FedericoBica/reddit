@@ -36,7 +36,7 @@ export function ReplyEditor({
     <div>
       {replies.length > 0 && (
         <div style={{ marginBottom: 10 }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: "#AEAEB2", marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          <p style={{ fontSize: 10, fontWeight: 700, color: "#B0B0B5", marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             AI Suggestions
           </p>
           <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -50,9 +50,9 @@ export function ReplyEditor({
                   style={{
                     padding: "5px 12px",
                     borderRadius: 20,
-                    border: `1.5px solid ${isActive ? "#E07000" : "#E5E5EA"}`,
-                    background: isActive ? "#FFF3E8" : "#FAFAF8",
-                    color: isActive ? "#E07000" : "#6B6B6E",
+                    border: `1.5px solid ${isActive ? "#FF4500" : "#E5E5EA"}`,
+                    background: isActive ? "#FFF3EC" : "#FAFAF8",
+                    color: isActive ? "#FF4500" : "#7C7C83",
                     fontSize: 11,
                     fontWeight: 800,
                     cursor: "pointer",
@@ -64,7 +64,7 @@ export function ReplyEditor({
                 >
                   {STYLE_LABELS[reply.style] ?? reply.style}
                   {reply.was_used && (
-                    <span style={{ color: "#16A34A", fontSize: 10, fontWeight: 900 }}>✓</span>
+                    <span style={{ color: "#46A758", fontSize: 10, fontWeight: 900 }}>✓</span>
                   )}
                 </button>
               );
@@ -85,7 +85,7 @@ export function ReplyEditor({
           borderRadius: 10,
           fontSize: 13,
           lineHeight: 1.6,
-          color: "#1C1C1E",
+          color: "#1A1A1B",
           background: "#FAFAF8",
           resize: "vertical",
           fontFamily: "inherit",

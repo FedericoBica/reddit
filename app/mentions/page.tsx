@@ -116,7 +116,7 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
                     {safePage > 0 ? (
                       <Link
                         href={buildHref({ projectId: currentProject.id, target: selectedTarget, sentiment: selectedSentiment === "all" ? undefined : selectedSentiment, sort: selectedSort === "recent" ? "recent" : undefined, page: safePage - 1 })}
-                        style={{ fontSize: 12, fontWeight: 800, color: "#FF4500", textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid #E07000" }}
+                        style={{ fontSize: 12, fontWeight: 800, color: "#FF4500", textDecoration: "none", padding: "4px 10px", borderRadius: 99, border: "1px solid #FF4500" }}
                       >
                         ← Prev
                       </Link>
@@ -125,7 +125,7 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
                     {safePage < totalPages - 1 ? (
                       <Link
                         href={buildHref({ projectId: currentProject.id, target: selectedTarget, sentiment: selectedSentiment === "all" ? undefined : selectedSentiment, sort: selectedSort === "recent" ? "recent" : undefined, page: safePage + 1 })}
-                        style={{ fontSize: 12, fontWeight: 800, color: "#FF4500", textDecoration: "none", padding: "4px 10px", borderRadius: 6, border: "1px solid #E07000" }}
+                        style={{ fontSize: 12, fontWeight: 800, color: "#FF4500", textDecoration: "none", padding: "4px 10px", borderRadius: 99, border: "1px solid #FF4500" }}
                       >
                         Next →
                       </Link>

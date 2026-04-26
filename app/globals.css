@@ -86,6 +86,13 @@ textarea:focus-visible {
   background-size: 3px 3px, auto, auto;
 }
 
+/* Inside the DS shell, app-page uses the DS background */
+.ds-shell main .app-page,
+.ds-shell main section.app-page {
+  background: var(--ds-bg-2, #F6F7F8);
+  min-height: 100%;
+}
+
 .auth-shell {
   min-height: 100vh;
   display: grid;

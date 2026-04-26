@@ -31,10 +31,10 @@ export default async function RejectedArchivePage({ searchParams }: Props) {
     <DashboardShell user={user} currentProject={currentProject}>
       <div className="app-page" style={{ maxWidth: 860, padding: "32px 28px" }}>
         <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em", color: "#1C1C1E" }}>
+          <h1 style={{ fontSize: 22, fontWeight: 900, letterSpacing: "-0.03em", color: "#1A1A1B" }}>
             Rechazados
           </h1>
-          <p style={{ fontSize: 13, color: "#6B6B6E", marginTop: 4 }}>
+          <p style={{ fontSize: 13, color: "#7C7C83", marginTop: 4 }}>
             Posts marcados como irrelevantes. Se mantienen aquí por si necesitás revisarlos.
           </p>
         </div>
@@ -96,10 +96,10 @@ function Section({
   return (
     <div style={style}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
-        <span style={{ fontSize: 12, fontWeight: 800, color: "#6B6B6E", letterSpacing: "0.05em", textTransform: "uppercase" }}>
+        <span style={{ fontSize: 12, fontWeight: 800, color: "#7C7C83", letterSpacing: "0.05em", textTransform: "uppercase" }}>
           {title}
         </span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: "#AEAEB2" }}>{count}</span>
+        <span style={{ fontSize: 11, fontWeight: 700, color: "#B0B0B5" }}>{count}</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
         {children}
@@ -135,32 +135,32 @@ function ArchiveCard({
       gap: 12,
       alignItems: "flex-start",
     }}>
-      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#AEAEB2", flexShrink: 0, marginTop: 5 }} />
+      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#B0B0B5", flexShrink: 0, marginTop: 5 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
-          <p style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E", lineHeight: 1.3 }}>{title}</p>
+          <p style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1B", lineHeight: 1.3 }}>{title}</p>
           {score !== null && (
             <span style={{
               fontSize: 11, fontWeight: 900, flexShrink: 0,
-              color: score >= 80 ? "#E07000" : score >= 60 ? "#FF9F40" : "#AEAEB2",
+              color: score >= 80 ? "#FF4500" : score >= 60 ? "#FF9F40" : "#B0B0B5",
             }}>
               {score}
             </span>
           )}
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 500 }}>r/{subreddit}</span>
+          <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 500 }}>r/{subreddit}</span>
           {date && (
-            <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 500 }}>{formatDate(date)}</span>
+            <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 500 }}>{formatDate(date)}</span>
           )}
           {badge && (
-            <span style={{ fontSize: 10, fontWeight: 800, color: "#4338CA", background: "#EEF2FF", padding: "2px 7px", borderRadius: 5 }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color: "#7193FF", background: "#E5EAFF", padding: "2px 7px", borderRadius: 5 }}>
               {badge}
             </span>
           )}
         </div>
         {reason && (
-          <p style={{ fontSize: 11, color: "#6B6B6E", marginTop: 5, lineHeight: 1.4 }}>
+          <p style={{ fontSize: 11, color: "#7C7C83", marginTop: 5, lineHeight: 1.4 }}>
             {reason.slice(0, 140)}
           </p>
         )}
@@ -168,7 +168,7 @@ function ArchiveCard({
           href={toRedditUrl(permalink)}
           target="_blank"
           rel="noreferrer"
-          style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700, textDecoration: "none", marginTop: 6, display: "inline-block" }}
+          style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 700, textDecoration: "none", marginTop: 6, display: "inline-block" }}
         >
           Ver en Reddit →
         </a>
@@ -179,7 +179,7 @@ function ArchiveCard({
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <div style={{ textAlign: "center", padding: "48px 0", color: "#AEAEB2" }}>
+    <div style={{ textAlign: "center", padding: "48px 0", color: "#B0B0B5" }}>
       <p style={{ fontSize: 14, fontWeight: 600 }}>{label}</p>
     </div>
   );

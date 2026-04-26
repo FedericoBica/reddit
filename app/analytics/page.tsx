@@ -154,7 +154,7 @@ function KpiCard({
         className="metric-value"
         style={{
           fontSize: 28,
-          color: highlight ? "#E07000" : accent ? "#1C1C1E" : "#1C1C1E",
+          color: highlight ? "#FF4500" : accent ? "#1A1A1B" : "#1A1A1B",
         }}
       >
         {value}
@@ -185,11 +185,11 @@ function ProjectHealthBadge({ project }: { project: { scrape_fail_count: number;
           gap: 6,
           padding: "6px 12px",
           borderRadius: 8,
-          background: isHealthy ? "#F0FDF4" : "#FFF3E8",
+          background: isHealthy ? "#DEF2E2" : "#FFF3EC",
           border: `1px solid ${isHealthy ? "#BBF7D0" : "rgba(224,112,0,0.2)"}`,
           fontSize: 12,
           fontWeight: 700,
-          color: isHealthy ? "#15803D" : "#E07000",
+          color: isHealthy ? "#46A758" : "#FF4500",
         }}
       >
         <span
@@ -197,7 +197,7 @@ function ProjectHealthBadge({ project }: { project: { scrape_fail_count: number;
             width: 6,
             height: 6,
             borderRadius: "50%",
-            background: isHealthy ? "#22C55E" : "#E07000",
+            background: isHealthy ? "#22C55E" : "#FF4500",
             flexShrink: 0,
           }}
         />
@@ -231,12 +231,12 @@ function RelevantSubredditBucket({
           marginBottom: 5,
         }}
       >
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E" }}>r/{subreddit}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1B" }}>r/{subreddit}</span>
         <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>
+          <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 700 }}>
             avg {avgScore} · {count} leads · {highIntentRate}% high intent
           </span>
-          <span style={{ fontSize: 14, fontWeight: 900, color: "#E07000", minWidth: 42, textAlign: "right" }}>
+          <span style={{ fontSize: 14, fontWeight: 900, color: "#FF4500", minWidth: 42, textAlign: "right" }}>
             {relevancyScore}%
           </span>
         </div>
@@ -246,7 +246,7 @@ function RelevantSubredditBucket({
           style={{
             height: "100%",
             borderRadius: 99,
-            background: "#E07000",
+            background: "#FF4500",
             width: `${relevancyScore}%`,
           }}
         />
@@ -270,18 +270,18 @@ function SubredditRow({
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        <span style={{ fontSize: 13, fontWeight: 700, color: "#1C1C1E" }}>r/{subreddit}</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1B" }}>r/{subreddit}</span>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
-          <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>
+          <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 700 }}>
             avg {avgScore}
           </span>
-          <span style={{ fontSize: 13, fontWeight: 800, color: "#E07000", minWidth: 24, textAlign: "right" }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: "#FF4500", minWidth: 24, textAlign: "right" }}>
             {count}
           </span>
         </div>
       </div>
       <div style={{ height: 4, borderRadius: 99, background: "#F0F0EE", overflow: "hidden" }}>
-        <div style={{ height: "100%", borderRadius: 99, background: "#E07000", width: `${pct}%`, opacity: 0.7 }} />
+        <div style={{ height: "100%", borderRadius: 99, background: "#FF4500", width: `${pct}%`, opacity: 0.7 }} />
       </div>
     </div>
   );
@@ -300,15 +300,15 @@ function KeywordRow({
   return (
     <div>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        <span style={{ fontSize: 13, fontWeight: 600, color: "#1C1C1E", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>
+        <span style={{ fontSize: 13, fontWeight: 600, color: "#1A1A1B", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "70%" }}>
           {keyword}
         </span>
-        <span style={{ fontSize: 13, fontWeight: 800, color: "#1C1C1E", minWidth: 24, textAlign: "right" }}>
+        <span style={{ fontSize: 13, fontWeight: 800, color: "#1A1A1B", minWidth: 24, textAlign: "right" }}>
           {count}
         </span>
       </div>
       <div style={{ height: 4, borderRadius: 99, background: "#F0F0EE", overflow: "hidden" }}>
-        <div style={{ height: "100%", borderRadius: 99, background: "#1C1C1E", width: `${pct}%`, opacity: 0.25 }} />
+        <div style={{ height: "100%", borderRadius: 99, background: "#1A1A1B", width: `${pct}%`, opacity: 0.25 }} />
       </div>
     </div>
   );
@@ -335,7 +335,7 @@ function TimelineChart({ rows }: { rows: { date: string; count: number }[] }) {
             style={{
               flex: 1,
               height: h,
-              background: r.count > 0 ? "#E07000" : "#F0F0EE",
+              background: r.count > 0 ? "#FF4500" : "#F0F0EE",
               borderRadius: "3px 3px 0 0",
               opacity: r.count > 0 ? 0.8 : 1,
               transition: "height 0.4s ease",

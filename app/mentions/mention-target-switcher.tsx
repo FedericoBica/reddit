@@ -36,7 +36,7 @@ export function MentionTargetSwitcher({
           borderRadius: 8,
           background: "#FFFFFF",
           boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
-          color: "#1C1C1E",
+          color: "#1A1A1B",
           fontSize: 13,
           fontWeight: 800,
           textAlign: "left",
@@ -47,7 +47,7 @@ export function MentionTargetSwitcher({
             width: 7,
             height: 7,
             borderRadius: 999,
-            background: active.id === "company" ? "#E07000" : "#1C1C1E",
+            background: active.id === "company" ? "#FF4500" : "#1A1A1B",
             flexShrink: 0,
           }}
         />
@@ -94,12 +94,12 @@ export function MentionTargetSwitcher({
                 padding: "8px 9px",
                 borderRadius: 7,
                 textDecoration: "none",
-                background: option.active ? "#FFF3E8" : "transparent",
+                background: option.active ? "#FFF3EC" : "transparent",
               }}
             >
               <span
                 style={{
-                  color: option.active ? "#1C1C1E" : "#6B6B6E",
+                  color: option.active ? "#1A1A1B" : "#7C7C83",
                   fontSize: 12,
                   fontWeight: option.active ? 800 : 700,
                   overflow: "hidden",
@@ -109,7 +109,7 @@ export function MentionTargetSwitcher({
               >
                 {option.label}
               </span>
-              <span style={{ color: "#8E8E93", fontSize: 11, lineHeight: 1.35 }}>
+              <span style={{ color: "#7C7C83", fontSize: 11, lineHeight: 1.35 }}>
                 {option.description}
               </span>
             </Link>
@@ -130,7 +130,7 @@ function ChevronIcon({ open }: { open: boolean }) {
       viewBox="0 0 14 14"
       width="14"
     >
-      <path d="M3.5 5.25 7 8.75l3.5-3.5" stroke="#8E8E93" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
+      <path d="M3.5 5.25 7 8.75l3.5-3.5" stroke="#7C7C83" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.7" />
     </svg>
   );
 }

@@ -15,8 +15,8 @@ export function KeywordsPillCollapsible({ keywords }: { keywords: string[] }) {
           borderRadius: 6,
           fontSize: 10,
           fontWeight: 800,
-          background: "#F5F5F3",
-          color: "#6B6B6E",
+          background: "#EDEFF1",
+          color: "#7C7C83",
           cursor: "pointer",
           listStyle: "none",
         }}
@@ -25,7 +25,7 @@ export function KeywordsPillCollapsible({ keywords }: { keywords: string[] }) {
         {rest > 0 && (
           <span
             style={{
-              background: "#E07000",
+              background: "#FF4500",
               color: "#FFF",
               borderRadius: 4,
               padding: "0 4px",
@@ -54,7 +54,7 @@ export function KeywordsPillCollapsible({ keywords }: { keywords: string[] }) {
         }}
       >
         {keywords.map((kw) => (
-          <span key={kw} style={{ fontSize: 11, fontWeight: 700, color: "#1C1C1E" }}>
+          <span key={kw} style={{ fontSize: 11, fontWeight: 700, color: "#1A1A1B" }}>
             {kw}
           </span>
         ))}

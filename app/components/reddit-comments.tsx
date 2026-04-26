@@ -44,7 +44,7 @@ export function RedditComments({ permalink }: { permalink: string }) {
           marginTop: 14,
           fontSize: 12,
           fontWeight: 700,
-          color: loading ? "#AEAEB2" : "#6B6B6E",
+          color: loading ? "#B0B0B5" : "#7C7C83",
           background: "none",
           border: "1px solid #E5E5EA",
           borderRadius: 7,
@@ -71,7 +71,7 @@ export function RedditComments({ permalink }: { permalink: string }) {
 
   if (comments.length === 0) {
     return (
-      <p style={{ marginTop: 12, fontSize: 12, color: "#AEAEB2", fontWeight: 600 }}>
+      <p style={{ marginTop: 12, fontSize: 12, color: "#B0B0B5", fontWeight: 600 }}>
         Sin comentarios disponibles.
       </p>
     );
@@ -79,7 +79,7 @@ export function RedditComments({ permalink }: { permalink: string }) {
 
   return (
     <div style={{ marginTop: 16 }}>
-      <p style={{ fontSize: 10, fontWeight: 700, color: "#AEAEB2", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
+      <p style={{ fontSize: 10, fontWeight: 700, color: "#B0B0B5", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: 8 }}>
         Top Comments
       </p>
       <div style={{ display: "grid", gap: 8 }}>
@@ -89,15 +89,15 @@ export function RedditComments({ permalink }: { permalink: string }) {
             style={{
               padding: "10px 12px",
               borderRadius: 8,
-              background: "#F5F5F3",
+              background: "#EDEFF1",
               border: "1px solid #EBEBEA",
             }}
           >
             <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: "#6B6B6E" }}>u/{c.author}</span>
-              <span style={{ fontSize: 11, color: "#AEAEB2", fontWeight: 700 }}>▲ {c.score}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: "#7C7C83" }}>u/{c.author}</span>
+              <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 700 }}>▲ {c.score}</span>
             </div>
-            <p style={{ fontSize: 12, color: "#1C1C1E", lineHeight: 1.55, margin: 0 }}>{c.body}</p>
+            <p style={{ fontSize: 12, color: "#1A1A1B", lineHeight: 1.55, margin: 0 }}>{c.body}</p>
           </div>
         ))}
       </div>

@@ -27,10 +27,10 @@ const COLUMNS: {
   border: string;
   dot: string;
 }[] = [
-  { key: "new",       label: "Nuevos",      color: "#E07000", bg: "#FFF3E8", border: "rgba(224,112,0,0.2)", dot: "#E07000" },
+  { key: "new",       label: "Nuevos",      color: "#FF4500", bg: "#FFF3EC", border: "rgba(224,112,0,0.2)", dot: "#FF4500" },
   { key: "reviewing", label: "Revisando",   color: "#3B82F6", bg: "#EFF6FF", border: "rgba(59,130,246,0.2)", dot: "#3B82F6" },
   { key: "replied",   label: "Respondidos", color: "#8B5CF6", bg: "#F5F3FF", border: "rgba(139,92,246,0.2)", dot: "#8B5CF6" },
-  { key: "won",       label: "Won ✓",       color: "#16A34A", bg: "#F0FDF4", border: "#BBF7D0",              dot: "#16A34A" },
+  { key: "won",       label: "Won ✓",       color: "#46A758", bg: "#DEF2E2", border: "#BBF7D0",              dot: "#46A758" },
   { key: "lost",      label: "Lost ✗",      color: "#DC2626", bg: "#FEF2F2", border: "#FEE2E2",              dot: "#DC2626" },
 ];
 
@@ -199,7 +199,7 @@ function KanbanColumn({
               padding: "20px 14px",
               textAlign: "center",
               fontSize: 12,
-              color: "#AEAEB2",
+              color: "#B0B0B5",
               border: "1px dashed #E5E5EA",
               borderRadius: 8,
             }}
@@ -232,7 +232,7 @@ function KanbanCard({
 }) {
   const score = lead.intent_score ?? 0;
   const scoreColor =
-    score >= 80 ? "#E07000" : score >= 60 ? "#FF9F40" : "#AEAEB2";
+    score >= 80 ? "#FF4500" : score >= 60 ? "#FF9F40" : "#B0B0B5";
   const updatedAt = lead.updated_at ?? lead.created_at;
 
   return (
@@ -293,7 +293,7 @@ function KanbanCard({
           style={{
             fontSize: 12,
             fontWeight: 700,
-            color: "#1C1C1E",
+            color: "#1A1A1B",
             lineHeight: 1.45,
             marginBottom: 8,
             overflow: "hidden",
@@ -311,7 +311,7 @@ function KanbanCard({
             style={{
               fontSize: 13,
               fontWeight: 900,
-              color: "#16A34A",
+              color: "#46A758",
               marginBottom: 6,
             }}
           >
@@ -334,7 +334,7 @@ function KanbanCard({
         )}
 
         {/* Footer */}
-        <p style={{ fontSize: 10, color: "#AEAEB2", fontWeight: 600 }}>
+        <p style={{ fontSize: 10, color: "#B0B0B5", fontWeight: 600 }}>
           {updatedAt ? formatRelative(updatedAt) : ""}
         </p>
       </div>

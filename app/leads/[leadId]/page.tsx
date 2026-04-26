@@ -79,7 +79,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
               href={`/dashboard?projectId=${currentProject.id}`}
               style={{
                 display: "inline-flex",
-                color: "#E07000",
+                color: "#FF4500",
                 fontSize: 13,
                 fontWeight: 800,
                 textDecoration: "none",
@@ -187,7 +187,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                                 marginBottom: 12,
                               }}
                             >
-                              <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3E8] font-extrabold text-[#E07000]">
+                              <Badge variant="secondary" className="rounded-[7px] bg-[#FFF3EC] font-extrabold text-[#FF4500]">
                                 {reply.style}
                               </Badge>
                               {reply.was_used && (
@@ -249,7 +249,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                         </option>
                       ))}
                     </select>
-                    <Button className="h-9 rounded-[8px] bg-[#1C1C1E] font-extrabold text-white hover:bg-[#2D2D30]" type="submit">
+                    <Button className="h-9 rounded-[8px] bg-[#1A1A1B] font-extrabold text-white hover:bg-[#2D2D30]" type="submit">
                       Actualizar estado
                     </Button>
                   </form>
@@ -391,8 +391,8 @@ function BattlecardsCard({ keywords, body }: { keywords: string[]; body: string 
                 style={{
                   fontSize: 9,
                   fontWeight: 900,
-                  color: "#E07000",
-                  background: "#FFF3E8",
+                  color: "#FF4500",
+                  background: "#FFF3EC",
                   padding: "2px 5px",
                   borderRadius: 3,
                   flexShrink: 0,
@@ -401,7 +401,7 @@ function BattlecardsCard({ keywords, body }: { keywords: string[]; body: string 
               >
                 0{i + 1}
               </span>
-              <p style={{ fontSize: 12, lineHeight: 1.5, color: "#6B6B6E" }}>{angle}</p>
+              <p style={{ fontSize: 12, lineHeight: 1.5, color: "#7C7C83" }}>{angle}</p>
             </div>
           ))}
         </div>
@@ -429,7 +429,7 @@ function GhostwriterCard({
       className="gap-0 rounded-[8px] py-0 shadow-none ring-0"
       style={{
         border: hasReplies ? "1px solid #BBF7D0" : "1px solid #F0F0EE",
-        background: hasReplies ? "#F0FDF4" : "#FFFFFF",
+        background: hasReplies ? "#DEF2E2" : "#FFFFFF",
       }}
     >
       <CardContent className="p-5">
@@ -462,14 +462,14 @@ function GhostwriterCard({
                   border: "1px solid #86EFAC",
                 }}
               >
-                <p style={{ fontSize: 10, fontWeight: 800, color: "#15803D", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                <p style={{ fontSize: 10, fontWeight: 800, color: "#46A758", marginBottom: 5, textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   Respuesta usada
                 </p>
                 <p
                   style={{
                     fontSize: 12,
                     lineHeight: 1.5,
-                    color: "#1C1C1E",
+                    color: "#1A1A1B",
                     overflow: "hidden",
                     display: "-webkit-box",
                     WebkitLineClamp: 3,
@@ -492,7 +492,7 @@ function GhostwriterCard({
                 gap: 6,
                 padding: "8px 14px",
                 borderRadius: 8,
-                background: "#1C1C1E",
+                background: "#1A1A1B",
                 color: "#FFF",
                 fontSize: 12,
                 fontWeight: 700,
@@ -531,7 +531,7 @@ function SnoozeCard({
 
   if (isSnoozed) {
     return (
-      <Card className="gap-0 rounded-[8px] border-[#E0E7FF] bg-[#EEF2FF] py-0 shadow-none ring-0">
+      <Card className="gap-0 rounded-[8px] border-[#E0E7FF] bg-[#E5EAFF] py-0 shadow-none ring-0">
         <CardContent className="p-5">
           <p className="section-title" style={{ color: "#3730A3" }}>
             💤 Snoozed
@@ -613,11 +613,11 @@ function formatSnoozeDate(iso: string): string {
 
 function ScoreBadge({ score }: { score: number | null }) {
   const val = score ?? 0;
-  let bg = "#8E8E93";
+  let bg = "#7C7C83";
   let glow = "rgba(142,142,147,0.18)";
 
   if (val >= 80) {
-    bg = "#E07000";
+    bg = "#FF4500";
     glow = "rgba(224,112,0,0.22)";
   } else if (val >= 60) {
     bg = "#FF9F40";
@@ -651,10 +651,10 @@ function ScoreBadge({ score }: { score: number | null }) {
 function SideFact({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p style={{ color: "#8E8E93", fontSize: 12, fontWeight: 800, marginBottom: 4 }}>
+      <p style={{ color: "#7C7C83", fontSize: 12, fontWeight: 800, marginBottom: 4 }}>
         {label}
       </p>
-      <p style={{ color: "#1C1C1E", fontSize: 14, lineHeight: 1.5 }}>{value}</p>
+      <p style={{ color: "#1A1A1B", fontSize: 14, lineHeight: 1.5 }}>{value}</p>
     </div>
   );
 }
