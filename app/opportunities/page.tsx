@@ -308,6 +308,7 @@ function LeadDetail({
           </div>
         ) : (
           <ReplyEditor
+            key={lead.id}
             replies={replies}
             permalink={lead.permalink}
             projectId={projectId}

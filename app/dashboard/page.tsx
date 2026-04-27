@@ -336,6 +336,7 @@ function ResultDetail({
           </div>
         ) : (
           <ReplyEditor
+            key={result.id}
             replies={replies}
             permalink={result.permalink}
             projectId={projectId}

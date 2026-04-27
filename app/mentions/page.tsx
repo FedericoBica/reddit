@@ -287,6 +287,7 @@ function MentionDetail({
 
       <div className="lead-comment-box">
         <MentionReplyGenerator
+          key={mention.id}
           projectId={projectId}
           mentionId={mention.id}
           permalink={mention.permalink}
