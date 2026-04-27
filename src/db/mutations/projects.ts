@@ -27,6 +27,13 @@ type GeneratedSubredditSuggestion = {
   rationale: string | null;
 };
 
+function withTelegramChatId(project: Omit<ProjectDTO, "telegram_chat_id">): ProjectDTO {
+  return {
+    ...project,
+    telegram_chat_id: null,
+  };
+}
+
 export async function createProject(input: CreateProjectInput): Promise<ProjectDTO> {
   const parsed = createProjectSchema.parse(input);
   const supabase = await createSupabaseServerClient();
@@ -91,7 +98,6 @@ export async function updateProject(
         scrape_fail_count,
         scrape_backoff_until,
         last_scrape_error,
-        telegram_chat_id,
         created_at,
         updated_at
       `,
@@ -102,7 +108,7 @@ export async function updateProject(
     throw new Error(`Failed to update project: ${error.message}`);
   }
 
-  return data as ProjectDTO;
+  return withTelegramChatId(data);
 }
 
 export async function deleteProject(projectId: string): Promise<void> {
@@ -142,7 +148,7 @@ export async function setProjectOnboardingStatus(
     throw new Error(`Failed to update project onboarding status: ${error.message}`);
   }
 
-  return data;
+  return withTelegramChatId(data);
 }
 
 export async function claimProjectSuggestionGeneration(
@@ -168,7 +174,7 @@ export async function claimProjectSuggestionGeneration(
   }
 
   if (freshClaim) {
-    return freshClaim;
+    return withTelegramChatId(freshClaim);
   }
 
   const { data: staleClaim, error: staleClaimError } = await supabase
@@ -189,7 +195,7 @@ export async function claimProjectSuggestionGeneration(
     );
   }
 
-  return staleClaim;
+  return staleClaim ? withTelegramChatId(staleClaim) : null;
 }
 
 export async function replaceProjectSuggestions(input: {
@@ -415,7 +421,6 @@ const projectDTOColumns = `
   scrape_fail_count,
   scrape_backoff_until,
   last_scrape_error,
-  telegram_chat_id,
   created_at,
   updated_at
 `;

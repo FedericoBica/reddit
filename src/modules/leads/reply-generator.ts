@@ -359,7 +359,6 @@ const projectColumns = `
   scrape_fail_count,
   scrape_backoff_until,
   last_scrape_error,
-  telegram_chat_id,
   created_at,
   updated_at
 `;
@@ -390,7 +389,13 @@ export async function getReplyGenerationContext(
     throw new Error(`Failed to load lead for reply generation: ${leadError.message}`);
   }
 
-  return { project, lead };
+  return {
+    project: {
+      ...project,
+      telegram_chat_id: null,
+    },
+    lead,
+  };
 }
 
 // ─── Main export ──────────────────────────────────────────────

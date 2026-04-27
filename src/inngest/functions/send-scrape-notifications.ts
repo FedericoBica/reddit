@@ -40,7 +40,7 @@ export const sendScrapeNotifications = inngest.createFunction(
 
     const { data: project } = await supabase
       .from("projects")
-      .select("id, name, owner_id, telegram_chat_id")
+      .select("id, name, owner_id")
       .eq("id", projectId)
       .single();
 
@@ -75,14 +75,16 @@ export const sendScrapeNotifications = inngest.createFunction(
       }
     }
 
-    // Telegram — only if chat ID configured and plan allows it.
-    if (project.telegram_chat_id) {
+    // Telegram notifications stay disabled until the remote DB has the column.
+    const telegramChatId = null;
+
+    if (telegramChatId) {
       const plan = await getBillingPlanForUser(project.owner_id);
       if (plan.integrations.telegram) {
         const noun = type === "leads" ? "opportunities" : type === "searchbox" ? "Google results" : "mentions";
         const msg = `<b>${project.name}</b> — ${count} new ${noun} found.\n\n<a href="${projectUrl}">View in ReddProwl</a>`;
         try {
-          await sendTelegramMessage(project.telegram_chat_id, msg);
+          await sendTelegramMessage(telegramChatId, msg);
           results.telegram = "sent";
         } catch (err) {
           results.telegram = `failed: ${err instanceof Error ? err.message : String(err)}`;
