@@ -4,7 +4,24 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { BrandMentionDTO, BrandMentionSentiment } from "@/db/schemas/domain";
 
-const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, post_type, mention_context, response_priority, sentiment_evidence, summary, wrong_region, posted_at, created_at`;
+const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, posted_at, created_at`;
+
+function withLegacyMentionCompatibility(
+  mention: Omit<
+    BrandMentionDTO,
+    "post_type" | "mention_context" | "response_priority" | "sentiment_evidence" | "summary" | "wrong_region"
+  >,
+): BrandMentionDTO {
+  return {
+    ...mention,
+    post_type: null,
+    mention_context: null,
+    response_priority: null,
+    sentiment_evidence: null,
+    summary: null,
+    wrong_region: null,
+  };
+}
 
 export type ListBrandMentionsInput = {
   projectId: string;
@@ -34,7 +51,14 @@ export async function listBrandMentions(input: ListBrandMentionsInput): Promise<
 
   if (error) throw new Error(`Failed to list brand mentions: ${error.message}`);
 
-  return (data ?? []) as BrandMentionDTO[];
+  return (data ?? []).map((mention) =>
+    withLegacyMentionCompatibility(
+      mention as Omit<
+        BrandMentionDTO,
+        "post_type" | "mention_context" | "response_priority" | "sentiment_evidence" | "summary" | "wrong_region"
+      >,
+    ),
+  );
 }
 
 export async function getLastMentionScrapedAt(projectId: string): Promise<string | null> {
@@ -66,5 +90,12 @@ export async function getBrandMentionById(
 
   if (error) throw new Error(`Failed to load brand mention: ${error.message}`);
 
-  return data as BrandMentionDTO | null;
+  return data
+    ? withLegacyMentionCompatibility(
+        data as Omit<
+          BrandMentionDTO,
+          "post_type" | "mention_context" | "response_priority" | "sentiment_evidence" | "summary" | "wrong_region"
+        >,
+      )
+    : null;
 }
