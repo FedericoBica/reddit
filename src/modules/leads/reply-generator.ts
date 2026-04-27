@@ -320,13 +320,9 @@ const leadColumns = `
   num_comments,
   intent_score,
   intent_type,
-  post_type,
   region_score,
-  wrong_region,
   sentiment,
-  sentiment_evidence,
   classification_reason,
-  summary,
   classifier_prompt_version,
   keywords_matched,
   status,
@@ -398,7 +394,13 @@ export async function getReplyGenerationContext(
       ...project,
       telegram_chat_id: null,
     },
-    lead,
+    lead: {
+      ...lead,
+      post_type: null,
+      wrong_region: null,
+      sentiment_evidence: null,
+      summary: null,
+    },
   };
 }
 

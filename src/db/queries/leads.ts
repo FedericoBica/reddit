@@ -24,13 +24,9 @@ const leadColumns = `
   num_comments,
   intent_score,
   intent_type,
-  post_type,
   region_score,
-  wrong_region,
   sentiment,
-  sentiment_evidence,
   classification_reason,
-  summary,
   classifier_prompt_version,
   keywords_matched,
   status,
@@ -46,6 +42,18 @@ const leadColumns = `
   created_at,
   updated_at
 `;
+
+function withLegacyLeadCompatibility(
+  lead: Omit<LeadDTO, "post_type" | "wrong_region" | "sentiment_evidence" | "summary">,
+): LeadDTO {
+  return {
+    ...lead,
+    post_type: null,
+    wrong_region: null,
+    sentiment_evidence: null,
+    summary: null,
+  };
+}
 
 export async function listProjectLeads(input: ListLeadsInput): Promise<LeadDTO[]> {
   const parsed = listLeadsInputSchema.parse(input);
@@ -72,7 +80,7 @@ export async function listProjectLeads(input: ListLeadsInput): Promise<LeadDTO[]
     throw new Error(`Failed to list leads: ${error.message}`);
   }
 
-  return data;
+  return data.map(withLegacyLeadCompatibility);
 }
 
 export async function listSnoozedProjectLeads(
@@ -96,7 +104,7 @@ export async function listSnoozedProjectLeads(
     throw new Error(`Failed to list snoozed leads: ${error.message}`);
   }
 
-  return data;
+  return data.map(withLegacyLeadCompatibility);
 }
 
 export async function listProjectLeadsWithReplies(
@@ -118,7 +126,7 @@ export async function listProjectLeadsWithReplies(
     throw new Error(`Failed to list leads with replies: ${error.message}`);
   }
 
-  return data;
+  return data.map(withLegacyLeadCompatibility);
 }
 
 export async function listAllProjectLeads(
@@ -139,7 +147,7 @@ export async function listAllProjectLeads(
     throw new Error(`Failed to list all leads: ${error.message}`);
   }
 
-  return data;
+  return data.map(withLegacyLeadCompatibility);
 }
 
 export async function listRepliedProjectLeads(
@@ -161,7 +169,7 @@ export async function listRepliedProjectLeads(
     throw new Error(`Failed to list replied leads: ${error.message}`);
   }
 
-  return data;
+  return data.map(withLegacyLeadCompatibility);
 }
 
 export async function listFreshProjectLeads(
@@ -185,7 +193,7 @@ export async function listFreshProjectLeads(
     throw new Error(`Failed to list fresh leads: ${error.message}`);
   }
 
-  return data;
+  return data.map(withLegacyLeadCompatibility);
 }
 
 export async function getLeadById(projectId: string, leadId: string): Promise<LeadDTO | null> {
@@ -204,5 +212,5 @@ export async function getLeadById(projectId: string, leadId: string): Promise<Le
     throw new Error(`Failed to load lead: ${error.message}`);
   }
 
-  return data;
+  return data ? withLegacyLeadCompatibility(data) : null;
 }
