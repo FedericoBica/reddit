@@ -977,6 +977,7 @@ export type Database = {
           secondary_language: string | null
           status: Database["public"]["Enums"]["project_status"]
           suggestions_error: string | null
+          telegram_chat_id: string | null
           tone: string | null
           updated_at: string
           value_proposition: string | null
@@ -1001,6 +1002,7 @@ export type Database = {
           secondary_language?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           suggestions_error?: string | null
+          telegram_chat_id?: string | null
           tone?: string | null
           updated_at?: string
           value_proposition?: string | null
@@ -1025,6 +1027,7 @@ export type Database = {
           secondary_language?: string | null
           status?: Database["public"]["Enums"]["project_status"]
           suggestions_error?: string | null
+          telegram_chat_id?: string | null
           tone?: string | null
           updated_at?: string
           value_proposition?: string | null
@@ -1301,6 +1304,7 @@ export type Database = {
           secondary_language: string | null
           status: Database["public"]["Enums"]["project_status"]
           suggestions_error: string | null
+          telegram_chat_id: string | null
           tone: string | null
           updated_at: string
           value_proposition: string | null
@@ -1319,6 +1323,10 @@ export type Database = {
           _roles: Database["public"]["Enums"]["project_member_role"][]
         }
         Returns: boolean
+      }
+      increment_campaign_failed_count: {
+        Args: { _campaign_id: string }
+        Returns: undefined
       }
       increment_campaign_reply_count: {
         Args: { _campaign_id: string }

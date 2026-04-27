@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { updateProject } from "@/db/mutations/projects";
 import type { UpdateProjectInput } from "@/db/schemas/domain";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   addKeyword,
   updateKeyword,
@@ -120,5 +121,24 @@ export async function toggleSubredditFromForm(formData: FormData) {
   const isActive = formData.get("isActive") === "true";
 
   await toggleSubreddit(projectId, subredditId, isActive);
+  revalidatePath("/settings");
+}
+
+export async function saveTelegramChatIdFromForm(formData: FormData): Promise<void> {
+  await requireUser("/settings");
+
+  const projectId = String(formData.get("projectId") ?? "").trim();
+  const chatId = String(formData.get("telegramChatId") ?? "").trim() || null;
+
+  if (!projectId) return;
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("projects")
+    .update({ telegram_chat_id: chatId })
+    .eq("id", projectId);
+
+  if (error) throw new Error(`Failed to save Telegram chat ID: ${error.message}`);
+
   revalidatePath("/settings");
 }

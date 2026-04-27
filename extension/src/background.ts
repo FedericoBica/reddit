@@ -76,6 +76,11 @@ async function runCycle(): Promise<void> {
       return;
     }
 
+    // Apply configured inter-message delay before sending.
+    const delayMin = item.delay_min_sec ?? 30;
+    const delayMax = item.delay_max_sec ?? 120;
+    await sleep(randomBetween(delayMin, delayMax) * 1000);
+
     const result = await sendDmViaTab(item.contact.reddit_username, item.interpolatedMessage);
 
     const success = result.success;
@@ -85,6 +90,7 @@ async function runCycle(): Promise<void> {
       item.campaign_id,
       success,
       result?.error,
+      success ? item.interpolatedMessage : undefined,
     );
 
     chrome.runtime.sendMessage({ type: "RUNNER_TICK", success, username: item.contact.reddit_username }).catch(() => {});
@@ -104,14 +110,28 @@ async function pollInbox(): Promise<void> {
     const tab = tabs[0];
     if (!tab.id) return;
 
-    const messages = await sendMessageWithContentFallback(tab.id, { type: "POLL_INBOX" }) as
-      | Array<{ redditMessageId: string; fromUsername: string; body: string; receivedAt: string }>
-      | undefined;
+    const stored = await chrome.storage.local.get(["inboxCursor"]);
+    const afterFullname = (stored.inboxCursor as string | undefined) ?? undefined;
 
-    if (!messages || messages.length === 0) return;
+    const response = await sendMessageWithContentFallback(tab.id, {
+      type: "POLL_INBOX",
+      afterFullname,
+    }) as { messages: Array<{ redditMessageId: string; fromUsername: string; body: string; receivedAt: string }>; newAfterFullname: string | null } | undefined;
 
-    const result = await syncInboxMessages(storage.token, messages);
+    if (!response || response.messages.length === 0) {
+      // Even if no new messages, update the cursor if we got a newer one.
+      if (response?.newAfterFullname) {
+        await chrome.storage.local.set({ inboxCursor: response.newAfterFullname });
+      }
+      return;
+    }
+
+    const result = await syncInboxMessages(storage.token, response.messages);
     console.log("[ReddProwl inbox]", result);
+
+    if (response.newAfterFullname) {
+      await chrome.storage.local.set({ inboxCursor: response.newAfterFullname });
+    }
   } catch (err) {
     console.error("[ReddProwl inbox]", err);
   }

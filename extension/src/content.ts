@@ -7,7 +7,7 @@ type InboundMessage = {
   receivedAt: string;
 };
 
-type PollInboxMessage = { type: "POLL_INBOX" };
+type PollInboxMessage = { type: "POLL_INBOX"; afterFullname?: string };
 type ScrapeThreadMessage = {
   type: "SCRAPE_THREAD";
   postUrl: string;
@@ -54,11 +54,12 @@ chrome.runtime.onMessage.addListener(
     }
 
     if (msg.type === "POLL_INBOX") {
-      fetchInboxMessages()
-        .then((messages) => sendResponse(messages))
+      const pollMsg = msg as PollInboxMessage;
+      fetchInboxMessages(pollMsg.afterFullname)
+        .then((result) => sendResponse(result))
         .catch((err: unknown) => {
           console.error("[ReddProwl] POLL_INBOX error", err);
-          sendResponse([]);
+          sendResponse({ messages: [], newAfterFullname: null });
         });
       return true;
     }
@@ -319,7 +320,7 @@ type RedditCommentData = {
 };
 
 type RedditListingChild<T> = { kind: string; data: T };
-type RedditListing<T> = { data: { children: RedditListingChild<T>[] } };
+type RedditListing<T> = { data: { children: RedditListingChild<T>[]; after: string | null } };
 type RedditMessageData = {
   id: string;
   author: string;
@@ -422,26 +423,58 @@ async function scrapeThreadCommenters(
   return [...authors];
 }
 
-async function fetchInboxMessages(): Promise<InboundMessage[]> {
-  // Fetch the last 25 inbox messages using the user's browser session.
-  const res = await fetch("https://www.reddit.com/message/inbox.json?limit=25&mark=false", {
-    credentials: "include",
-    headers: { Accept: "application/json" },
-  });
+async function fetchInboxMessages(
+  afterFullname?: string,
+): Promise<{ messages: InboundMessage[]; newAfterFullname: string | null }> {
+  const MAX_PAGES = 5;
+  const PAGE_SIZE = 25;
 
-  if (!res.ok) return [];
+  const collected: InboundMessage[] = [];
+  // The newest message fullname seen — stored as cursor after a successful sync.
+  let newestFullname: string | null = null;
+  let pageAfter: string | undefined = undefined;
 
-  const listing = (await res.json()) as RedditListing<RedditMessageData>;
-  const children = listing?.data?.children ?? [];
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const url = new URL("https://www.reddit.com/message/inbox.json");
+    url.searchParams.set("limit", String(PAGE_SIZE));
+    url.searchParams.set("mark", "false");
+    if (pageAfter) url.searchParams.set("after", pageAfter);
 
-  return children
-    .filter((c) => c.kind === "t4" && !c.data.was_comment)
-    .map((c) => ({
-      redditMessageId: c.data.id,
-      fromUsername: c.data.author,
-      body: c.data.body,
-      receivedAt: new Date(c.data.created_utc * 1000).toISOString(),
-    }));
+    const res = await fetch(url.toString(), {
+      credentials: "include",
+      headers: { Accept: "application/json" },
+    });
+
+    if (!res.ok) break;
+
+    const listing = (await res.json()) as RedditListing<RedditMessageData>;
+    const children = listing?.data?.children ?? [];
+
+    let hitCursor = false;
+    for (const c of children) {
+      if (c.kind !== "t4" || c.data.was_comment) continue;
+
+      const fullname = `t4_${c.data.id}`;
+
+      // Record the newest message we've seen (first item on page 0).
+      if (newestFullname === null) newestFullname = fullname;
+
+      // Stop when we reach a message we already processed in a prior poll.
+      if (fullname === afterFullname) { hitCursor = true; break; }
+
+      collected.push({
+        redditMessageId: c.data.id,
+        fromUsername: c.data.author,
+        body: c.data.body,
+        receivedAt: new Date(c.data.created_utc * 1000).toISOString(),
+      });
+    }
+
+    if (hitCursor || !listing?.data?.after || children.length < PAGE_SIZE) break;
+    pageAfter = listing.data.after;
+  }
+
+  return { messages: collected, newAfterFullname: newestFullname };
 }
 
 async function getRedditContext(): Promise<RedditContext> {

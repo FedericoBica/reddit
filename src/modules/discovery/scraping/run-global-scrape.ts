@@ -235,6 +235,13 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
         duplicatesSkipped,
       });
 
+      if (leadsCreated > 0) {
+        await inngest.send({
+          name: "leads/scrape.completed",
+          data: { projectId: target.project.id, newLeadsCount: leadsCreated },
+        });
+      }
+
       results.push({
         projectId: target.project.id,
         status: "completed",

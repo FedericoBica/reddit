@@ -2,7 +2,6 @@ import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { BrandLink } from "./logo";
 import { ProjectSwitcher } from "./project-switcher";
-import { PushNotificationToggle } from "./push-notification-toggle";
 import { SidebarLinks } from "./sidebar-links";
 import { signOut } from "@/modules/auth/actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -196,7 +195,6 @@ async function DashboardShellContent({
                 </Link>
               )}
             </div>
-            <PushNotificationToggle publicKey={process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY} />
           </div>
         </div>
       </aside>

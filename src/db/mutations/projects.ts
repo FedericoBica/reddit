@@ -91,6 +91,7 @@ export async function updateProject(
         scrape_fail_count,
         scrape_backoff_until,
         last_scrape_error,
+        telegram_chat_id,
         created_at,
         updated_at
       `,
@@ -101,7 +102,7 @@ export async function updateProject(
     throw new Error(`Failed to update project: ${error.message}`);
   }
 
-  return data;
+  return data as ProjectDTO;
 }
 
 export async function deleteProject(projectId: string): Promise<void> {
@@ -332,6 +333,7 @@ function toProjectDTO(project: ProjectDTO): ProjectDTO {
     scrape_fail_count: project.scrape_fail_count,
     scrape_backoff_until: project.scrape_backoff_until,
     last_scrape_error: project.last_scrape_error,
+    telegram_chat_id: project.telegram_chat_id,
     created_at: project.created_at,
     updated_at: project.updated_at,
   };
@@ -413,6 +415,7 @@ const projectDTOColumns = `
   scrape_fail_count,
   scrape_backoff_until,
   last_scrape_error,
+  telegram_chat_id,
   created_at,
   updated_at
 `;

@@ -8,6 +8,7 @@ import { listProjectLeads } from "@/db/queries/leads";
 import { listProjectKeywords } from "@/db/queries/settings";
 import type { BrandMentionDTO, BrandMentionSentiment, KeywordDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
+import { toRedditUrl } from "@/lib/utils";
 import { resolveCurrentProject } from "@/modules/projects/current";
 
 export const metadata: Metadata = {
@@ -144,7 +145,7 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
 // ── Sub-components ─────────────────────────────────────────────
 
 function MentionCard({ mention }: { mention: BrandMentionDTO }) {
-  const redditUrl = `https://reddit.com${mention.permalink}`;
+  const redditUrl = toRedditUrl(mention.permalink);
 
   return (
     <a

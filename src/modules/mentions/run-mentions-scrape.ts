@@ -5,6 +5,7 @@ import { upsertBrandMention, updateProjectLastMentionsScrapedAt } from "@/db/mut
 import { classifyMentionSentiment } from "./mention-classifier";
 import { createRedditDiscoveryProvider } from "@/modules/discovery/reddit/provider";
 import type { RedditDiscoveryProvider } from "@/modules/discovery/reddit/types";
+import { inngest } from "@/inngest/client";
 
 type MentionTarget = {
   term: string;
@@ -105,6 +106,13 @@ export async function runMentionsScrapeWithCompetitors(
       );
     }
     console.warn(`[mentions] project ${projectId}: ${errors}/${total} candidates failed, ${saved} saved.`);
+  }
+
+  if (saved > 0) {
+    await inngest.send({
+      name: "mentions/scrape.completed",
+      data: { projectId, newMentionsCount: saved },
+    });
   }
 
   return saved;

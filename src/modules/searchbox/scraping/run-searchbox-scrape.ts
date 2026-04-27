@@ -7,6 +7,7 @@ import { classifyLeadCandidate } from "@/modules/discovery/classification/lead-c
 import type { RedditPost } from "@/modules/discovery/reddit/types";
 import { searchGoogleForRedditPosts } from "@/modules/searchbox/serp/serp-provider";
 import { fetchRedditPostMetadata } from "@/modules/searchbox/scraping/fetch-reddit-metadata";
+import { inngest } from "@/inngest/client";
 
 const SEARCHBOX_INTENT_THRESHOLD = 40;
 const MAX_RESULTS_PER_PROJECT = 50;
@@ -143,6 +144,14 @@ async function scrapeSearchboxForTarget(target: SearchboxScrapeTarget) {
   }
 
   const status = serpSuccesses === 0 ? "skipped_serp_outage" : "completed";
+
+  if (resultsNew > 0) {
+    await inngest.send({
+      name: "searchbox/scrape.completed",
+      data: { projectId: target.project.id, newResultsCount: resultsNew },
+    });
+  }
+
   return { status, resultsFound, resultsNew, serpSuccesses, serpFailures };
 }
 

@@ -17,6 +17,7 @@ import {
   updateKeywordFromForm,
   removeKeywordFromForm,
   toggleKeywordFromForm,
+  saveTelegramChatIdFromForm,
 } from "@/modules/projects/settings-actions";
 import { deleteProjectFromForm } from "@/modules/projects/delete-actions";
 import {
@@ -186,17 +187,71 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           {selectedTab === "notifications" && (
             <SettingsSection
               title="Notifications"
-              description="Channels and fetch frequency for mention monitoring and keyword opportunities."
+              description="Get notified when new leads, Google mentions, or Reddit mentions are found for this project."
             >
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 12, marginBottom: 18 }}>
-                <NotificationChannel label="Browser push" enabled />
-                <NotificationChannel label="Telegram" enabled={billingPlan.integrations.telegram} />
-                <NotificationChannel label="Slack" enabled={billingPlan.integrations.slack} />
+              {/* Telegram */}
+              <div style={{ marginBottom: 24 }}>
+                <p style={{ fontSize: 11, fontWeight: 800, color: "#B0B0B5", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+                  Telegram
+                </p>
+                {billingPlan.integrations.telegram ? (
+                  <form action={saveTelegramChatIdFromForm}>
+                    <input type="hidden" name="projectId" value={currentProject.id} />
+                    <div style={{ display: "flex", gap: 8, alignItems: "flex-end", flexWrap: "wrap" }}>
+                      <div style={{ flex: "1 1 240px" }}>
+                        <label style={{ display: "block", fontSize: 11, fontWeight: 700, color: "#7C7C83", marginBottom: 4 }}>
+                          Chat ID
+                        </label>
+                        <input
+                          name="telegramChatId"
+                          type="text"
+                          defaultValue={currentProject.telegram_chat_id ?? ""}
+                          placeholder="e.g. -1001234567890"
+                          style={{ width: "100%", padding: "7px 10px", borderRadius: 7, border: "1px solid #EEEEED", fontSize: 13, fontFamily: "monospace", boxSizing: "border-box" }}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        style={{ padding: "8px 16px", borderRadius: 7, border: "none", background: "#FF4500", color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                      >
+                        Save
+                      </button>
+                      {currentProject.telegram_chat_id && (
+                        <button
+                          type="submit"
+                          name="telegramChatId"
+                          value=""
+                          style={{ padding: "8px 14px", borderRadius: 7, border: "1px solid #EEEEED", background: "none", color: "#7C7C83", fontSize: 12, fontWeight: 700, cursor: "pointer", flexShrink: 0 }}
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <p style={{ marginTop: 6, fontSize: 11, color: "#B0B0B5" }}>
+                      Start a chat with your bot, then send <code>/start</code>. To get your chat ID, forward any message to <strong>@userinfobot</strong>.
+                    </p>
+                  </form>
+                ) : (
+                  <div style={{ padding: "12px 14px", borderRadius: 8, background: "#F8F8F7", border: "1px solid #EEEEED", fontSize: 13, color: "#7C7C83" }}>
+                    Telegram notifications require the Growth plan or higher.
+                  </div>
+                )}
               </div>
+
+              {/* Email */}
+              <div style={{ marginBottom: 24 }}>
+                <p style={{ fontSize: 11, fontWeight: 800, color: "#B0B0B5", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 10 }}>
+                  Email
+                </p>
+                <div style={{ padding: "12px 14px", borderRadius: 8, background: "#F8F8F7", border: "1px solid #EEEEED", fontSize: 13, color: "#7C7C83" }}>
+                  Email notifications are sent automatically to your account email when new leads, Google results, or mentions are found.
+                </div>
+              </div>
+
+              {/* Frequency info */}
               <div style={{ display: "grid", gap: 10 }}>
                 <FrequencyRow label="Mention fetching" value={`Every ${billingPlan.scrapeIntervalHours}h`} />
                 <FrequencyRow label="Keyword opportunities" value={`Search window: ${billingPlan.keywordSearchTimeWindow}`} />
-                <FrequencyRow label="Webhook delivery" value={billingPlan.integrations.webhooks ? "Available" : "Upgrade required"} />
               </div>
             </SettingsSection>
           )}

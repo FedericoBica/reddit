@@ -145,10 +145,11 @@ export async function reportQueueResult(
   campaignId: string,
   success: boolean,
   errorReason?: string,
+  messageBody?: string,
 ): Promise<void> {
   await apiFetch(`/api/ext/queue/${queueItemId}/result`, token, {
     method: "POST",
-    body: JSON.stringify({ campaignId, success, errorReason }),
+    body: JSON.stringify({ campaignId, success, errorReason, messageBody }),
   });
 }
 

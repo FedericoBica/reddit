@@ -8,6 +8,7 @@ import { requireUser } from "@/modules/auth/server";
 import { computeCrmStats, formatRelativeTime, getOutcomeTransitions } from "@/modules/outbound/logic";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import { updateContactStatusFromForm } from "@/modules/outbound/contact-actions";
+import { deleteCampaignAction } from "@/modules/outbound/campaign-actions";
 
 export const metadata: Metadata = { title: "Lead CRM" };
 
@@ -82,13 +83,11 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
               </p>
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: 10 }}>
                 {campaigns.map((c) => (
-                  <Link
+                  <CampaignCardWrapper
                     key={c.id}
-                    href={`/outbound/campaigns/${c.id}?projectId=${currentProject.id}`}
-                    style={{ textDecoration: "none" }}
-                  >
-                    <CampaignCard campaign={c} />
-                  </Link>
+                    campaign={c}
+                    projectId={currentProject.id}
+                  />
                 ))}
               </div>
             </section>
@@ -154,6 +153,51 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
 
 /* ─── Campaign card ─── */
 
+function CampaignCardWrapper({ campaign, projectId }: { campaign: DmCampaignDTO; projectId: string }) {
+  const canDelete = campaign.status !== "active";
+
+  return (
+    <div style={{ position: "relative" }}>
+      <Link
+        href={`/outbound/campaigns/${campaign.id}?projectId=${projectId}`}
+        style={{ textDecoration: "none", display: "block" }}
+      >
+        <CampaignCard campaign={campaign} />
+      </Link>
+      {canDelete && (
+        <form
+          action={deleteCampaignAction}
+          style={{ position: "absolute", top: 8, right: 8 }}
+          onSubmit={(e) => {
+            if (!confirm(`Delete "${campaign.name}"? This cannot be undone.`)) e.preventDefault();
+          }}
+        >
+          <input type="hidden" name="campaignId" value={campaign.id} />
+          <input type="hidden" name="projectId" value={projectId} />
+          <button
+            type="submit"
+            title="Delete campaign"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              padding: "2px 4px",
+              borderRadius: 4,
+              color: "#B0B0B5",
+              fontSize: 13,
+              lineHeight: 1,
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            ✕
+          </button>
+        </form>
+      )}
+    </div>
+  );
+}
+
 function CampaignCard({ campaign }: { campaign: DmCampaignDTO }) {
   const statusColor = {
     active: "#46A758",
@@ -172,7 +216,7 @@ function CampaignCard({ campaign }: { campaign: DmCampaignDTO }) {
       transition: "border-color 150ms ease",
     }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8, marginBottom: 6 }}>
-        <p style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1B" }}>{campaign.name}</p>
+        <p style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1B", paddingRight: 16 }}>{campaign.name}</p>
         <span style={{ fontSize: 9, fontWeight: 800, color: statusColor, textTransform: "uppercase", letterSpacing: "0.05em", flexShrink: 0 }}>
           {campaign.status}
         </span>

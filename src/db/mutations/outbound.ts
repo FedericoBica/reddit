@@ -167,7 +167,7 @@ export async function seedLeadCampaignQueue(
 export async function getNextQueueItem(
   campaignId: string,
   projectId: string,
-): Promise<(DmQueueItemDTO & { contact: DmContactDTO; interpolatedMessage: string }) | null> {
+): Promise<(DmQueueItemDTO & { contact: DmContactDTO; interpolatedMessage: string; delay_min_sec: number; delay_max_sec: number }) | null> {
   const supabase = createSupabaseAdminClient();
 
   // Validate campaign belongs to the calling project and is active.
@@ -260,6 +260,8 @@ export async function getNextQueueItem(
     ...(queueItem as DmQueueItemDTO),
     contact,
     interpolatedMessage,
+    delay_min_sec: campaign.delay_min_sec,
+    delay_max_sec: campaign.delay_max_sec,
   };
 }
 
@@ -271,6 +273,7 @@ type QueueResultInput = {
   projectId: string;
   success: boolean;
   errorReason?: string;
+  messageBody?: string;
 };
 
 export async function recordQueueResult(input: QueueResultInput): Promise<boolean> {
@@ -326,7 +329,7 @@ export async function recordQueueResult(input: QueueResultInput): Promise<boolea
       contact_id: updated.contact_id,
       queue_item_id: updated.id,
       direction: "out" as const,
-      body: "",
+      body: input.messageBody ?? "",
       sent_at: now,
     });
 
@@ -356,9 +359,28 @@ export async function recordQueueResult(input: QueueResultInput): Promise<boolea
         await supabase.rpc("increment_user_dm_monthly_used", { _user_id: project.owner_id });
       }
     }
+  } else {
+    // Increment failed_count so the campaign detail UI reflects real failure counts.
+    await supabase.rpc("increment_campaign_failed_count", { _campaign_id: updated.campaign_id });
   }
 
   return true;
+}
+
+export async function deleteCampaign(campaignId: string, projectId: string): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+
+  // Delete child records first to satisfy FK constraints.
+  await supabase.from("dm_messages").delete().eq("campaign_id", campaignId);
+  await supabase.from("dm_queue").delete().eq("campaign_id", campaignId);
+
+  const { error } = await supabase
+    .from("dm_campaigns")
+    .delete()
+    .eq("id", campaignId)
+    .eq("project_id", projectId);
+
+  if (error) throw new Error(`Failed to delete campaign: ${error.message}`);
 }
 
 const campaignColumns = `

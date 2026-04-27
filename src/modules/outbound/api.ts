@@ -20,6 +20,7 @@ type QueueResultBody = {
   campaignId?: string;
   success?: boolean;
   errorReason?: string;
+  messageBody?: string;
 };
 
 type CampaignConfig = {
@@ -38,7 +39,7 @@ export function parseLeadCampaignConfig(sourceConfig: Record<string, unknown>): 
 
 export function validateQueueResultBody(body: QueueResultBody): {
   ok: true;
-  value: { campaignId: string; success: boolean; errorReason?: string };
+  value: { campaignId: string; success: boolean; errorReason?: string; messageBody?: string };
 } | {
   ok: false;
   message: string;
@@ -52,6 +53,7 @@ export function validateQueueResultBody(body: QueueResultBody): {
       campaignId: body.campaignId,
       success: body.success,
       errorReason: body.errorReason,
+      messageBody: typeof body.messageBody === "string" ? body.messageBody : undefined,
     },
   };
 }
@@ -165,6 +167,7 @@ export async function handleRecordQueueResult(
       projectId: string;
       success: boolean;
       errorReason?: string;
+      messageBody?: string;
     }) => Promise<boolean>;
   },
 ): Promise<ApiResult> {
@@ -180,6 +183,7 @@ export async function handleRecordQueueResult(
     projectId: auth.projectId,
     success: validated.value.success,
     errorReason: validated.value.errorReason,
+    messageBody: validated.value.messageBody,
   });
 
   return { status: 200, body: { ok: true, processed } };
