@@ -1,5 +1,7 @@
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { Database } from "@/db/schemas/database.types";
+import { requireEnv } from "@/lib/env";
 import { resolvePostAuthPath } from "@/modules/auth/post-auth";
 
 export async function GET(request: NextRequest) {
@@ -16,14 +18,17 @@ export async function GET(request: NextRequest) {
   }
 
   if (code) {
-    const supabase = await createSupabaseServerClient();
+    const { supabase, response } = createSupabaseRouteHandlerClient(request);
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(new URL(await resolvePostAuthPath(next), url.origin));
+      return redirectWithCookies(
+        new URL(await resolvePostAuthPath(next), url.origin),
+        response,
+      );
     }
 
-    return NextResponse.redirect(authErrorUrl(url.origin, next, error.message));
+    return redirectWithCookies(authErrorUrl(url.origin, next, error.message), response);
   }
 
   return NextResponse.redirect(authErrorUrl(url.origin, next, "Invalid auth callback"));
@@ -47,4 +52,40 @@ function authErrorUrl(origin: string, next: string, message: string) {
   }
 
   return url;
+}
+
+function createSupabaseRouteHandlerClient(request: NextRequest) {
+  const response = NextResponse.next({ request });
+
+  const supabase = createServerClient<Database>(
+    requireEnv("NEXT_PUBLIC_SUPABASE_URL"),
+    requireEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY"),
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set(name, value, options);
+          });
+        },
+      },
+    },
+  );
+
+  return { supabase, response };
+}
+
+function redirectWithCookies(
+  destination: URL,
+  responseWithCookies: NextResponse,
+) {
+  const redirectResponse = NextResponse.redirect(destination);
+
+  responseWithCookies.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie);
+  });
+
+  return redirectResponse;
 }
