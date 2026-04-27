@@ -2,7 +2,7 @@ import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { upsertBrandMention, updateProjectLastMentionsScrapedAt } from "@/db/mutations/brand-mentions";
-import { classifyMentionSentiment } from "./mention-classifier";
+import { classifyMention } from "./mention-classifier";
 import { createRedditDiscoveryProvider } from "@/modules/discovery/reddit/provider";
 import type { RedditDiscoveryProvider } from "@/modules/discovery/reddit/types";
 import { inngest } from "@/inngest/client";
@@ -17,6 +17,8 @@ type ProjectMentionTarget = {
   id: string;
   name: string;
   website_url: string | null;
+  value_proposition: string | null;
+  region: string | null;
   owner_id: string;
 };
 
@@ -36,7 +38,7 @@ export async function runMentionsScrapeWithCompetitors(
   const [{ data: project }, { data: competitors }] = await Promise.all([
     supabase
       .from("projects")
-      .select("id, name, website_url, owner_id")
+      .select("id, name, website_url, value_proposition, region, owner_id")
       .eq("id", projectId)
       .eq("status", "active")
       .single(),
@@ -95,7 +97,7 @@ export async function runMentionsScrapeWithCompetitors(
     );
   }
 
-  const { saved, errors } = await processAndSavePosts(posts, targets, projectId);
+  const { saved, errors } = await processAndSavePosts(posts, targets, projectId, project as ProjectMentionTarget);
 
   if (errors > 0) {
     const total = saved + errors;
@@ -122,6 +124,7 @@ async function processAndSavePosts(
   posts: Awaited<ReturnType<ReturnType<typeof createRedditDiscoveryProvider>["fetchNewPosts"]>>,
   targets: MentionTarget[],
   projectId: string,
+  project: ProjectMentionTarget,
 ): Promise<ScrapeResult> {
   const seen = new Set<string>();
   let saved = 0;
@@ -137,8 +140,12 @@ async function processAndSavePosts(
       seen.add(key);
 
       try {
-        const { sentiment, reason } = await classifyMentionSentiment({
+        const classification = await classifyMention({
           targetLabel: target.targetLabel,
+          targetType: target.targetType,
+          valueProposition: project.value_proposition,
+          region: project.region,
+          subreddit: post.subreddit,
           title: post.title,
           body: post.body,
         });
@@ -156,8 +163,14 @@ async function processAndSavePosts(
           url: post.url,
           redditScore: post.score ?? 0,
           numComments: post.numComments ?? 0,
-          sentiment,
-          sentimentReason: reason,
+          sentiment: classification.sentiment,
+          sentimentReason: classification.sentimentReason,
+          postType: classification.postType,
+          mentionContext: classification.mentionContext,
+          responsePriority: classification.responsePriority,
+          sentimentEvidence: classification.sentimentEvidence,
+          summary: classification.summary,
+          wrongRegion: classification.wrongRegion,
           postedAt: post.createdUtc,
         });
 

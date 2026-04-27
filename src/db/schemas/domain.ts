@@ -99,6 +99,10 @@ export const createLeadSchema = z.object({
   classifierPromptVersion: z.string().trim().max(80).optional().nullable(),
   keywordsMatched: z.array(z.string()).default([]),
   rawData: z.custom<Json>().default({}),
+  postType: z.enum(["question", "roundup", "complaint", "comparison", "case_study", "discussion", "other"]).optional().nullable(),
+  sentimentEvidence: z.string().max(300).optional().nullable(),
+  summary: z.string().max(2_000).optional().nullable(),
+  wrongRegion: z.boolean().optional().nullable(),
 });
 
 export const updateLeadStatusSchema = z.object({
@@ -243,9 +247,13 @@ export type LeadDTO = Pick<
   | "num_comments"
   | "intent_score"
   | "intent_type"
+  | "post_type"
   | "region_score"
+  | "wrong_region"
   | "sentiment"
+  | "sentiment_evidence"
   | "classification_reason"
+  | "summary"
   | "classifier_prompt_version"
   | "keywords_matched"
   | "status"
@@ -272,6 +280,9 @@ export const brandMentionTargetTypeSchema = z.enum(["company", "competitor"]);
 export type BrandMentionSentiment = z.infer<typeof brandMentionSentimentSchema>;
 export type BrandMentionTargetType = z.infer<typeof brandMentionTargetTypeSchema>;
 
+export type MentionContext = "recommended" | "criticized" | "compared" | "neutral_mention" | "used_by_author" | "leaving";
+export type MentionPostType = "question" | "roundup" | "complaint" | "comparison" | "case_study" | "discussion" | "other";
+
 export type BrandMentionDTO = {
   id: string;
   project_id: string;
@@ -288,6 +299,12 @@ export type BrandMentionDTO = {
   num_comments: number;
   sentiment: BrandMentionSentiment;
   sentiment_reason: string | null;
+  post_type: MentionPostType | null;
+  mention_context: MentionContext | null;
+  response_priority: number | null;
+  sentiment_evidence: string | null;
+  summary: string | null;
+  wrong_region: boolean | null;
   posted_at: string | null;
   created_at: string;
 };

@@ -8,6 +8,7 @@ import {
   markLeadReplyUsed,
   requestLeadReplyGeneration,
 } from "@/db/mutations/lead-replies";
+import { recordAiReplyGeneration, assertAiReplyGenerationAvailable } from "@/modules/billing/reply-generation";
 import { snoozeLead, unsnoozeLead, updateLeadStatus } from "@/db/mutations/leads";
 import { leadStatusSchema } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
@@ -48,6 +49,14 @@ export async function generateLeadRepliesFromForm(formData: FormData) {
   const leadId = String(formData.get("leadId") ?? "");
   const returnTo = String(formData.get("returnTo") ?? `/leads/${leadId}?projectId=${projectId}`);
 
+  try {
+    await assertAiReplyGenerationAvailable(user.id);
+  } catch (error) {
+    await failLeadReplyGeneration(projectId, leadId, error instanceof Error ? error.message : "AI reply limit reached.");
+    revalidatePath(`/leads/${leadId}`);
+    redirect(returnTo);
+  }
+
   const queued = await requestLeadReplyGeneration({
     projectId,
     leadId,
@@ -56,6 +65,8 @@ export async function generateLeadRepliesFromForm(formData: FormData) {
   if (!queued) {
     redirect(returnTo);
   }
+
+  await recordAiReplyGeneration(projectId, user.id, "lead");
 
   try {
     await inngest.send({

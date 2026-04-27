@@ -99,57 +99,75 @@ export type Database = {
           body: string | null
           created_at: string
           id: string
+          mention_context: string | null
           num_comments: number | null
           permalink: string
+          post_type: string | null
           posted_at: string | null
           project_id: string
           reddit_post_id: string
           reddit_score: number | null
+          response_priority: number | null
           sentiment: string
+          sentiment_evidence: string | null
           sentiment_reason: string | null
           subreddit: string
+          summary: string | null
           target_label: string
           target_type: string
           title: string
           url: string | null
+          wrong_region: boolean | null
         }
         Insert: {
           author?: string | null
           body?: string | null
           created_at?: string
           id?: string
+          mention_context?: string | null
           num_comments?: number | null
           permalink: string
+          post_type?: string | null
           posted_at?: string | null
           project_id: string
           reddit_post_id: string
           reddit_score?: number | null
+          response_priority?: number | null
           sentiment?: string
+          sentiment_evidence?: string | null
           sentiment_reason?: string | null
           subreddit: string
+          summary?: string | null
           target_label: string
           target_type: string
           title: string
           url?: string | null
+          wrong_region?: boolean | null
         }
         Update: {
           author?: string | null
           body?: string | null
           created_at?: string
           id?: string
+          mention_context?: string | null
           num_comments?: number | null
           permalink?: string
+          post_type?: string | null
           posted_at?: string | null
           project_id?: string
           reddit_post_id?: string
           reddit_score?: number | null
+          response_priority?: number | null
           sentiment?: string
+          sentiment_evidence?: string | null
           sentiment_reason?: string | null
           subreddit?: string
+          summary?: string | null
           target_label?: string
           target_type?: string
           title?: string
           url?: string | null
+          wrong_region?: boolean | null
         }
         Relationships: [
           {
@@ -494,6 +512,8 @@ export type Database = {
           label: string | null
           last_used_at: string | null
           project_id: string
+          reddit_username: string | null
+          reddit_verified_at: string | null
           revoked_at: string | null
           token_hash: string
           user_id: string
@@ -505,6 +525,8 @@ export type Database = {
           label?: string | null
           last_used_at?: string | null
           project_id: string
+          reddit_username?: string | null
+          reddit_verified_at?: string | null
           revoked_at?: string | null
           token_hash: string
           user_id: string
@@ -516,6 +538,8 @@ export type Database = {
           label?: string | null
           last_used_at?: string | null
           project_id?: string
+          reddit_username?: string | null
+          reddit_verified_at?: string | null
           revoked_at?: string | null
           token_hash?: string
           user_id?: string
@@ -679,6 +703,7 @@ export type Database = {
           num_comments: number | null
           opened_at: string | null
           permalink: string
+          post_type: string | null
           project_id: string
           raw_data: Json
           reddit_fullname: string | null
@@ -691,13 +716,16 @@ export type Database = {
           reply_generation_status: Database["public"]["Enums"]["reply_generation_status"]
           score: number | null
           sentiment: Database["public"]["Enums"]["lead_sentiment"] | null
+          sentiment_evidence: string | null
           snoozed_until: string | null
           status: Database["public"]["Enums"]["lead_status"]
           subreddit: string
+          summary: string | null
           title: string
           updated_at: string
           url: string | null
           won_value: number | null
+          wrong_region: boolean | null
         }
         Insert: {
           assigned_to?: string | null
@@ -715,6 +743,7 @@ export type Database = {
           num_comments?: number | null
           opened_at?: string | null
           permalink: string
+          post_type?: string | null
           project_id: string
           raw_data?: Json
           reddit_fullname?: string | null
@@ -727,13 +756,16 @@ export type Database = {
           reply_generation_status?: Database["public"]["Enums"]["reply_generation_status"]
           score?: number | null
           sentiment?: Database["public"]["Enums"]["lead_sentiment"] | null
+          sentiment_evidence?: string | null
           snoozed_until?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           subreddit: string
+          summary?: string | null
           title: string
           updated_at?: string
           url?: string | null
           won_value?: number | null
+          wrong_region?: boolean | null
         }
         Update: {
           assigned_to?: string | null
@@ -751,6 +783,7 @@ export type Database = {
           num_comments?: number | null
           opened_at?: string | null
           permalink?: string
+          post_type?: string | null
           project_id?: string
           raw_data?: Json
           reddit_fullname?: string | null
@@ -763,13 +796,16 @@ export type Database = {
           reply_generation_status?: Database["public"]["Enums"]["reply_generation_status"]
           score?: number | null
           sentiment?: Database["public"]["Enums"]["lead_sentiment"] | null
+          sentiment_evidence?: string | null
           snoozed_until?: string | null
           status?: Database["public"]["Enums"]["lead_status"]
           subreddit?: string
+          summary?: string | null
           title?: string
           updated_at?: string
           url?: string | null
           won_value?: number | null
+          wrong_region?: boolean | null
         }
         Relationships: [
           {

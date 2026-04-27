@@ -12,6 +12,16 @@ import {
 } from "@/modules/billing/limits";
 
 export const BILLING_PLAN_COOKIE = "rlr_billing_plan";
+const AI_REPLY_USAGE_OPERATIONS = [
+  "lead_reply_generation",
+  "mention_reply_generation",
+] as const;
+
+export type AiReplyUsage = {
+  used: number;
+  limit: number | null;
+  remaining: number | null;
+};
 
 export async function getCurrentBillingPlan(): Promise<ProjectLimit> {
   try {
@@ -73,4 +83,55 @@ export async function getBillingPlanForUser(userId: string): Promise<ProjectLimi
 
   const plan = parseBillingPlan(data?.billing_plan);
   return plan ? getProjectLimitForPlan(plan) : getEffectiveProjectLimit();
+}
+
+export async function getCurrentAiReplyUsage(): Promise<AiReplyUsage> {
+  const supabase = await createSupabaseServerClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const plan = await getCurrentBillingPlan();
+
+  if (!user) {
+    return {
+      used: 0,
+      limit: plan.maxAiRepliesPerMonth,
+      remaining: plan.maxAiRepliesPerMonth,
+    };
+  }
+
+  return getAiReplyUsageForUser(user.id, plan);
+}
+
+export async function getAiReplyUsageForUser(
+  userId: string,
+  plan?: ProjectLimit,
+): Promise<AiReplyUsage> {
+  const resolvedPlan = plan ?? await getBillingPlanForUser(userId);
+  const supabase = createSupabaseAdminClient();
+  const startOfMonth = new Date();
+  startOfMonth.setUTCDate(1);
+  startOfMonth.setUTCHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from("api_usage_log")
+    .select("requests_count")
+    .eq("user_id", userId)
+    .eq("service", "openai")
+    .in("operation", [...AI_REPLY_USAGE_OPERATIONS])
+    .gte("created_at", startOfMonth.toISOString());
+
+  if (error) {
+    throw new Error(`Failed to load AI reply usage: ${error.message}`);
+  }
+
+  const used = (data ?? []).reduce((sum, row) => sum + (row.requests_count ?? 1), 0);
+  const limit = resolvedPlan.maxAiRepliesPerMonth;
+
+  return {
+    used,
+    limit,
+    remaining: limit === null ? null : Math.max(0, limit - used),
+  };
 }

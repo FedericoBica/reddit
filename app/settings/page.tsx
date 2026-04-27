@@ -8,7 +8,7 @@ import { listProjectKeywords, listProjectSubreddits } from "@/db/queries/setting
 import { listActiveExtensionTokens } from "@/db/queries/extension-tokens";
 import type { ExtensionTokenDTO, KeywordDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
-import { getCurrentBillingPlan } from "@/modules/billing/current";
+import { getCurrentAiReplyUsage, getCurrentBillingPlan } from "@/modules/billing/current";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import {
   updateProjectFromForm,
@@ -45,12 +45,13 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
   const selectedTab = parseSettingsTab(params?.tab);
 
-  const [currentLocale, t, keywords, subreddits, billingPlan, extensionTokens] = await Promise.all([
+  const [currentLocale, t, keywords, subreddits, billingPlan, aiReplyUsage, extensionTokens] = await Promise.all([
     getLocale(),
     getTranslations("settings"),
     listProjectKeywords(currentProject.id),
     listProjectSubreddits(currentProject.id),
     getCurrentBillingPlan(),
+    getCurrentAiReplyUsage(),
     selectedTab === "extension" ? listActiveExtensionTokens(user.id, currentProject.id) : Promise.resolve([]),
   ]);
   const connectToken = params?.connectToken ?? null;
@@ -263,7 +264,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             >
               <div className="metric-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginBottom: 18 }}>
                 <BillingMetric label="Plan" value={billingPlan.label} />
-                <BillingMetric label="AI replies" value={formatLimit(0, billingPlan.maxAiRepliesPerMonth)} />
+                <BillingMetric label="AI replies" value={formatLimit(aiReplyUsage.used, billingPlan.maxAiRepliesPerMonth)} />
               </div>
               <div style={{ display: "grid", gap: 8 }}>
                 <PlanLimit label="Keywords" value={formatLimit(searchKeywords.length, billingPlan.maxKeywords)} />
@@ -483,6 +484,7 @@ function FieldRow({
 }) {
   return (
     <div
+      className={vertical ? undefined : "settings-field-row"}
       style={
         vertical
           ? { display: "flex", flexDirection: "column", gap: 6 }

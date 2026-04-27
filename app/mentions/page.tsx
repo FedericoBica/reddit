@@ -2,14 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/app/components/dashboard-shell";
+import { RedditComments } from "@/app/components/reddit-comments";
+import { MentionReplyGenerator } from "@/app/mentions/mention-reply-generator";
 import { MentionTargetSwitcher, type MentionTargetOption } from "@/app/mentions/mention-target-switcher";
 import { listBrandMentions } from "@/db/queries/brand-mentions";
 import { listProjectLeads } from "@/db/queries/leads";
 import { listProjectKeywords } from "@/db/queries/settings";
 import type { BrandMentionDTO, BrandMentionSentiment, KeywordDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
-import { toRedditUrl } from "@/lib/utils";
 import { resolveCurrentProject } from "@/modules/projects/current";
+import { toRedditUrl } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Mentions",
@@ -20,6 +22,7 @@ const PAGE_SIZE = 8;
 type MentionsPageProps = {
   searchParams?: Promise<{
     projectId?: string;
+    mentionId?: string;
     target?: string;
     sentiment?: string;
     sort?: string;
@@ -42,9 +45,8 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
     listBrandMentions({ projectId: currentProject.id }),
   ]);
 
-  const newLeadsCount = recentLeads.filter((l) => l.status === "new").length;
-  const competitors = keywords.filter((k) => k.type === "competitor" && k.is_active);
-
+  const newLeadsCount = recentLeads.filter((lead) => lead.status === "new").length;
+  const competitors = keywords.filter((keyword) => keyword.type === "competitor" && keyword.is_active);
   const selectedTarget = resolveTarget(params?.target, currentProject.name, competitors);
   const selectedSentiment = parseSentiment(params?.sentiment);
   const selectedSort = params?.sort === "recent" ? "recent" : "relevant";
@@ -52,14 +54,22 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
   const targetMentions = filterByTarget(allMentions, selectedTarget, currentProject.name);
   const filteredMentions = filterBySentiment(targetMentions, selectedSentiment);
   const sortedMentions = sortMentions(filteredMentions, selectedSort);
-
   const sentimentStats = computeSentimentStats(targetMentions);
   const targetOptions = buildTargetOptions(currentProject.id, currentProject.name, competitors, selectedTarget);
 
-  const currentPage = Math.max(0, parseInt(params?.page ?? "0") || 0);
+  const requestedId = params?.mentionId;
+  const selectedMention = requestedId
+    ? sortedMentions.find((mention) => mention.id === requestedId) ?? sortedMentions[0] ?? null
+    : sortedMentions[0] ?? null;
+
+  const pageFromParam = Math.max(0, parseInt(params?.page ?? "0") || 0);
+  const selectedIndex = selectedMention ? sortedMentions.findIndex((mention) => mention.id === selectedMention.id) : -1;
+  const autoPage = selectedIndex >= 0 ? Math.floor(selectedIndex / PAGE_SIZE) : 0;
+  const currentPage = params?.mentionId && !params?.page
+    ? autoPage
+    : Math.min(pageFromParam, Math.max(0, Math.ceil(sortedMentions.length / PAGE_SIZE) - 1));
   const totalPages = Math.max(1, Math.ceil(sortedMentions.length / PAGE_SIZE));
-  const safePage = Math.min(currentPage, totalPages - 1);
-  const paginatedMentions = sortedMentions.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
+  const paginatedMentions = sortedMentions.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
 
   return (
     <DashboardShell
@@ -67,14 +77,18 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
       currentProject={currentProject}
       newLeadsCount={newLeadsCount}
     >
-      <div className="app-page" style={{ minHeight: "100vh" }}>
-        <header className="page-header">
-          <div>
-            <p className="page-kicker">Monitoring</p>
-            <h1 className="page-title">Mentions</h1>
-            <p className="page-copy">
-              Reddit posts that mention {selectedTarget === "all" ? "your brand or competitors" : selectedTarget} directly — tracked separately from buying-intent leads.
-            </p>
+      <section className="searchbox-workspace">
+        <header className="ds-topbar">
+          <div className="ds-topbar-left">
+            <div className="ds-topbar-icon">◎</div>
+            <div className="ds-topbar-titles">
+              <h1 className="ds-topbar-title">Brand <em>Mentions</em></h1>
+              <div className="ds-topbar-sub">
+                <span><strong>{sortedMentions.length}</strong> filtered posts</span>
+                <span className="ds-topbar-sep">·</span>
+                <span>{selectedTarget === "all" ? "brand + competitors" : selectedTarget}</span>
+              </div>
+            </div>
           </div>
           <MentionCountBadge count={allMentions.length} />
         </header>
@@ -82,79 +96,105 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
         {allMentions.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="content-flow">
-            {/* Controls row */}
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16, flexWrap: "wrap", marginBottom: 8 }}>
-              <div style={{ maxWidth: 300, flex: "1 1 240px" }}>
-                <MentionTargetSwitcher options={targetOptions} />
-              </div>
-              <SortControl projectId={currentProject.id} target={selectedTarget} sentiment={selectedSentiment} selectedSort={selectedSort} />
-            </div>
-
-            {/* Sentiment bar */}
-            <SentimentBar
-              projectId={currentProject.id}
-              target={selectedTarget}
-              selectedSentiment={selectedSentiment}
-              selectedSort={selectedSort}
-              stats={sentimentStats}
-            />
-
-            {/* Mention list */}
-            {sortedMentions.length === 0 ? (
-              <div className="empty-state">
-                <p className="section-title">No mentions with this filter</p>
-              </div>
-            ) : (
-              <>
-                <div className="opportunity-list" style={{ overflowY: "visible", padding: 0 }}>
-                  {paginatedMentions.map((mention) => (
-                    <MentionCard key={`${mention.id}`} mention={mention} />
-                  ))}
+          <div className="searchbox-body">
+            <section className="opportunity-column" aria-label="Brand mentions">
+              <div style={{ padding: "12px 14px 8px", borderBottom: "1px solid #DAE0E6", display: "grid", gap: 10 }}>
+                <div style={{ maxWidth: 320 }}>
+                  <MentionTargetSwitcher options={targetOptions} />
                 </div>
-                {totalPages > 1 && (
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 16, padding: "0 2px" }}>
-                    {safePage > 0 ? (
-                      <Link
-                        href={buildHref({ projectId: currentProject.id, target: selectedTarget, sentiment: selectedSentiment === "all" ? undefined : selectedSentiment, sort: selectedSort === "recent" ? "recent" : undefined, page: safePage - 1 })}
-                        style={{ fontSize: 12, fontWeight: 800, color: "#FF4500", textDecoration: "none", padding: "4px 10px", borderRadius: 99, border: "1px solid #FF4500" }}
-                      >
-                        ← Prev
-                      </Link>
-                    ) : <span />}
-                    <span style={{ fontSize: 12, fontWeight: 700, color: "#7C7C83" }}>{safePage + 1} / {totalPages}</span>
-                    {safePage < totalPages - 1 ? (
-                      <Link
-                        href={buildHref({ projectId: currentProject.id, target: selectedTarget, sentiment: selectedSentiment === "all" ? undefined : selectedSentiment, sort: selectedSort === "recent" ? "recent" : undefined, page: safePage + 1 })}
-                        style={{ fontSize: 12, fontWeight: 800, color: "#FF4500", textDecoration: "none", padding: "4px 10px", borderRadius: 99, border: "1px solid #FF4500" }}
-                      >
-                        Next →
-                      </Link>
-                    ) : <span />}
+                <SortControl
+                  projectId={currentProject.id}
+                  target={selectedTarget}
+                  sentiment={selectedSentiment}
+                  selectedSort={selectedSort}
+                />
+                <SentimentBar
+                  projectId={currentProject.id}
+                  target={selectedTarget}
+                  selectedSentiment={selectedSentiment}
+                  selectedSort={selectedSort}
+                  mentionId={selectedMention?.id}
+                  stats={sentimentStats}
+                />
+              </div>
+
+              <div className="opportunity-list">
+                {sortedMentions.length > 0 ? (
+                  paginatedMentions.map((mention) => (
+                    <MentionCard
+                      key={mention.id}
+                      mention={mention}
+                      active={mention.id === selectedMention?.id}
+                      href={buildHref({
+                        projectId: currentProject.id,
+                        mentionId: mention.id,
+                        target: selectedTarget,
+                        sentiment: selectedSentiment === "all" ? undefined : selectedSentiment,
+                        sort: selectedSort === "recent" ? "recent" : undefined,
+                      })}
+                    />
+                  ))
+                ) : (
+                  <div className="empty-state">
+                    <p className="section-title">No mentions with this filter</p>
                   </div>
                 )}
-              </>
-            )}
+              </div>
+
+              {totalPages > 1 && (
+                <div style={{ borderTop: "1px solid #DAE0E6", padding: "10px 14px", display: "flex", justifyContent: "center", alignItems: "center", gap: 10 }}>
+                  {currentPage > 0 ? (
+                    <Link
+                      href={buildHref({
+                        projectId: currentProject.id,
+                        target: selectedTarget,
+                        sentiment: selectedSentiment === "all" ? undefined : selectedSentiment,
+                        sort: selectedSort === "recent" ? "recent" : undefined,
+                        page: currentPage - 1,
+                      })}
+                      style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none", padding: "2px 8px", borderRadius: 99, border: "1px solid #FF4500" }}
+                    >
+                      ←
+                    </Link>
+                  ) : <span style={{ width: 30 }} />}
+                  <span style={{ fontSize: 11, fontWeight: 700, color: "#7C7C83" }}>{currentPage + 1} / {totalPages}</span>
+                  {currentPage < totalPages - 1 ? (
+                    <Link
+                      href={buildHref({
+                        projectId: currentProject.id,
+                        target: selectedTarget,
+                        sentiment: selectedSentiment === "all" ? undefined : selectedSentiment,
+                        sort: selectedSort === "recent" ? "recent" : undefined,
+                        page: currentPage + 1,
+                      })}
+                      style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none", padding: "2px 8px", borderRadius: 99, border: "1px solid #FF4500" }}
+                    >
+                      →
+                    </Link>
+                  ) : <span style={{ width: 30 }} />}
+                </div>
+              )}
+            </section>
+
+            <MentionDetail mention={selectedMention} projectId={currentProject.id} />
           </div>
         )}
-      </div>
+      </section>
     </DashboardShell>
   );
 }
 
-// ── Sub-components ─────────────────────────────────────────────
-
-function MentionCard({ mention }: { mention: BrandMentionDTO }) {
-  const redditUrl = toRedditUrl(mention.permalink);
-
+function MentionCard({
+  mention,
+  active,
+  href,
+}: {
+  mention: BrandMentionDTO;
+  active: boolean;
+  href: string;
+}) {
   return (
-    <a
-      href={redditUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="opportunity-card"
-      style={{ textDecoration: "none" }}
-    >
+    <Link href={href} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
       <div className="opportunity-meta">
         <TargetBadge type={mention.target_type} label={mention.target_label} />
         <span>r/{mention.subreddit}</span>
@@ -172,10 +212,87 @@ function MentionCard({ mention }: { mention: BrandMentionDTO }) {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
         <SentimentPill sentiment={mention.sentiment} />
         <span style={{ fontSize: 12, color: "#8E8E93", fontWeight: 700 }}>
-          ↑ {mention.reddit_score}
+          ▲ {mention.reddit_score}
         </span>
       </div>
-    </a>
+    </Link>
+  );
+}
+
+function MentionDetail({
+  mention,
+  projectId,
+}: {
+  mention: BrandMentionDTO | null;
+  projectId: string;
+}) {
+  if (!mention) {
+    return (
+      <section className="detail-pane">
+        <div className="detail-content">
+          <div className="empty-state">
+            <p className="section-title">No mentions selected</p>
+            <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
+              Choose a mention from the list to inspect the full post and generate a reply.
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  const redditUrl = toRedditUrl(mention.permalink);
+
+  return (
+    <section className="detail-pane" aria-label="Mention detail">
+      <div className="detail-topbar">
+        <div className="opportunity-meta">
+          <TargetBadge type={mention.target_type} label={mention.target_label} />
+          <span>r/{mention.subreddit}</span>
+          {mention.posted_at && <span>{formatDate(mention.posted_at)}</span>}
+          {mention.author && <span>u/{mention.author}</span>}
+        </div>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          <SentimentPill sentiment={mention.sentiment} />
+        </div>
+      </div>
+
+      <div className="detail-content">
+        <h2 style={{ fontSize: 22, lineHeight: 1.2, letterSpacing: "-0.02em", fontWeight: 700, color: "#1A1A1B" }}>
+          {mention.title}
+        </h2>
+
+        {mention.sentiment_reason && (
+          <p style={{ fontSize: 12, color: "#7C7C83", fontWeight: 600, marginTop: 10 }}>
+            {mention.sentiment_reason}
+          </p>
+        )}
+      </div>
+
+      <article className="lead-post">
+        <p className="reddit-body" style={{ fontSize: 13 }}>
+          {mention.body?.trim() || "No body available. Open the post on Reddit to see the full context."}
+        </p>
+
+        <RedditComments permalink={mention.permalink} />
+
+        <div className="post-stats-bar">
+          {mention.reddit_score > 0 && <span>▲ {mention.reddit_score} upvotes</span>}
+          <span>💬 {mention.num_comments} comments</span>
+          <a href={redditUrl} target="_blank" rel="noreferrer" className="post-stats-link">
+            View Post on Reddit →
+          </a>
+        </div>
+      </article>
+
+      <div className="lead-comment-box">
+        <MentionReplyGenerator
+          projectId={projectId}
+          mentionId={mention.id}
+          permalink={mention.permalink}
+        />
+      </div>
+    </section>
   );
 }
 
@@ -218,12 +335,14 @@ function SentimentBar({
   target,
   selectedSentiment,
   selectedSort,
+  mentionId,
   stats,
 }: {
   projectId: string;
   target: string;
   selectedSentiment: BrandMentionSentiment | "all";
   selectedSort: string;
+  mentionId?: string;
   stats: Record<string, number>;
 }) {
   const items: Array<{ value: BrandMentionSentiment | "all"; label: string; color: string; bg: string }> = [
@@ -234,14 +353,20 @@ function SentimentBar({
   ];
 
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
+    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
       {items.map((item) => {
         const count = item.value === "all" ? stats.all : (stats[item.value] ?? 0);
         const active = selectedSentiment === item.value;
         return (
           <Link
             key={item.value}
-            href={buildHref({ projectId, target, sentiment: item.value === "all" ? undefined : item.value, sort: selectedSort === "recent" ? "recent" : undefined })}
+            href={buildHref({
+              projectId,
+              mentionId,
+              target,
+              sentiment: item.value === "all" ? undefined : item.value,
+              sort: selectedSort === "recent" ? "recent" : undefined,
+            })}
             className={`filter-pill${active ? " filter-pill-active" : ""}`}
             style={active ? { borderColor: item.color, color: item.color, background: item.bg } : {}}
           >
@@ -253,17 +378,32 @@ function SentimentBar({
   );
 }
 
-function SortControl({ projectId, target, sentiment, selectedSort }: { projectId: string; target: string; sentiment: BrandMentionSentiment | "all"; selectedSort: string }) {
+function SortControl({
+  projectId,
+  target,
+  sentiment,
+  selectedSort,
+}: {
+  projectId: string;
+  target: string;
+  sentiment: BrandMentionSentiment | "all";
+  selectedSort: string;
+}) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
       <span style={{ fontSize: 12, color: "#8E8E93", fontWeight: 800 }}>Sort</span>
-      {["relevant", "recent"].map((s) => (
+      {["relevant", "recent"].map((sort) => (
         <Link
-          key={s}
-          href={buildHref({ projectId, target, sentiment: sentiment === "all" ? undefined : sentiment, sort: s === "recent" ? "recent" : undefined })}
-          className={`filter-pill${selectedSort === s ? " filter-pill-active" : ""}`}
+          key={sort}
+          href={buildHref({
+            projectId,
+            target,
+            sentiment: sentiment === "all" ? undefined : sentiment,
+            sort: sort === "recent" ? "recent" : undefined,
+          })}
+          className={`filter-pill${selectedSort === sort ? " filter-pill-active" : ""}`}
         >
-          {s === "recent" ? "Most recent" : "Most discussed"}
+          {sort === "recent" ? "Most recent" : "Most discussed"}
         </Link>
       ))}
     </div>
@@ -301,15 +441,28 @@ function MonitorIcon() {
   );
 }
 
-// ── Helpers ────────────────────────────────────────────────────
-
-function buildHref({ projectId, target, sentiment, sort, page }: { projectId: string; target: string; sentiment?: string; sort?: string; page?: number }) {
-  const p = new URLSearchParams({ projectId });
-  if (target && target !== "all") p.set("target", target);
-  if (sentiment) p.set("sentiment", sentiment);
-  if (sort) p.set("sort", sort);
-  if (page != null && page > 0) p.set("page", String(page));
-  return `/mentions?${p.toString()}`;
+function buildHref({
+  projectId,
+  mentionId,
+  target,
+  sentiment,
+  sort,
+  page,
+}: {
+  projectId: string;
+  mentionId?: string;
+  target?: string;
+  sentiment?: string;
+  sort?: string;
+  page?: number;
+}) {
+  const params = new URLSearchParams({ projectId });
+  if (mentionId) params.set("mentionId", mentionId);
+  if (target && target !== "all") params.set("target", target);
+  if (sentiment) params.set("sentiment", sentiment);
+  if (sort) params.set("sort", sort);
+  if (page != null && page > 0) params.set("page", String(page));
+  return `/mentions?${params.toString()}`;
 }
 
 function parseSentiment(value: string | undefined): BrandMentionSentiment | "all" {
@@ -320,19 +473,19 @@ function parseSentiment(value: string | undefined): BrandMentionSentiment | "all
 function resolveTarget(target: string | undefined, companyName: string, competitors: KeywordDTO[]): string {
   if (!target || target === "all") return "all";
   if (target === companyName) return companyName;
-  if (competitors.some((c) => c.term === target)) return target;
+  if (competitors.some((competitor) => competitor.term === target)) return target;
   return "all";
 }
 
 function filterByTarget(mentions: BrandMentionDTO[], target: string, companyName: string): BrandMentionDTO[] {
   if (target === "all") return mentions;
-  if (target === companyName) return mentions.filter((m) => m.target_type === "company");
-  return mentions.filter((m) => m.target_label === target);
+  if (target === companyName) return mentions.filter((mention) => mention.target_type === "company");
+  return mentions.filter((mention) => mention.target_label === target);
 }
 
 function filterBySentiment(mentions: BrandMentionDTO[], sentiment: BrandMentionSentiment | "all"): BrandMentionDTO[] {
   if (sentiment === "all") return mentions;
-  return mentions.filter((m) => m.sentiment === sentiment);
+  return mentions.filter((mention) => mention.sentiment === sentiment);
 }
 
 function sortMentions(mentions: BrandMentionDTO[], sort: string): BrandMentionDTO[] {
@@ -346,9 +499,9 @@ function sortMentions(mentions: BrandMentionDTO[], sort: string): BrandMentionDT
 
 function computeSentimentStats(mentions: BrandMentionDTO[]) {
   return mentions.reduce(
-    (acc, m) => {
+    (acc, mention) => {
       acc.all++;
-      acc[m.sentiment] = (acc[m.sentiment] ?? 0) + 1;
+      acc[mention.sentiment] = (acc[mention.sentiment] ?? 0) + 1;
       return acc;
     },
     { all: 0, positive: 0, neutral: 0, negative: 0 } as Record<string, number>,
@@ -376,12 +529,12 @@ function buildTargetOptions(
       href: buildHref({ projectId, target: companyName }),
       active: selectedTarget === companyName,
     },
-    ...competitors.map((c) => ({
-      id: c.term,
-      label: c.term,
+    ...competitors.map((competitor) => ({
+      id: competitor.term,
+      label: competitor.term,
       description: "Competitor mentions",
-      href: buildHref({ projectId, target: c.term }),
-      active: selectedTarget === c.term,
+      href: buildHref({ projectId, target: competitor.term }),
+      active: selectedTarget === competitor.term,
     })),
   ];
 }
@@ -393,4 +546,12 @@ function formatRelative(dateStr: string) {
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
+}
+
+function formatDate(dateStr: string) {
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(dateStr));
 }

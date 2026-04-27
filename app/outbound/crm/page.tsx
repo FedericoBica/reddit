@@ -67,7 +67,7 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
 
         <div style={{ maxWidth: 1100, margin: "0 auto", padding: "0 20px 60px" }}>
           {/* Overview metrics */}
-          <div className="metric-grid" style={{ gridTemplateColumns: "repeat(5, minmax(0, 1fr))", marginBottom: 20 }}>
+          <div className="metric-grid" style={{ marginBottom: 20 }}>
             <OverviewMetric label="Queued" value={stats.byStatus.queued} color="#7C7C83" />
             <OverviewMetric label="Sent" value={stats.byStatus.sent} color="#FF4500" />
             <OverviewMetric label="Replied" value={stats.byStatus.replied} color="#2563EB" />
@@ -113,7 +113,7 @@ export default async function CrmPage({ searchParams }: CrmPageProps) {
           </div>
 
           {/* CRM table */}
-          <div style={{ background: "#FFF", border: "1px solid #EEEEED", borderRadius: 12, overflow: "hidden" }}>
+          <div style={{ background: "#FFF", border: "1px solid #EEEEED", borderRadius: 12, overflowX: "auto" }}>
             {contacts.length === 0 ? (
               <div style={{ padding: "40px 24px", textAlign: "center", color: "#B0B0B5", fontSize: 13 }}>
                 No contacts yet.{" "}

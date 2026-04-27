@@ -7,7 +7,7 @@ import type { Enums } from "@/db/schemas/database.types";
 import type { RedditPost } from "@/modules/discovery/reddit/types";
 import type { KeywordMatchTarget } from "@/modules/discovery/classification/keyword-match";
 
-export const LEAD_CLASSIFIER_PROMPT_VERSION = "v4";
+export const LEAD_CLASSIFIER_PROMPT_VERSION = "v5";
 
 // ─── Schema ──────────────────────────────────────────────────
 
@@ -19,9 +19,12 @@ const leadClassificationSchema = z.object({
     "existing_user",
     "low_intent",
   ]),
+  post_type: z.enum(["question", "roundup", "complaint", "comparison", "case_study", "discussion", "other"]),
   intent_score: z.number().int().min(0).max(100),
   region_score: z.number().int().min(0).max(10),
+  wrong_region: z.boolean(),
   sentiment: z.enum(["positive", "negative", "neutral"]),
+  sentiment_evidence: z.string().trim().max(200),
   classification_reason: z.string().trim().min(1).max(300),
 });
 
@@ -42,9 +45,12 @@ type ClassifyLeadInput = {
 
 export type LeadClassification = {
   intentType: z.infer<typeof leadClassificationSchema>["intent_type"];
+  postType: z.infer<typeof leadClassificationSchema>["post_type"];
   intentScore: number;
   regionScore: number;
+  wrongRegion: boolean;
   sentiment: Enums<"lead_sentiment">;
+  sentimentEvidence: string;
   classificationReason: string;
   promptVersion: typeof LEAD_CLASSIFIER_PROMPT_VERSION;
   usage: {
@@ -225,6 +231,38 @@ Keywords: ["project management"]
 → classification_reason: "Academic methodology research, no tool need or practical workflow discussion"
 
 ═══════════════════════════════════════════════
+POST TYPE — classify into exactly one
+═══════════════════════════════════════════════
+
+"question"    — Author asks for help, advice, or tool recommendations
+"complaint"   — Author expresses frustration or failure with a tool/workflow
+"comparison"  — Author explicitly compares 2+ tools
+"roundup"     — Structured list/review with no personal buying stake
+"case_study"  — Author shares a personal outcome or experience
+"discussion"  — Open conversation without a specific question or complaint
+"other"       — Doesn't fit the above
+
+═══════════════════════════════════════════════
+SENTIMENT + EVIDENCE
+═══════════════════════════════════════════════
+
+sentiment: overall tone of the post (positive / negative / neutral)
+sentiment_evidence: the exact phrase (max 150 chars) that best captures the sentiment
+
+═══════════════════════════════════════════════
+REGION
+═══════════════════════════════════════════════
+
+region_score (1–10): How likely is this post from the configured user region/country?
+  10  — Multiple strong local signals (currency + slang + local institution)
+  7–9 — Clear regional signals
+  4–6 — Ambiguous
+  1–3 — No regional signals
+  0   — Clearly a DIFFERENT country → set wrong_region: true
+
+wrong_region: true only when signals clearly point to a different country.
+
+═══════════════════════════════════════════════
 classification_reason FORMAT (max 300 chars)
 ═══════════════════════════════════════════════
 
@@ -306,9 +344,12 @@ export async function classifyLeadCandidate(
 
   return {
     intentType: parsed.intent_type,
+    postType: parsed.post_type,
     intentScore: parsed.intent_score,
     regionScore: parsed.region_score,
+    wrongRegion: parsed.wrong_region,
     sentiment: parsed.sentiment,
+    sentimentEvidence: parsed.sentiment_evidence,
     classificationReason: parsed.classification_reason,
     promptVersion: LEAD_CLASSIFIER_PROMPT_VERSION,
     usage: {

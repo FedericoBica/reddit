@@ -1454,6 +1454,12 @@ textarea:focus-visible {
   -webkit-font-smoothing: antialiased;
 }
 
+/* Mobile-only elements: hidden on desktop */
+.ds-mobile-topbar { display: none; }
+.ds-hamburger { display: none; }
+.ds-sidebar-close { display: none; }
+.ds-overlay { display: none; }
+
 /* ── Sidebar ── */
 .ds-sidebar {
   width: 240px;
@@ -2702,9 +2708,81 @@ textarea:focus-visible {
   }
 
   .ds-sidebar {
-    width: 100%;
+    display: none;
     border-right: 0;
-    border-bottom: 1px solid #DAE0E6;
+  }
+
+  .ds-sidebar.is-open {
+    display: flex;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 100;
+    width: 280px;
+    height: 100vh;
+    overflow-y: auto;
+    box-shadow: 4px 0 32px rgba(0, 0, 0, 0.18);
+  }
+
+  .ds-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 99;
+    background: rgba(0, 0, 0, 0.4);
+  }
+
+  .ds-mobile-topbar {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    padding: 0 16px;
+    border-bottom: 1px solid var(--ds-line-2, #DAE0E6);
+    background: var(--ds-paper, #FFFFFF);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+
+  .ds-hamburger {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 8px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+
+  .ds-hamburger:hover {
+    background: var(--ds-bg-3, #EDEFF1);
+  }
+
+  .ds-hamburger span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: var(--ds-ink, #1A1A1B);
+    border-radius: 1px;
+  }
+
+  .ds-sidebar-close {
+    display: flex;
+    align-self: flex-end;
+    margin: 10px 10px 0;
+    padding: 6px 10px;
+    border: none;
+    background: none;
+    font-size: 16px;
+    color: var(--ds-ink-3, #7C7C83);
+    cursor: pointer;
+    border-radius: 6px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .ds-sidebar-close:hover {
+    background: var(--ds-bg-3, #EDEFF1);
   }
 
   .searchbox-workspace {
@@ -2782,6 +2860,20 @@ textarea:focus-visible {
   .lead-card {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .detail-topbar {
+    flex-wrap: wrap;
+    min-height: auto;
+    padding: 10px 16px;
+  }
+
+  .settings-field-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  .settings-field-row label {
+    margin-bottom: 2px;
   }
 }
 
