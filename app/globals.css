@@ -2370,6 +2370,35 @@ textarea:focus-visible {
   color: #EA0027;
 }
 
+.kw-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 30;
+  background: #FFFFFF;
+  border: 1px solid #EEEEED;
+  border-radius: 10px;
+  padding: 10px 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 160px;
+  max-width: 260px;
+}
+
+.kw-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1A1A1B;
+  padding: 3px 8px;
+  border-radius: 5px;
+  background: #EDEFF1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .comment-surface {
   width: 100%;
   min-height: 108px;

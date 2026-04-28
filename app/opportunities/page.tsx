@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AutoRefresh } from "@/app/components/auto-refresh";
+import { KeywordsDropdown } from "@/app/components/keywords-dropdown";
 import { ReplyEditor } from "@/app/components/reply-editor";
 import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
@@ -243,7 +244,10 @@ function LeadDetail({
           {lead.created_utc && <span>{formatDate(lead.created_utc)}</span>}
           {lead.author && <span>u/{lead.author}</span>}
         </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
+          {lead.keywords_matched?.length > 0 && (
+            <KeywordsDropdown keywords={lead.keywords_matched} />
+          )}
           <form action={updateLeadStatusFromForm}>
             <input type="hidden" name="projectId" value={projectId} />
             <input type="hidden" name="leadId" value={lead.id} />
