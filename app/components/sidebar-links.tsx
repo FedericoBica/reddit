@@ -20,10 +20,9 @@ export function SidebarLinks({
   const [archiveOpen, setArchiveOpen] = useState(inArchive);
 
   const INBOUND_NAV = [
-    { href: "/dashboard",     label: t("searchbox"),  icon: InboxIcon,  badge: newSearchboxCount },
-    { href: "/opportunities", label: t("new"),         icon: FlashIcon,  badge: newLeadsCount     },
-    { href: "/mentions",      label: t("mentions"),    icon: SignalIcon,  badge: 0                },
-    { href: "/analytics",     label: t("analytics"),   icon: ChartIcon,  badge: 0                },
+    { href: "/dashboard", label: t("searchbox"), icon: InboxIcon, badge: newSearchboxCount },
+    { href: "/feed",      label: "Leads",         icon: FlashIcon, badge: newLeadsCount    },
+    { href: "/analytics", label: t("analytics"),  icon: ChartIcon, badge: 0               },
   ];
 
   const OUTBOUND_NAV = [
@@ -32,6 +31,7 @@ export function SidebarLinks({
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard" || pathname.startsWith("/leads/");
+    if (href === "/feed") return pathname === "/feed" || pathname === "/opportunities" || pathname === "/mentions";
     return pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
   };
 

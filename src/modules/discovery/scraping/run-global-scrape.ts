@@ -68,8 +68,8 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
       continue;
     }
 
+    let postsSeen = 0;
     try {
-      let postsSeen = 0;
       let leadsCreated = 0;
       let duplicatesSkipped = 0;
       let classificationsCount = 0;
@@ -260,7 +260,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
         currentFailCount: target.project.scrape_fail_count,
         errorMessage: message,
       });
-      results.push({ projectId: target.project.id, status: "failed", postsSeen: 0 });
+      results.push({ projectId: target.project.id, status: "failed", postsSeen, error: message });
     }
   }
 

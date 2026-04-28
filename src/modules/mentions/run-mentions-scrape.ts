@@ -26,7 +26,7 @@ const MENTIONS_MAX_PER_TERM = 25;
 const MENTIONS_TIME_WINDOW = "month" as const;
 const ERROR_RATE_THRESHOLD = 0.5; // fail loudly if >50% of candidates error
 
-type ScrapeResult = { saved: number; errors: number };
+type ScrapeResult = { saved: number; errors: number; lastError: string | null };
 
 export async function runMentionsScrapeWithCompetitors(
   projectId: string,
@@ -97,17 +97,17 @@ export async function runMentionsScrapeWithCompetitors(
     );
   }
 
-  const { saved, errors } = await processAndSavePosts(posts, targets, projectId, project as ProjectMentionTarget);
+  const { saved, errors, lastError } = await processAndSavePosts(posts, targets, projectId, project as ProjectMentionTarget);
 
   if (errors > 0) {
     const total = saved + errors;
     const errorRate = errors / total;
     if (errorRate >= ERROR_RATE_THRESHOLD) {
       throw new Error(
-        `[mentions] project ${projectId}: ${errors}/${total} candidates failed classification/save (${Math.round(errorRate * 100)}%). Possible classifier or DB issue.`,
+        `[mentions] project ${projectId}: ${errors}/${total} candidates failed classification/save (${Math.round(errorRate * 100)}%). Last error: ${lastError ?? "unknown"}`,
       );
     }
-    console.warn(`[mentions] project ${projectId}: ${errors}/${total} candidates failed, ${saved} saved.`);
+    console.warn(`[mentions] project ${projectId}: ${errors}/${total} candidates failed, ${saved} saved. Last error: ${lastError ?? "unknown"}`);
   }
 
   if (saved > 0) {
@@ -129,6 +129,7 @@ async function processAndSavePosts(
   const seen = new Set<string>();
   let saved = 0;
   let errors = 0;
+  let lastError: string | null = null;
 
   for (const post of posts) {
     const postText = `${post.title} ${post.body ?? ""}`.toLowerCase();
@@ -177,15 +178,16 @@ async function processAndSavePosts(
         saved++;
       } catch (err) {
         errors++;
+        lastError = err instanceof Error ? err.message : String(err);
         console.error(
           `[mentions] Failed to classify/save post ${post.id} for "${target.targetLabel}":`,
-          err instanceof Error ? err.message : err,
+          lastError,
         );
       }
     }
   }
 
-  return { saved, errors };
+  return { saved, errors, lastError };
 }
 
 function buildMentionTargets(project: ProjectMentionTarget): MentionTarget[] {
