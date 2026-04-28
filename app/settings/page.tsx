@@ -72,7 +72,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     <DashboardShell
       user={user}
       currentProject={currentProject}
-      newLeadsCount={0}
+
     >
       <div className="app-page" style={{ minHeight: "100vh" }}>
         <header className="page-header">
@@ -80,7 +80,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="page-kicker">{t("kicker")}</p>
             <h1 className="page-title">{currentProject.name}</h1>
             <p className="page-copy">
-              {activeKeywords.length} active keywords · {activeCompetitors.length} competitors · {activeSubreddits.length} communities monitored · {activeXKeywords.length} X rules
+              {activeKeywords.length} active keywords · {activeCompetitors.length} competitors · {activeSubreddits.length} communities monitored{billingPlan.xEnabled ? ` · ${activeXKeywords.length} X rules` : ""}
             </p>
           </div>
         </header>
@@ -92,7 +92,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             padding: "0 20px 60px",
           }}
         >
-          <SettingsTabs projectId={currentProject.id} selectedTab={selectedTab} />
+          <SettingsTabs projectId={currentProject.id} selectedTab={selectedTab} xEnabled={billingPlan.xEnabled} />
 
           {selectedTab === "general" && (
             <SettingsSection
@@ -171,26 +171,55 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           )}
 
           {selectedTab === "x" && (
-            <SettingsSection
-              title="X"
-              description="Separate query set for X filtered stream rules. Use X syntax here: hashtags, exact phrases, from:, lang:, min_faves: and similar operators."
-              badge={`${activeXKeywords.length} active`}
-            >
-              <div style={{ display: "grid", gap: 0 }}>
-                {xKeywords.length === 0 ? (
-                  <EmptyHint>No X queries yet. Add your first filtered stream rule below.</EmptyHint>
-                ) : (
-                  xKeywords.map((keyword) => (
-                    <XKeywordRow key={keyword.id} keyword={keyword} projectId={currentProject.id} />
-                  ))
-                )}
-              </div>
-              <form action={addXKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                <input type="hidden" name="projectId" value={currentProject.id} />
-                <input className="settings-input" name="query" placeholder='Example: ("project management" OR asana) lang:en -is:retweet' required style={{ flex: 1 }} />
-                <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
-              </form>
-            </SettingsSection>
+            billingPlan.xEnabled ? (
+              <SettingsSection
+                title="X"
+                description="Separate query set for X filtered stream rules. Use X syntax here: hashtags, exact phrases, from:, lang:, min_faves: and similar operators."
+                badge={`${activeXKeywords.length} active`}
+              >
+                <div style={{ display: "grid", gap: 0 }}>
+                  {xKeywords.length === 0 ? (
+                    <EmptyHint>No X queries yet. Add your first filtered stream rule below.</EmptyHint>
+                  ) : (
+                    xKeywords.map((keyword) => (
+                      <XKeywordRow key={keyword.id} keyword={keyword} projectId={currentProject.id} />
+                    ))
+                  )}
+                </div>
+                <form action={addXKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                  <input type="hidden" name="projectId" value={currentProject.id} />
+                  <input className="settings-input" name="query" placeholder='Example: (crm OR "project management") lang:en -is:retweet' required style={{ flex: 1 }} />
+                  <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
+                </form>
+                <XQuerySyntaxGuide />
+              </SettingsSection>
+            ) : (
+              <SettingsSection
+                title="X"
+                description="X monitoring is available on Growth and Professional plans."
+              >
+                <div style={{ padding: "24px 0", textAlign: "center" }}>
+                  <p style={{ fontSize: 14, color: "#7C7C83", marginBottom: 16 }}>
+                    Upgrade to Growth to monitor X (Twitter) for buyer-intent posts and mentions.
+                  </p>
+                  <a
+                    href="/settings?tab=billing"
+                    style={{
+                      display: "inline-block",
+                      padding: "8px 20px",
+                      background: "#FF4500",
+                      color: "#FFF",
+                      borderRadius: 8,
+                      fontSize: 13,
+                      fontWeight: 600,
+                      textDecoration: "none",
+                    }}
+                  >
+                    Upgrade plan →
+                  </a>
+                </div>
+              </SettingsSection>
+            )
           )}
 
           {selectedTab === "prompts" && (
@@ -297,7 +326,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 <BillingMetric label="AI replies" value={formatLimit(aiReplyUsage.used, billingPlan.maxAiRepliesPerMonth)} />
               </div>
               <div style={{ display: "grid", gap: 8 }}>
-                <PlanLimit label="Keywords" value={formatLimit(searchKeywords.length, billingPlan.maxKeywords)} />
+                <PlanLimit label="Reddit keywords" value={formatLimit(searchKeywords.length, billingPlan.maxKeywords)} />
+                {billingPlan.xEnabled && (
+                  <PlanLimit label="X keywords" value={formatLimit(activeXKeywords.length, billingPlan.maxXKeywords)} />
+                )}
                 <PlanLimit label="Competitors" value={formatLimit(competitorKeywords.length, billingPlan.maxCompetitors)} />
                 <PlanLimit label="Ghostwriter threads" value={formatLimit(0, billingPlan.maxGhostwriterThreads)} />
                 <PlanLimit label="Team members" value={formatLimit(1, billingPlan.maxTeamMembers)} />
@@ -337,10 +369,13 @@ const SETTINGS_TABS: Array<{ id: SettingsTab; label: string }> = [
 function SettingsTabs({
   projectId,
   selectedTab,
+  xEnabled,
 }: {
   projectId: string;
   selectedTab: SettingsTab;
+  xEnabled: boolean;
 }) {
+  const visibleTabs = xEnabled ? SETTINGS_TABS : SETTINGS_TABS.filter((t) => t.id !== "x");
   return (
     <nav
       aria-label="Settings sections"
@@ -353,7 +388,7 @@ function SettingsTabs({
         marginBottom: 18,
       }}
     >
-      {SETTINGS_TABS.map((tab) => (
+      {visibleTabs.map((tab) => (
         <Link
           key={tab.id}
           href={`/settings?projectId=${projectId}&tab=${tab.id}`}
@@ -876,6 +911,41 @@ function PlanLimit({ label, value }: { label: string; value: string }) {
       <span style={{ fontSize: 13, color: "#7C7C83", fontWeight: 700 }}>{label}</span>
       <span style={{ fontSize: 13, color: "#1A1A1B", fontWeight: 800 }}>{value}</span>
     </div>
+  );
+}
+
+/* ─── X query syntax guide ─── */
+
+const X_OPERATORS = [
+  { op: "-is:retweet", desc: "Exclude retweets (almost always needed)" },
+  { op: "lang:en", desc: "Only English tweets" },
+  { op: "(termA OR termB)", desc: "Match either term" },
+  { op: '"exact phrase"', desc: "Exact phrase match" },
+  { op: "-is:reply", desc: "Exclude replies to others" },
+  { op: "has:links", desc: "Only tweets with links" },
+  { op: "is:verified", desc: "Only verified accounts" },
+  { op: "min_faves:10", desc: "Minimum like count" },
+  { op: "from:username", desc: "Only from a specific account" },
+];
+
+function XQuerySyntaxGuide() {
+  return (
+    <details style={{ marginTop: 18 }}>
+      <summary style={{ fontSize: 12, fontWeight: 700, color: "#7C7C83", cursor: "pointer", userSelect: "none", listStyle: "none", display: "flex", alignItems: "center", gap: 6 }}>
+        <span style={{ fontSize: 10 }}>▶</span> Query syntax reference
+      </summary>
+      <div style={{ marginTop: 12, borderRadius: 8, border: "1px solid #EDEFF1", overflow: "hidden" }}>
+        {X_OPERATORS.map(({ op, desc }, i) => (
+          <div key={op} style={{ display: "flex", gap: 12, padding: "8px 12px", background: i % 2 === 0 ? "#FAFAFA" : "#FFF", borderTop: i > 0 ? "1px solid #F0F0F0" : undefined }}>
+            <code style={{ fontSize: 11, fontFamily: "ui-monospace, Menlo, monospace", color: "#FF4500", whiteSpace: "nowrap", flexShrink: 0 }}>{op}</code>
+            <span style={{ fontSize: 12, color: "#7C7C83" }}>{desc}</span>
+          </div>
+        ))}
+      </div>
+      <p style={{ fontSize: 11, color: "#B0B0B5", marginTop: 8 }}>
+        Combine operators in one query: <code style={{ fontFamily: "ui-monospace, Menlo, monospace" }}>crm lang:en -is:retweet min_faves:5</code>
+      </p>
+    </details>
   );
 }
 

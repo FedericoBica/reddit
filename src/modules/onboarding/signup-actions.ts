@@ -18,7 +18,8 @@ import {
 import { createSupabaseServerClient as createClient } from "@/lib/supabase/server";
 import { requireUser } from "@/modules/auth/server";
 import { setCurrentBillingPlan } from "@/modules/billing/current";
-import { parseBillingPlan, type BillingPlan } from "@/modules/billing/limits";
+import { parseBillingPlan, getProjectLimitForPlan, type BillingPlan } from "@/modules/billing/limits";
+import { addXKeyword } from "@/db/mutations/x";
 import { inngest } from "@/inngest/client";
 import { analyzeCompanyWithAI, fetchWebsiteText } from "@/modules/onboarding/company-analyzer";
 import { setCurrentProject } from "@/modules/projects/current";
@@ -76,14 +77,14 @@ export async function signUpWithPassword(formData: FormData) {
     );
   }
 
-  redirect("/signup/company");
+  redirect("/signup/plan");
 }
 
 export async function signUpWithGoogle() {
   const headerStore = await headers();
   const origin = headerStore.get("origin") ?? "http://localhost:3000";
   const supabase = await createSupabaseServerClient();
-  const next = "/signup/company";
+  const next = "/signup/plan";
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -337,17 +338,8 @@ export async function continueToPlan(formData: FormData) {
 export async function choosePlanFromSignup(formData: FormData) {
   await requireUser("/signup/plan");
 
-  const projectId = String(formData.get("projectId") ?? "");
   const plan = parseBillingPlan(String(formData.get("plan") ?? "")) ?? "growth";
-
   await setCurrentBillingPlan(plan as BillingPlan);
 
-  if (projectId) {
-    await inngest.send({
-      name: "project/backfill.requested",
-      data: { projectId },
-    });
-  }
-
-  redirect(`/signup/loading?projectId=${projectId}`);
+  redirect("/signup/company");
 }

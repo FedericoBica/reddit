@@ -6,6 +6,7 @@ export type ProjectLimit = {
   plan: BillingPlan;
   label: string;
   maxKeywords: number | null;
+  maxXKeywords: number | null;
   maxCompetitors: number | null;
   scrapeIntervalHours: number;
   keywordSearchTimeWindow: KeywordSearchTimeWindow;
@@ -13,6 +14,7 @@ export type ProjectLimit = {
   maxGhostwriterThreads: number | null;
   maxTeamMembers: number | null;
   maxRedditAccounts: number | null;
+  xEnabled: boolean;
   integrations: {
     slack: boolean;
     telegram: boolean;
@@ -26,7 +28,8 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
   startup: {
     plan: "startup",
     label: "Startup",
-    maxKeywords: 20,
+    maxKeywords: 10,
+    maxXKeywords: null,
     maxCompetitors: 3,
     scrapeIntervalHours: 168,
     keywordSearchTimeWindow: "week",
@@ -34,6 +37,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxGhostwriterThreads: 5,
     maxTeamMembers: 1,
     maxRedditAccounts: 1,
+    xEnabled: false,
     integrations: {
       slack: false,
       telegram: false,
@@ -45,7 +49,8 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
   growth: {
     plan: "growth",
     label: "Growth",
-    maxKeywords: 40,
+    maxKeywords: 20,
+    maxXKeywords: 10,
     maxCompetitors: 6,
     scrapeIntervalHours: 24,
     keywordSearchTimeWindow: "day",
@@ -53,6 +58,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxGhostwriterThreads: 15,
     maxTeamMembers: 2,
     maxRedditAccounts: 2,
+    xEnabled: true,
     integrations: {
       slack: false,
       telegram: true,
@@ -64,7 +70,8 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
   professional: {
     plan: "professional",
     label: "Professional",
-    maxKeywords: 60,
+    maxKeywords: 30,
+    maxXKeywords: 20,
     maxCompetitors: 8,
     scrapeIntervalHours: 24,
     keywordSearchTimeWindow: "day",
@@ -72,6 +79,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxGhostwriterThreads: null,
     maxTeamMembers: 3,
     maxRedditAccounts: null,
+    xEnabled: true,
     integrations: {
       slack: true,
       telegram: true,

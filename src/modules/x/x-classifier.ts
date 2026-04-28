@@ -5,10 +5,21 @@ import { zodTextFormat } from "openai/helpers/zod";
 import { z } from "zod";
 import type { Enums } from "@/db/schemas/database.types";
 
-export const X_CLASSIFIER_PROMPT_VERSION = "v1";
+export const X_CLASSIFIER_PROMPT_VERSION = "v2";
+
+const X_INTENT_TYPES = [
+  "problem_expression",
+  "recommendation_request",
+  "competitor_mention",
+  "product_discovery",
+  "conversation_starter",
+] as const;
+
+export type XIntentType = (typeof X_INTENT_TYPES)[number];
 
 const xClassificationSchema = z.object({
   intent_score: z.number().int().min(0).max(100),
+  intent_type: z.enum(X_INTENT_TYPES),
   sentiment: z.enum(["positive", "negative", "neutral"]),
   classification_reason: z.string().trim().min(1).max(240),
 });
@@ -36,6 +47,7 @@ type ClassifyXPostInput = {
 
 export type XPostClassification = {
   intentScore: number;
+  intentType: XIntentType;
   sentiment: Enums<"lead_sentiment">;
   classificationReason: string;
   promptVersion: typeof X_CLASSIFIER_PROMPT_VERSION;
@@ -57,8 +69,16 @@ Low scores:
 - Promotional posts from vendors
 - Content with no practical problem or workflow discussion
 
+Intent types:
+- problem_expression: user expresses frustration, pain, or difficulty with a workflow
+- recommendation_request: asking for tool suggestions, alternatives, or opinions
+- competitor_mention: directly mentioning a competitor product
+- product_discovery: exploring options, evaluating categories
+- conversation_starter: opening a discussion or debate about the topic area
+
 Return:
 - intent_score from 0 to 100
+- intent_type from the list above
 - sentiment
 - classification_reason using this format: "[signal observed] -> [why it is or is not a good X lead]"
 Keep the reason concrete and under 240 chars.
@@ -110,6 +130,7 @@ export async function classifyXPostCandidate(input: ClassifyXPostInput): Promise
 
   return {
     intentScore: parsed.intent_score,
+    intentType: parsed.intent_type,
     sentiment: parsed.sentiment,
     classificationReason: parsed.classification_reason,
     promptVersion: X_CLASSIFIER_PROMPT_VERSION,

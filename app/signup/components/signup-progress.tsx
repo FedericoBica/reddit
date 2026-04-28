@@ -1,4 +1,4 @@
-const STEP_LABELS = ["Company", "Competitors", "Why Reddit", "Plan"];
+const STEP_LABELS = ["Plan", "Company", "Competitors"];
 
 export function SignupProgress({ active }: { active: number }) {
   return (

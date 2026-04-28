@@ -3,30 +3,15 @@ import { redirect } from "next/navigation";
 import { BrandLink } from "@/app/components/logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
-import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { PlanSelector } from "./plan-selector";
 
 export const metadata: Metadata = {
-  title: "Elegir plan",
+  title: "Choose a plan",
 };
 
-type PlanPageProps = {
-  searchParams?: Promise<{ projectId?: string; preview?: string }>;
-};
-
-export default async function SignupPlanPage({ searchParams }: PlanPageProps) {
+export default async function SignupPlanPage() {
   const user = await getCurrentUser();
-  const params = await searchParams;
-  const projectId = params?.projectId ?? "";
-
   if (!user) redirect("/signup");
-  if (!projectId) {
-    if (params?.preview === "1" && await isCurrentUserAdmin()) {
-      // Admin preview mode
-    } else {
-      redirect("/signup/company");
-    }
-  }
 
   return (
     <main className="signup-wizard-shell">
@@ -36,10 +21,9 @@ export default async function SignupPlanPage({ searchParams }: PlanPageProps) {
 
       <Card className="signup-wizard-card">
         <CardContent className="p-0">
-          <PlanSelector projectId={projectId} />
+          <PlanSelector />
         </CardContent>
       </Card>
     </main>
   );
-  // Note: SignupProgress is rendered inside PlanSelector to keep layout self-contained
 }

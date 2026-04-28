@@ -10,13 +10,13 @@ const PLANS = [
     id: "startup",
     name: "Startup",
     price: "$19",
-    note: "For founders testing Reddit as a channel — 10 keywords, 50 replies, 1 seat.",
+    note: "For founders testing Reddit as a channel — 10 keywords, 100 replies, 1 seat.",
     features: [
-      "20 Custom Tracked Keywords",
+      "10 Reddit Keywords",
       "3 Tracked Competitors",
       "100 AI-Guided Replies",
       "Weekly Lead Opportunities",
-      "Monthly SEO Opportunities",
+      "Reddit Monitoring",
       "Analytics Dashboard",
       "1 Seat (Owner Only)",
       "Email Notifications",
@@ -26,14 +26,14 @@ const PLANS = [
     id: "growth",
     name: "Growth",
     price: "$39",
-    note: "Daily insights, expanded tracking, 300 AI replies — for teams converting Reddit to revenue.",
+    note: "Daily insights, expanded tracking, 300 AI replies, X monitoring — for teams converting social to revenue.",
     popular: true,
     features: [
-      "40 Custom Tracked Keywords",
+      "20 Reddit Keywords + 10 X Keywords",
       "6 Tracked Competitors",
       "300 AI-Guided Replies",
       "Daily Lead Opportunities",
-      "Monthly SEO Opportunities",
+      "Reddit + X Monitoring",
       "Analytics Dashboard",
       "2 Seats (Owner + 1 Member)",
       "Email & Telegram Alerts",
@@ -43,37 +43,33 @@ const PLANS = [
     id: "professional",
     name: "Professional",
     price: "$79",
-    note: "Multiple brands, unlimited replies, priority support — agencies and multi-product teams.",
+    note: "Multiple brands, 500 replies, Slack & webhooks, X monitoring — agencies and multi-product teams.",
     features: [
-      "60 Custom Tracked Keywords",
+      "30 Reddit Keywords + 20 X Keywords",
       "8 Tracked Competitors",
       "500 AI-Guided Replies",
       "Daily Lead Opportunities",
-      "Monthly SEO Opportunities",
+      "Reddit + X Monitoring",
       "Analytics Dashboard",
       "3 Seats (Owner + 2 Members)",
-      "Email & Telegram Alerts",
+      "Email, Telegram & Slack Alerts",
     ],
   },
 ] as const;
 
 type PlanId = (typeof PLANS)[number]["id"];
 
-type PlanSelectorProps = {
-  projectId: string;
-};
-
-export function PlanSelector({ projectId }: PlanSelectorProps) {
+export function PlanSelector() {
   const [selected, setSelected] = useState<PlanId>("growth");
   const plan = PLANS.find((p) => p.id === selected)!;
 
   return (
     <div className="signup-plan-selector">
       <div className="signup-plan-features-panel">
-        <SignupProgress active={3} />
+        <SignupProgress active={0} />
         <div className="sw-eyebrow" style={{ marginTop: 20 }}>
           <span className="sw-eyebrow-dot" />
-          Step 04 · Plan
+          Step 01 · Plan
         </div>
         <h1 className="signup-wizard-title">
           Pick a plan,<br /><em>start in minutes.</em>
@@ -92,13 +88,12 @@ export function PlanSelector({ projectId }: PlanSelectorProps) {
         </div>
 
         <form action={choosePlanFromSignup} style={{ marginTop: "auto" }}>
-          <input type="hidden" name="projectId" value={projectId} />
           <input type="hidden" name="plan" value={selected} />
           <Button
             type="submit"
             className="sw-btn-primary w-full"
           >
-            Start with {plan.name} — {plan.price}/mo →
+            Continue with {plan.name} →
           </Button>
         </form>
         <div className="sw-foot-note">

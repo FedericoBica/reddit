@@ -1263,139 +1263,6 @@ export type Database = {
           },
         ]
       }
-      x_keywords: {
-        Row: {
-          created_at: string
-          id: string
-          is_active: boolean
-          project_id: string
-          query: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          project_id: string
-          query: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_active?: boolean
-          project_id?: string
-          query?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "x_keywords_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      x_posts: {
-        Row: {
-          author_followers_count: number | null
-          author_id: string | null
-          author_name: string | null
-          author_username: string | null
-          author_verified: boolean | null
-          bookmark_count: number | null
-          classification_reason: string | null
-          classifier_prompt_version: string | null
-          created_at: string
-          id: string
-          impression_count: number | null
-          intent_score: number | null
-          keywords_matched: string[]
-          lang: string | null
-          like_count: number
-          permalink: string
-          posted_at: string | null
-          project_id: string
-          quote_count: number
-          raw_data: Json
-          reply_count: number
-          retweet_count: number
-          sentiment: Database["public"]["Enums"]["lead_sentiment"] | null
-          status: Database["public"]["Enums"]["lead_status"]
-          text: string
-          updated_at: string
-          x_post_id: string
-        }
-        Insert: {
-          author_followers_count?: number | null
-          author_id?: string | null
-          author_name?: string | null
-          author_username?: string | null
-          author_verified?: boolean | null
-          bookmark_count?: number | null
-          classification_reason?: string | null
-          classifier_prompt_version?: string | null
-          created_at?: string
-          id?: string
-          impression_count?: number | null
-          intent_score?: number | null
-          keywords_matched?: string[]
-          lang?: string | null
-          like_count?: number
-          permalink: string
-          posted_at?: string | null
-          project_id: string
-          quote_count?: number
-          raw_data?: Json
-          reply_count?: number
-          retweet_count?: number
-          sentiment?: Database["public"]["Enums"]["lead_sentiment"] | null
-          status?: Database["public"]["Enums"]["lead_status"]
-          text: string
-          updated_at?: string
-          x_post_id: string
-        }
-        Update: {
-          author_followers_count?: number | null
-          author_id?: string | null
-          author_name?: string | null
-          author_username?: string | null
-          author_verified?: boolean | null
-          bookmark_count?: number | null
-          classification_reason?: string | null
-          classifier_prompt_version?: string | null
-          created_at?: string
-          id?: string
-          impression_count?: number | null
-          intent_score?: number | null
-          keywords_matched?: string[]
-          lang?: string | null
-          like_count?: number
-          permalink?: string
-          posted_at?: string | null
-          project_id?: string
-          quote_count?: number
-          raw_data?: Json
-          reply_count?: number
-          retweet_count?: number
-          sentiment?: Database["public"]["Enums"]["lead_sentiment"] | null
-          status?: Database["public"]["Enums"]["lead_status"]
-          text?: string
-          updated_at?: string
-          x_post_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "x_posts_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: false
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       users: {
         Row: {
           avatar_url: string | null
@@ -1437,6 +1304,261 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      x_keywords: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          project_id: string
+          query: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          project_id: string
+          query: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          project_id?: string
+          query?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x_keywords_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      x_post_replies: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          input_tokens: number | null
+          model: string | null
+          output_tokens: number | null
+          project_id: string
+          prompt_version: string | null
+          style: string
+          was_used: boolean
+          x_post_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          input_tokens?: number | null
+          model?: string | null
+          output_tokens?: number | null
+          project_id: string
+          prompt_version?: string | null
+          style: string
+          was_used?: boolean
+          x_post_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          input_tokens?: number | null
+          model?: string | null
+          output_tokens?: number | null
+          project_id?: string
+          prompt_version?: string | null
+          style?: string
+          was_used?: boolean
+          x_post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x_post_replies_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "x_post_replies_x_post_id_fkey"
+            columns: ["x_post_id"]
+            isOneToOne: false
+            referencedRelation: "x_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      x_profiles: {
+        Row: {
+          id: string
+          project_id: string
+          interests: string[]
+          favorite_creators: string[]
+          use_own_tweets: boolean
+          structure_types: string[]
+          products: string[]
+          x_rules: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          interests?: string[]
+          favorite_creators?: string[]
+          use_own_tweets?: boolean
+          structure_types?: string[]
+          products?: string[]
+          x_rules?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          interests?: string[]
+          favorite_creators?: string[]
+          use_own_tweets?: boolean
+          structure_types?: string[]
+          products?: string[]
+          x_rules?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x_profiles_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      x_posts: {
+        Row: {
+          author_followers_count: number | null
+          author_id: string | null
+          author_name: string | null
+          author_username: string | null
+          author_verified: boolean | null
+          bookmark_count: number | null
+          classification_reason: string | null
+          classifier_prompt_version: string | null
+          created_at: string
+          id: string
+          impression_count: number | null
+          intent_score: number | null
+          intent_type: string | null
+          keywords_matched: string[]
+          lang: string | null
+          like_count: number
+          permalink: string
+          posted_at: string | null
+          project_id: string
+          quote_count: number
+          raw_data: Json
+          reply_count: number
+          reply_generation_completed_at: string | null
+          reply_generation_error: string | null
+          reply_generation_requested_at: string | null
+          reply_generation_status: Database["public"]["Enums"]["reply_generation_status"]
+          retweet_count: number
+          sentiment: Database["public"]["Enums"]["lead_sentiment"] | null
+          status: Database["public"]["Enums"]["lead_status"]
+          text: string
+          updated_at: string
+          x_post_id: string
+        }
+        Insert: {
+          author_followers_count?: number | null
+          author_id?: string | null
+          author_name?: string | null
+          author_username?: string | null
+          author_verified?: boolean | null
+          bookmark_count?: number | null
+          classification_reason?: string | null
+          classifier_prompt_version?: string | null
+          created_at?: string
+          id?: string
+          impression_count?: number | null
+          intent_score?: number | null
+          intent_type?: string | null
+          keywords_matched?: string[]
+          lang?: string | null
+          like_count?: number
+          permalink: string
+          posted_at?: string | null
+          project_id: string
+          quote_count?: number
+          raw_data?: Json
+          reply_count?: number
+          reply_generation_completed_at?: string | null
+          reply_generation_error?: string | null
+          reply_generation_requested_at?: string | null
+          reply_generation_status?: Database["public"]["Enums"]["reply_generation_status"]
+          retweet_count?: number
+          sentiment?: Database["public"]["Enums"]["lead_sentiment"] | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          text: string
+          updated_at?: string
+          x_post_id: string
+        }
+        Update: {
+          author_followers_count?: number | null
+          author_id?: string | null
+          author_name?: string | null
+          author_username?: string | null
+          author_verified?: boolean | null
+          bookmark_count?: number | null
+          classification_reason?: string | null
+          classifier_prompt_version?: string | null
+          created_at?: string
+          id?: string
+          impression_count?: number | null
+          intent_score?: number | null
+          intent_type?: string | null
+          keywords_matched?: string[]
+          lang?: string | null
+          like_count?: number
+          permalink?: string
+          posted_at?: string | null
+          project_id?: string
+          quote_count?: number
+          raw_data?: Json
+          reply_count?: number
+          reply_generation_completed_at?: string | null
+          reply_generation_error?: string | null
+          reply_generation_requested_at?: string | null
+          reply_generation_status?: Database["public"]["Enums"]["reply_generation_status"]
+          retweet_count?: number
+          sentiment?: Database["public"]["Enums"]["lead_sentiment"] | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          text?: string
+          updated_at?: string
+          x_post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x_posts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
@@ -1721,3 +1843,4 @@ export const Constants = {
     },
   },
 } as const
+

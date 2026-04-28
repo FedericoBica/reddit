@@ -6,18 +6,18 @@ import { ProjectSwitcher } from "./project-switcher";
 import { SidebarLinks } from "./sidebar-links";
 import { signOut } from "@/modules/auth/actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getNewItemsCount } from "@/db/queries/leads";
+import { getCurrentBillingPlan } from "@/modules/billing/current";
 import type { ProjectDTO } from "@/db/schemas/domain";
 
 export function DashboardShell({
   user,
   currentProject,
-  newLeadsCount,
   newSearchboxCount,
   children,
 }: {
   user: User;
   currentProject: ProjectDTO;
-  newLeadsCount?: number;
   newSearchboxCount?: number;
   children: React.ReactNode;
 }) {
@@ -27,7 +27,6 @@ export function DashboardShell({
     <DashboardShellContent
       user={user}
       currentProject={currentProject}
-      newLeadsCount={newLeadsCount}
       newSearchboxCount={newSearchboxCount}
       isAdminPromise={isAdminPromise}
     >
@@ -111,19 +110,21 @@ async function checkIsAdmin(userId: string): Promise<boolean> {
 async function DashboardShellContent({
   user,
   currentProject,
-  newLeadsCount,
   newSearchboxCount,
   isAdminPromise,
   children,
 }: {
   user: User;
   currentProject: ProjectDTO;
-  newLeadsCount?: number;
   newSearchboxCount?: number;
   isAdminPromise: Promise<boolean>;
   children: React.ReactNode;
 }) {
-  const isAdmin = await isAdminPromise;
+  const [isAdmin, newLeadsCount, billingPlan] = await Promise.all([
+    isAdminPromise,
+    getNewItemsCount(currentProject.id),
+    getCurrentBillingPlan(),
+  ]);
   const refreshNowMs = Number(new Date());
 
   const sidebarContent = (
@@ -143,6 +144,7 @@ async function DashboardShellContent({
         currentProjectId={currentProject.id}
         newLeadsCount={newLeadsCount}
         newSearchboxCount={newSearchboxCount}
+        xEnabled={billingPlan.xEnabled}
       />
 
       {/* Footer */}

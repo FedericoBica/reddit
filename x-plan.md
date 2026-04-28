@@ -9,13 +9,173 @@ Estado actual: pipeline técnico completo y funcionando (webhook, Inngest, clasi
 ### 1. Reply generator para X posts
 El gap más grande. Reddit leads tienen `ReplyEditor` con generación de múltiples drafts con IA. X posts solo tienen "Dismiss" y "Open on X".
 
-Qué hay que crear:
-- `src/db/schemas` — añadir `XPostReply` DTO y tabla `x_post_replies` (migration 029)
-- `src/modules/x/x-reply-generator.ts` — función que toma el tweet y el proyecto, genera 3 sugerencias de reply en ≤280 chars con tono adecuado para X (conciso, no de vendedor)
-- `src/inngest/functions/generate-x-reply.ts` — función Inngest disparada por evento `x/reply.generate.requested`
-- `src/modules/x/actions.ts` — añadir `generateXReplyFromForm` server action
-- `XReplyEditor` component en `app/feed/page.tsx` — similar a `ReplyEditor`, muestra drafts generados, botón copy, botón "Mark as Replied"
-- En `XPostDetail`: integrar `XReplyEditor` en el `.lead-comment-box` equivalente, igual que `LeadDetail` tiene `ReplyEditor`
+#### 1a. State machine — migration 029
+
+El enum `reply_generation_status` (`idle/generating/ready/failed`) ya existe en DB (migration 007). Reutilizarlo añadiendo a `x_posts`:
+
+```sql
+alter table public.x_posts
+  add column reply_generation_status public.reply_generation_status not null default 'idle',
+  add column reply_generation_error  text,
+  add column reply_generation_requested_at  timestamptz,
+  add column reply_generation_completed_at  timestamptz;
+
+create table public.x_post_replies (
+  id          uuid primary key default gen_random_uuid(),
+  project_id  uuid not null references public.projects(id) on delete cascade,
+  x_post_id   uuid not null references public.x_posts(id)  on delete cascade,
+  content     text not null,
+  style       text not null,         -- 'engaging' | 'direct' | 'concise'
+  was_used    boolean not null default false,
+  created_at  timestamptz not null default now()
+);
+-- RLS: members can read, service_role can insert
+```
+
+`XPostDTO` (domain.ts) debe exponer los cuatro campos de estado una vez regenerados los tipos.
+
+#### 1b. Mutations — `src/db/mutations/x.ts`
+
+Tres funciones paralelas a `lead-replies.ts`:
+
+```ts
+// Guard idéntico al de Reddit: solo avanza si status IN ('idle','failed')
+requestXPostReplyGeneration(projectId, xPostId): Promise<boolean>
+  → update x_posts set reply_generation_status='generating', error=null,
+    requested_at=now(), completed_at=null
+    where id=xPostId and reply_generation_status in ('idle','failed')
+    return Boolean(data)   // false = ya estaba generando, no enviar evento
+
+completeXPostReplyGeneration({projectId, xPostId, userId, replies}): Promise<void>
+  → insert into x_post_replies (rows)
+  → update x_posts set reply_generation_status='ready', completed_at=now()
+
+failXPostReplyGeneration(projectId, xPostId, message): Promise<void>
+  → update x_posts set reply_generation_status='failed', error=message.slice(0,2000),
+    completed_at=now()
+```
+
+`listXPostReplies(projectId, xPostId)` en `src/db/queries/x.ts`.
+
+#### 1c. Inngest — `src/inngest/functions/generate-x-reply.ts`
+
+```ts
+triggers: [{ event: "x/reply.generate.requested" }]
+onFailure: → failXPostReplyGeneration(projectId, xPostId, error.message)
+
+steps:
+  1. "load context"  → getXPostById + project details
+  2. "generate engaging reply" → generateXReplyVariant(context, "engaging")
+  3. "generate direct reply"   → generateXReplyVariant(context, "direct")
+  4. "generate concise reply"  → generateXReplyVariant(context, "concise")
+  5. "save replies"            → completeXPostReplyGeneration(...)
+```
+
+Registrar en `src/inngest/functions/index.ts`.
+
+#### 1d. Reply generator — `src/modules/x/x-reply-generator.ts`
+
+**No comparte nada con `reply-generator.ts` de Reddit.** Módulo independiente con prompt, estilos y anti-patrones propios de X.
+
+Diferencias estructurales clave respecto a Reddit:
+
+| Dimensión | Reddit | X |
+|-----------|--------|---|
+| Longitud máxima | 900 tokens output (~1500 chars) | ≤280 chars hard limit (Zod: `max(280)`) |
+| Estilos | `engaging / direct / balanced` | `hook / reply / mention` |
+| Intent strategies | 5 tipos basados en `intent_type` | No existe — tweets son demasiado cortos para esa granularidad |
+| Few-shot examples | Largos, multi-párrafo | Cortos, 1-2 líneas por ejemplo |
+| URL del producto | Incluida estratégicamente | Evitar salvo fit obvio — X penaliza links |
+| temperature | 0.4 | 0.7 — X necesita más variedad y creatividad |
+| max_output_tokens | 900 | 120 |
+
+**Estilos para X:**
+
+- `hook` — Observación o pregunta que engancha, sin mencionar el producto. Objetivo: que el autor responda. Ejemplo: *"El problema no es X, es que la mayoría automatiza antes de entender el flujo. ¿Probaste mapear el proceso primero?"*
+- `reply` — Respuesta directa y útil, como un colega con contexto. Puede mencionar el producto si encaja naturalmente. Ejemplo: *"Esto es exactamente para lo que construimos [Producto] — si querés lo charlamos."*
+- `mention` — Valor primero (dato, perspectiva, tip), producto al final como opción natural, sin URL. Ejemplo: *"Depende del volumen. Para <1000 contactos cualquier tool sirve; a partir de ahí la segmentación se vuelve crítica. Nosotros usamos [Producto] para eso."*
+
+**Anti-patrones específicos de X:**
+
+```
+- Empezar con "Hey @username" — suena a bot
+- Incluir hashtags — parece spam de marketing
+- Más de 2 oraciones seguidas sin punto — X se lee en scroll rápido
+- "Chequeá nuestro link en bio" — señal de cuenta comercial
+- Emojis en exceso — uno máximo si el tono es casual
+- Responder exactamente lo que ya dijo el tweet sin agregar nada
+- "¡Exactamente!" / "Gran punto!" — bot flag igual que en Reddit
+- URL del producto salvo en estilo `reply` cuando el fit es obvio
+```
+
+**Estructura del system prompt:**
+
+```
+Escribís replies en X para un equipo SaaS.
+X no es Reddit ni LinkedIn. Las reglas son distintas:
+- 280 chars max — cada palabra cuenta
+- El scroll es rápido — la primera oración decide si leen el resto
+- Los usuarios de X detectan cuentas de marketing al instante
+- Un reply útil sin mención de producto vale más que un pitch que no aporta nada
+
+[ANTI-PATRONES]
+[EJEMPLOS — 3 buenos y 2 malos, todos ≤280 chars]
+[ESTILO — instrucción del estilo solicitado]
+```
+
+**User prompt (mucho más corto que Reddit):**
+
+```
+Producto: {name}
+Propuesta de valor: {value_proposition}
+Tweet:
+{text}
+Keywords matcheadas: {keywords_matched}
+Razón del clasificador: {classification_reason}
+
+Escribí un reply estilo {style} de máximo 280 chars.
+No incluyas URL. No uses hashtags.
+```
+
+Zod schema: `z.object({ content: z.string().trim().min(10).max(280) })` — el `max(280)` en el schema es el guard final independiente del prompt.
+
+#### 1e. Server action — `src/modules/x/actions.ts`
+
+```ts
+export async function generateXReplyFromForm(formData: FormData) {
+  // requireUser, extraer projectId + xPostId + returnTo
+  // requestXPostReplyGeneration → si retorna false, redirect (ya en curso)
+  // inngest.send("x/reply.generate.requested", { projectId, xPostId, userId })
+  // revalidatePath("/feed") + redirect(returnTo)
+}
+```
+
+#### 1f. UI — `XReplyEditor` en `app/feed/page.tsx`
+
+Componente client-side paralelo a `ReplyEditor`:
+- Tabs por style (Engaging / Direct / Concise) con botón Copy
+- Char counter (≤280) en rojo si excede
+- "Mark as Replied" llama a `updateXPostStatusFromForm` con `status=replied` + `was_used=true` en el reply seleccionado
+
+En `XPostDetail`: añadir sección `.lead-comment-box` con:
+```tsx
+{isXGenerating ? (
+  <div>Generating replies…</div>
+) : (
+  <XReplyEditor
+    replies={xReplies}
+    projectId={projectId}
+    xPostId={post.id}
+    permalink={post.permalink}
+    returnTo={returnTo}
+    generateForm={<form action={generateXReplyFromForm}>...</form>}
+  />
+)}
+```
+
+`isXGenerating = selectedXPost?.reply_generation_status === "generating"` — incluir en la condición de `AutoRefresh` junto con `isGenerating` de leads.
+
+`xReplies` se carga en `FeedPage` con `listXPostReplies` cuando `selectedXPost` existe.
 
 Nota: Los replies de X son ≤280 chars y en tono diferente a Reddit — el prompt debe reflejarlo.
 
@@ -44,12 +204,46 @@ URL params cuando type=x: `xScore` (all/high/medium), `xSentiment`, `xSort`.
 
 ---
 
-### 4. Badge del sidebar cuenta X posts nuevos
-`newLeadsCount` en el sidebar actualmente solo cuenta leads de Reddit con `status="new"`. Hay que sumar los X posts con `status="new"`.
+### 4. Badge del sidebar — mover el conteo al shell
 
-- En `app/feed/page.tsx`: calcular `newXCount = allXPosts.filter(p => p.status === "new").length`
-- Pasar `newLeadsCount + newXCount` al `DashboardShell` como badge
-- O bien pasar ambos por separado y mostrar distinción en el tooltip (opcional)
+**Problema de arquitectura actual:** `newLeadsCount` se calcula en cada página por separado y se pasa como prop a `DashboardShell`. Resultado: ~10 páginas que montan el shell (archive, content-lab, outbound, etc.) no pasan el prop y el badge muestra 0. Si sumamos X posts en `feed/page.tsx` solamente, el badge queda inconsistente según la ruta activa.
+
+**Solución correcta:** mover el conteo dentro de `DashboardShellContent`, que ya es un server component async y ya tiene `currentProject.id`.
+
+**`src/db/queries/leads.ts` (o nuevo `src/db/queries/counts.ts`):**
+
+```ts
+export async function getNewItemsCount(projectId: string): Promise<number> {
+  const supabase = await createSupabaseServerClient();
+  const [leadsResult, xPostsResult] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", projectId)
+      .eq("status", "new"),
+    supabase
+      .from("x_posts")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", projectId)
+      .eq("status", "new"),
+  ]);
+  return (leadsResult.count ?? 0) + (xPostsResult.count ?? 0);
+}
+```
+
+**`app/components/dashboard-shell.tsx`:**
+
+```ts
+async function DashboardShellContent({ currentProject, ... }) {
+  // Reemplaza el prop recibido — siempre fresco, en todas las páginas
+  const newLeadsCount = await getNewItemsCount(currentProject.id);
+  ...
+}
+```
+
+Eliminar `newLeadsCount` del prop type de `DashboardShell` y `DashboardShellContent`. Las páginas que hoy lo calculan ellas mismas (feed, analytics, pipeline, etc.) dejan de pasarlo — el shell lo tiene internamente.
+
+Nota: es una query `head: true` (COUNT sin fetch de filas) — muy barata, no impacta en performance.
 
 ---
 
@@ -99,22 +293,149 @@ Qué hacer en Settings:
 ---
 
 ### 8. Sugerencias de keywords con IA para X
-Reddit tiene `project_keyword_suggestions` generadas por IA en el onboarding. X no tiene nada equivalente.
 
-Qué crear:
-- Migration 029 (o extender): tabla `x_keyword_suggestions (id, project_id, query, rationale, status)`
-- `src/modules/x/x-keyword-suggestion-generator.ts` — prompt específico que genera queries válidas para X Filtered Stream (con operadores) basadas en el proyecto
-- Server action `generateXKeywordSuggestionsFromForm`
-- En Settings tab X Keywords: sección "Suggested keywords" con cards Accept/Dismiss, igual que los keyword suggestions de Reddit en onboarding
+Reddit tiene `project_keyword_suggestions` generadas por IA. X no tiene equivalente, **y tiene un requisito adicional**: las queries de X Filtered Stream tienen sintaxis estricta. Una query inválida pasada a `addRules()` en `x-stream-rules.ts:68` hace que X API devuelva 4xx y el throw rompe el sync entero para todos los proyectos.
+
+#### 8a. Validador previo — `validateXQuery` en `x-stream-rules.ts`
+
+X API soporta `dry_run: true` en el endpoint de reglas — valida sin aplicar:
+
+```ts
+export async function validateXQuery(query: string): Promise<{ valid: boolean; error?: string }> {
+  const response = await fetch(X_RULES_URL, {
+    method: "POST",
+    headers: getAuthHeaders(),
+    body: JSON.stringify({ add: [{ value: query }], dry_run: true }),
+  });
+
+  if (response.ok) return { valid: true };
+
+  const body = await response.json() as { errors?: Array<{ message: string }> };
+  const message = body.errors?.[0]?.message ?? `HTTP ${response.status}`;
+  return { valid: false, error: message };
+}
+```
+
+Este helper se reutiliza en tres lugares (ver abajo).
+
+#### 8b. Schema de la tabla — `x_keyword_suggestions`
+
+A diferencia de Reddit (`project_keyword_suggestions` sin columna de status — aceptar/descartar es implícito vía delete), X necesita un campo `status` para persistir el resultado de validación:
+
+```sql
+create table public.x_keyword_suggestions (
+  id          uuid primary key default gen_random_uuid(),
+  project_id  uuid not null references public.projects(id) on delete cascade,
+  query       text not null,
+  rationale   text,
+  status      text not null default 'pending',
+  -- 'pending'  → generado por IA, sin acción del usuario
+  -- 'invalid'  → falló dry_run al momento de generación
+  -- (aceptado/descartado se manejan por delete, igual que Reddit)
+  validation_error text,       -- mensaje de X API si status='invalid'
+  created_at  timestamptz not null default now(),
+  unique (project_id, query)
+);
+```
+
+#### 8c. Flujo de generación — `x-keyword-suggestion-generator.ts`
+
+Al generar sugerencias, validar cada query antes de persistir:
+
+```ts
+for (const suggestion of aiSuggestions) {
+  const { valid, error } = await validateXQuery(suggestion.query);
+  await supabase.from("x_keyword_suggestions").upsert({
+    project_id: projectId,
+    query: suggestion.query,
+    rationale: suggestion.rationale,
+    status: valid ? "pending" : "invalid",
+    validation_error: error ?? null,
+  }, { onConflict: "project_id,query" });
+}
+```
+
+UI en Settings: mostrar `pending` con botones Accept/Dismiss; mostrar `invalid` como tarjeta deshabilitada con el error de X API visible (no ocultarlos — el usuario puede editar y re-validar manualmente).
+
+#### 8d. Validación en accept — server action
+
+Cuando el usuario acepta una sugerencia, re-validar antes de persistir a `x_keywords` (defensa ante queries que eran válidas al generarse pero pueden haber cambiado reglas de X):
+
+```ts
+export async function acceptXKeywordSuggestionFromForm(formData: FormData) {
+  const query = String(formData.get("query") ?? "");
+  const { valid, error } = await validateXQuery(query);
+
+  if (!valid) {
+    // Re-marcar sugerencia como invalid en DB y retornar el error al usuario
+    await markXSuggestionInvalid(projectId, suggestionId, error);
+    return; // o redirect con error param
+  }
+
+  await addXKeyword(projectId, query);
+  await deleteSuggestion(projectId, suggestionId);
+  await queueXRulesSync(projectId);
+}
+```
+
+#### 8e. Validación en entry manual — `addXKeywordFromForm`
+
+El mismo `validateXQuery` se llama en `addXKeywordFromForm` antes de insertar en `x_keywords`. Si la query es inválida, retornar el mensaje de error al usuario en lugar de guardar y dejar que el sync falle silenciosamente.
+
+#### 8f. Hardening de `addRules` en `x-stream-rules.ts`
+
+Actualmente `addRules` lanza en cualquier 4xx, rompiendo el sync para todos los proyectos. Mejorar para aislar fallas por regla:
+
+X API puede devolver 200 con errores parciales en el body (`errors` array) o 4xx. Parsear el body de error para identificar qué reglas fallaron y loguear por separado sin interrumpir las reglas válidas del batch.
 
 ---
 
 ### 9. Intent threshold para X posts
-Actualmente todos los tweets matcheados se guardan sin importar el intent_score. Igual que Reddit tiene `LEAD_INTENT_THRESHOLD`, X debería tener umbral.
 
-- Añadir `X_INTENT_THRESHOLD` env var (default: 25 — tweets son cortos, scores tienden a ser más bajos)
-- En `process-x-post.ts`: si `classification.intentScore < threshold`, hacer early return `{ saved: false, belowThreshold: true }` en lugar de guardar
-- Evitar llenar la DB de tweets irrelevantes
+**Diferencia crítica vs Reddit:** Reddit usa `continue` sin guardar nada porque es un scraper pull — el mismo post no vuelve a aparecer en el siguiente ciclo. X usa webhook con garantía **at-least-once**: el mismo tweet puede re-entregarse tras reconexiones o retries de X. Si no se guarda ningún registro, el pipeline vuelve a clasificar (pagando AI) en cada re-entrega.
+
+**Estrategia correcta: dos pasos en `process-x-post.ts`**
+
+**Paso 1 — "check existing" ANTES de clasificar:**
+
+```ts
+const existing = await step.run("check existing", () =>
+  supabase
+    .from("x_posts")
+    .select("id")
+    .eq("project_id", payload.projectId)
+    .eq("x_post_id", payload.post.id)
+    .maybeSingle()
+);
+
+if (existing.data) {
+  return { saved: false, duplicate: true }; // ya procesado, cortar sin llamar a AI
+}
+```
+
+**Paso 2 — después de clasificar, aplicar threshold:**
+
+```ts
+if (classification.intentScore < threshold) {
+  // Guardar igual, pero con status="irrelevant"
+  // El registro actúa como marca durable de "seen but discarded"
+  // La próxima re-entrega termina en el paso 1 (lookup barato, sin AI)
+  await step.run("save as irrelevant", () =>
+    upsertXPost({ ..., status: "irrelevant" })
+  );
+  return { saved: false, belowThreshold: true };
+}
+```
+
+**Por qué no una tabla separada de drops:** `upsertXPost` ya tiene `onConflict: "project_id,x_post_id"` — reusar la misma tabla es más simple y no requiere infraestructura adicional. Las filas con `status="irrelevant"` no aparecen en el feed (ya filtradas).
+
+**Configuración:**
+- Env var `X_INTENT_THRESHOLD` (default: 25 — tweets son más cortos que posts de Reddit, los scores tienden a ser menores)
+- El threshold se evalúa post-clasificación, no antes — necesitamos el score para decidir
+
+**Resultado por re-entrega del mismo tweet:**
+- Primera vez: DB lookup (miss) → clasificar → guardar con status correcto
+- Re-entregas: DB lookup (hit) → return `{duplicate: true}` — sin AI, sin upsert
 
 ---
 

@@ -9,6 +9,7 @@ import { getCurrentUser } from "@/modules/auth/server";
 import {
   analyzeCompanyWebsite,
   createProjectFromCompanyProfile,
+  createProjectManually,
 } from "./actions";
 import { CompanyWebsiteAnalyzer } from "./company-website-analyzer";
 import { SignupProgress } from "@/app/signup/components/signup-progress";
@@ -49,13 +50,13 @@ export default async function SignupCompanyPage({ searchParams }: CompanyPagePro
       <Card className="signup-wizard-card">
         <CardContent className="signup-wizard-content" style={{ padding: 0 }}>
           {!analyzed ? (
-            <CompanyWebsiteAnalyzer action={analyzeCompanyWebsite} error={params?.error} />
+            <CompanyWebsiteAnalyzer analyzeAction={analyzeCompanyWebsite} manualAction={createProjectManually} error={params?.error} />
           ) : (
             <>
               <section className="signup-wizard-main">
                 <div className="sw-eyebrow">
                   <span className="sw-eyebrow-dot" />
-                  Step 01 · Company
+                  Step 02 · Company
                 </div>
                 <h1 className="signup-wizard-title">
                   AI-generated<br /><em>company brief.</em>

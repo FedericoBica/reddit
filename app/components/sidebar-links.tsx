@@ -2,32 +2,23 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export function SidebarLinks({
   currentProjectId,
   newLeadsCount = 0,
   newSearchboxCount = 0,
+  xEnabled = false,
 }: {
   currentProjectId: string;
   newLeadsCount?: number;
   newSearchboxCount?: number;
+  xEnabled?: boolean;
 }) {
   const pathname = usePathname();
-  const t = useTranslations("nav");
-  const inArchive = pathname.startsWith("/archive");
-  const [archiveOpen, setArchiveOpen] = useState(inArchive);
-
-  const INBOUND_NAV = [
-    { href: "/dashboard", label: t("searchbox"), icon: InboxIcon, badge: newSearchboxCount },
-    { href: "/feed",      label: "Leads",         icon: FlashIcon, badge: newLeadsCount    },
-    { href: "/analytics", label: t("analytics"),  icon: ChartIcon, badge: 0               },
-  ];
-
-  const OUTBOUND_NAV = [
-    { href: "/outbound/crm",  label: "Lead CRM",       icon: CrmIcon,    badge: 0                },
-  ];
+  const [archiveOpen, setArchiveOpen] = useState(
+    pathname.startsWith("/archive"),
+  );
 
   const isActive = (href: string) => {
     if (href === "/dashboard") return pathname === "/dashboard" || pathname.startsWith("/leads/");
@@ -35,7 +26,22 @@ export function SidebarLinks({
     return pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
   };
 
-  const isOpen = archiveOpen || inArchive;
+  const REDDIT_NAV = [
+    { href: "/dashboard",  label: "Search Box", icon: InboxIcon,  badge: newSearchboxCount },
+    { href: "/feed",       label: "Leads",      icon: FlashIcon,  badge: newLeadsCount     },
+    { href: "/analytics",  label: "Analytics",  icon: ChartIcon,  badge: 0                 },
+  ];
+
+  const X_NAV = [
+    { href: "/x/queue",        label: "My Queue",       icon: QueueIcon },
+    { href: "/x/inspiration",  label: "Inspiration",    icon: SparkIcon },
+    { href: "/x/studio",       label: "Content Studio", icon: PenIcon   },
+    { href: "/x/engage",       label: "Engage",         icon: EngageIcon },
+    { href: "/x/context",      label: "My Context",     icon: ProfileIcon },
+  ];
+
+  const inArchive = pathname.startsWith("/archive");
+  const archiveIsOpen = archiveOpen || inArchive;
 
   return (
     <nav
@@ -48,10 +54,10 @@ export function SidebarLinks({
         gap: 2,
       }}
     >
-      {/* ── INBOUND ── */}
-      <GroupLabel>Inbound</GroupLabel>
+      {/* ── REDDIT ── */}
+      <GroupLabel>Reddit</GroupLabel>
 
-      {INBOUND_NAV.map((item) => {
+      {REDDIT_NAV.map((item) => {
         const active = isActive(item.href);
         const Icon = item.icon;
         return (
@@ -74,67 +80,77 @@ export function SidebarLinks({
         type="button"
         onClick={() => setArchiveOpen((v) => !v)}
         className={`sidebar-link${inArchive ? " sidebar-link-active" : ""}`}
-        style={{
-          width: "100%",
-          background: inArchive ? undefined : "transparent",
-          border: "none",
-          cursor: "pointer",
-          textAlign: "left",
-        }}
+        style={{ width: "100%", background: inArchive ? undefined : "transparent", border: "none", cursor: "pointer", textAlign: "left" }}
       >
         <ArchiveIcon className="sidebar-icon" />
-        <span style={{ flex: 1 }}>Archivo</span>
-        <ChevronIcon open={isOpen} />
+        <span style={{ flex: 1 }}>Archive</span>
+        <ChevronIcon open={archiveIsOpen} />
       </button>
 
-      {isOpen && (
+      {archiveIsOpen && (
         <>
           <Link
             href={`/archive/replied?projectId=${currentProjectId}`}
             className={`sidebar-link${pathname === "/archive/replied" ? " sidebar-link-active" : ""}`}
             style={{ paddingLeft: 32 }}
           >
-            Respondidos
+            Replied
           </Link>
           <Link
             href={`/archive/rejected?projectId=${currentProjectId}`}
             className={`sidebar-link${pathname === "/archive/rejected" ? " sidebar-link-active" : ""}`}
             style={{ paddingLeft: 32 }}
           >
-            Rechazados
+            Dismissed
           </Link>
         </>
       )}
 
-      {/* ── OUTBOUND ── */}
-      <GroupLabel style={{ marginTop: 10 }}>Outbound</GroupLabel>
+      {/* ── X ── */}
+      {xEnabled && (
+        <>
+          <GroupLabel style={{ marginTop: 10 }}>X</GroupLabel>
+          {X_NAV.map((item) => {
+            const active = isActive(item.href);
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={`${item.href}?projectId=${currentProjectId}`}
+                className={`sidebar-link${active ? " sidebar-link-active" : ""}`}
+              >
+                <Icon className="sidebar-icon" />
+                <span style={{ flex: 1 }}>{item.label}</span>
+              </Link>
+            );
+          })}
+        </>
+      )}
 
-      {OUTBOUND_NAV.map((item) => {
-        const active = isActive(item.href);
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={`${item.href}?projectId=${currentProjectId}`}
-            className={`sidebar-link${active ? " sidebar-link-active" : ""}`}
-          >
-            <Icon className="sidebar-icon" />
-            <span style={{ flex: 1 }}>{item.label}</span>
-          </Link>
-        );
-      })}
-
-      {/* ── Settings (global) ── */}
+      {/* ── Settings ── */}
       <div style={{ marginTop: "auto", paddingTop: 8 }}>
         <Link
           href={`/settings?projectId=${currentProjectId}`}
           className={`sidebar-link${isActive("/settings") ? " sidebar-link-active" : ""}`}
         >
           <GearIcon className="sidebar-icon" />
-          <span style={{ flex: 1 }}>{t("settings")}</span>
+          <span style={{ flex: 1 }}>Settings</span>
         </Link>
       </div>
     </nav>
+  );
+}
+
+function GroupLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return <p className="ds-nav-group" style={style}>{children}</p>;
+}
+
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"
+      style={{ transition: "transform 160ms ease", transform: open ? "rotate(90deg)" : "rotate(0deg)", flexShrink: 0 }}>
+      <path d="M4 2.5L7.5 6L4 9.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
   );
 }
 
@@ -147,10 +163,10 @@ function InboxIcon({ className }: { className?: string }) {
   );
 }
 
-function SignalIcon({ className }: { className?: string }) {
+function FlashIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 19.5v-15M7.25 16.5a7 7 0 0 1 0-9M16.75 7.5a7 7 0 0 1 0 9M4.15 20a12 12 0 0 1 0-16M19.85 4a12 12 0 0 1 0 16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M13 2L4.5 13.5H11L10 22L20 10H13.5L13 2Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -160,23 +176,6 @@ function ChartIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M4 19.25h16" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
       <path d="M6.5 17V11M12 17V6M17.5 17v-8" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function FlashIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M13 2L4.5 13.5H11L10 22L20 10H13.5L13 2Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function GearIcon({ className }: { className?: string }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -191,31 +190,53 @@ function ArchiveIcon({ className }: { className?: string }) {
   );
 }
 
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true"
-      style={{ transition: "transform 160ms ease", transform: open ? "rotate(90deg)" : "rotate(0deg)", flexShrink: 0 }}
-    >
-      <path d="M4 2.5L7.5 6L4 9.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function CrmIcon({ className }: { className?: string }) {
+function GearIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="9" cy="7" r="4" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
 
-function GroupLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+function QueueIcon({ className }: { className?: string }) {
   return (
-    <p className="ds-nav-group" style={style}>
-      {children}
-    </p>
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function SparkIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function PenIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function EngageIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function ProfileIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="8" r="4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
   );
 }

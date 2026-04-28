@@ -31,6 +31,15 @@ type XPostEvent = {
   };
 };
 
+const X_INTENT_THRESHOLD = readPositiveIntEnv("X_INTENT_THRESHOLD", 25);
+
+function readPositiveIntEnv(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const parsed = parseInt(raw, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
 export const processXPost = inngest.createFunction(
   {
     id: "process-x-post",
@@ -42,6 +51,20 @@ export const processXPost = inngest.createFunction(
   async ({ event, step }) => {
     const payload = ((event as unknown) as XPostEvent).data;
     const supabase = createSupabaseAdminClient();
+
+    // Dedup check — X webhooks are at-least-once; skip AI if already processed
+    const existingPost = await step.run("check existing", async () =>
+      supabase
+        .from("x_posts")
+        .select("id, status")
+        .eq("project_id", payload.projectId)
+        .eq("x_post_id", payload.post.id)
+        .maybeSingle(),
+    );
+
+    if (existingPost.data) {
+      return { saved: false, duplicate: true };
+    }
 
     const [projectResult, keywordResult] = await Promise.all([
       step.run("load project", async () =>
@@ -97,6 +120,8 @@ export const processXPost = inngest.createFunction(
       ? `https://x.com/${payload.post.authorUsername}/status/${payload.post.id}`
       : `https://x.com/i/web/status/${payload.post.id}`;
 
+    const belowThreshold = classification.intentScore < X_INTENT_THRESHOLD;
+
     await step.run("save x post", async () =>
       upsertXPost({
         projectId: payload.projectId,
@@ -117,14 +142,16 @@ export const processXPost = inngest.createFunction(
         bookmarkCount: payload.post.metrics.bookmarkCount,
         impressionCount: payload.post.metrics.impressionCount,
         intentScore: classification.intentScore,
+        intentType: classification.intentType,
         sentiment: classification.sentiment,
         classificationReason: classification.classificationReason,
         classifierPromptVersion: classification.promptVersion,
         keywordsMatched: [keyword.query],
+        status: belowThreshold ? "irrelevant" : "new",
         rawData: payload.post.raw as Json,
       }),
     );
 
-    return { saved: true };
+    return { saved: !belowThreshold, belowThreshold };
   },
 );

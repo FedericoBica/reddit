@@ -44,7 +44,7 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
     <DashboardShell
       user={user}
       currentProject={currentProject}
-      newLeadsCount={newLeadsCount}
+
     >
       <div className="app-page" style={{ minHeight: "100vh" }}>
         {/* Header */}

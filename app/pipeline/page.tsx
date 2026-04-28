@@ -73,7 +73,7 @@ export default async function PipelinePage({ searchParams }: PipelinePageProps) 
     <DashboardShell
       user={user}
       currentProject={currentProject}
-      newLeadsCount={newLeadsCount}
+
     >
       <div className="app-page" style={{ minHeight: "100vh" }}>
         <header className="page-header">

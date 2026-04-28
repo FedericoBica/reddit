@@ -53,7 +53,7 @@ export default async function ThreadsPage({ searchParams }: ThreadsPageProps) {
     <DashboardShell
       user={user}
       currentProject={currentProject}
-      newLeadsCount={newLeadsCount}
+
     >
       <section className="searchbox-workspace">
         {/* Header */}

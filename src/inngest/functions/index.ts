@@ -10,5 +10,6 @@ import { scrapeBrandMentions } from "./scrape-brand-mentions";
 import { setupNewProject } from "./setup-new-project";
 import { processXPost } from "./process-x-post";
 import { syncXStreamRules } from "./sync-x-stream-rules";
+import { generateXReply } from "./generate-x-reply";
 
-export const functions = [hourlyScheduler, scrapeGlobalProjects, generateLeadReplies, sendLeadPushNotification, sendScrapeNotifications, backfillNewProject, searchboxWeeklyScan, setupNewProject, searchboxForProject, scrapeBrandMentions, processXPost, syncXStreamRules];
+export const functions = [hourlyScheduler, scrapeGlobalProjects, generateLeadReplies, sendLeadPushNotification, sendScrapeNotifications, backfillNewProject, searchboxWeeklyScan, setupNewProject, searchboxForProject, scrapeBrandMentions, processXPost, syncXStreamRules, generateXReply];

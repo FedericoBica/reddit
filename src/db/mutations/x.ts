@@ -2,7 +2,7 @@ import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { projectIdSchema, leadStatusSchema, type XPostDTO } from "@/db/schemas/domain";
+import { projectIdSchema, leadStatusSchema, type XPostDTO, type XPostReplyDTO } from "@/db/schemas/domain";
 import type { Json } from "@/db/schemas/database.types";
 
 const xPostColumns = `
@@ -25,11 +25,16 @@ const xPostColumns = `
   bookmark_count,
   impression_count,
   intent_score,
+  intent_type,
   sentiment,
   classification_reason,
   classifier_prompt_version,
   keywords_matched,
   status,
+  reply_generation_status,
+  reply_generation_error,
+  reply_generation_requested_at,
+  reply_generation_completed_at,
   created_at,
   updated_at
 `;
@@ -116,10 +121,12 @@ type UpsertXPostInput = {
   bookmarkCount?: number | null;
   impressionCount?: number | null;
   intentScore?: number | null;
+  intentType?: string | null;
   sentiment?: "positive" | "negative" | "neutral" | null;
   classificationReason?: string | null;
   classifierPromptVersion?: string | null;
   keywordsMatched?: string[];
+  status?: "new" | "reviewing" | "replied" | "irrelevant" | "won" | "lost";
   rawData?: Json;
 };
 
@@ -158,11 +165,12 @@ export async function upsertXPost(input: UpsertXPostInput): Promise<XPostDTO> {
         bookmark_count: input.bookmarkCount ?? null,
         impression_count: input.impressionCount ?? null,
         intent_score: input.intentScore ?? null,
+        intent_type: input.intentType ?? null,
         sentiment: input.sentiment ?? null,
         classification_reason: input.classificationReason ?? null,
         classifier_prompt_version: input.classifierPromptVersion ?? null,
         keywords_matched: mergedKeywords,
-        status: existing?.status ?? "new",
+        status: input.status ?? existing?.status ?? "new",
         raw_data: input.rawData ?? {},
       },
       {
@@ -193,5 +201,114 @@ export async function updateXPostStatus(projectId: string, postId: string, statu
 
   if (error) {
     throw new Error(`Failed to update X post status: ${error.message}`);
+  }
+}
+
+export async function requestXPostReplyGeneration(projectId: string, xPostId: string): Promise<boolean> {
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("x_posts")
+    .update({
+      reply_generation_status: "generating",
+      reply_generation_error: null,
+      reply_generation_requested_at: new Date().toISOString(),
+      reply_generation_completed_at: null,
+    })
+    .eq("project_id", projectId)
+    .eq("id", xPostId)
+    .in("reply_generation_status", ["idle", "failed"])
+    .select("id")
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(`Failed to request X post reply generation: ${error.message}`);
+  }
+
+  return Boolean(data);
+}
+
+type GeneratedXReplyInput = {
+  style: string;
+  content: string;
+  promptVersion: string;
+  model: string;
+  inputTokens: number | null;
+  outputTokens: number | null;
+};
+
+type CompleteXPostReplyGenerationInput = {
+  projectId: string;
+  xPostId: string;
+  userId: string;
+  replies: GeneratedXReplyInput[];
+};
+
+export async function completeXPostReplyGeneration(input: CompleteXPostReplyGenerationInput): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+
+  const replyRows = input.replies.map((r) => ({
+    project_id: input.projectId,
+    x_post_id: input.xPostId,
+    created_by: input.userId,
+    style: r.style,
+    content: r.content,
+    prompt_version: r.promptVersion,
+    model: r.model,
+    input_tokens: r.inputTokens,
+    output_tokens: r.outputTokens,
+    was_used: false,
+  }));
+
+  const { error: repliesError } = await supabase.from("x_post_replies").insert(replyRows);
+
+  if (repliesError) {
+    throw new Error(`Failed to insert X post replies: ${repliesError.message}`);
+  }
+
+  const { error: statusError } = await supabase
+    .from("x_posts")
+    .update({
+      reply_generation_status: "ready",
+      reply_generation_error: null,
+      reply_generation_completed_at: new Date().toISOString(),
+    })
+    .eq("project_id", input.projectId)
+    .eq("id", input.xPostId);
+
+  if (statusError) {
+    throw new Error(`Failed to mark X post reply generation complete: ${statusError.message}`);
+  }
+}
+
+export async function failXPostReplyGeneration(projectId: string, xPostId: string, message: string): Promise<void> {
+  const supabase = createSupabaseAdminClient();
+
+  const { error } = await supabase
+    .from("x_posts")
+    .update({
+      reply_generation_status: "failed",
+      reply_generation_error: message.slice(0, 2_000),
+      reply_generation_completed_at: new Date().toISOString(),
+    })
+    .eq("project_id", projectId)
+    .eq("id", xPostId);
+
+  if (error) {
+    throw new Error(`Failed to mark X post reply generation failed: ${error.message}`);
+  }
+}
+
+export async function markXPostReplyUsed(projectId: string, replyId: string): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+
+  const { error } = await supabase
+    .from("x_post_replies")
+    .update({ was_used: true })
+    .eq("project_id", projectId)
+    .eq("id", replyId);
+
+  if (error) {
+    throw new Error(`Failed to mark X reply as used: ${error.message}`);
   }
 }

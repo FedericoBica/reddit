@@ -70,7 +70,6 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
     <DashboardShell
       user={user}
       currentProject={currentProject}
-      newLeadsCount={newLeadsCount}
     >
       <section className="app-page">
         <header className="page-header">

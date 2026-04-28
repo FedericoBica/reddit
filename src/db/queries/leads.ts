@@ -214,3 +214,22 @@ export async function getLeadById(projectId: string, leadId: string): Promise<Le
 
   return data ? withLegacyLeadCompatibility(data) : null;
 }
+
+export async function getNewItemsCount(projectId: string): Promise<number> {
+  const supabase = await createSupabaseServerClient();
+
+  const [leadsResult, xPostsResult] = await Promise.all([
+    supabase
+      .from("leads")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", projectId)
+      .eq("status", "new"),
+    supabase
+      .from("x_posts")
+      .select("id", { count: "exact", head: true })
+      .eq("project_id", projectId)
+      .eq("status", "new"),
+  ]);
+
+  return (leadsResult.count ?? 0) + (xPostsResult.count ?? 0);
+}

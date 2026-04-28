@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { projectIdSchema, type XKeywordDTO, type XPostDTO } from "@/db/schemas/domain";
+import { projectIdSchema, type XKeywordDTO, type XPostDTO, type XPostReplyDTO } from "@/db/schemas/domain";
 import type { PostgrestError } from "@supabase/supabase-js";
 
 const xKeywordColumns = `id, project_id, query, is_active, created_at, updated_at`;
@@ -25,13 +25,33 @@ const xPostColumns = `
   bookmark_count,
   impression_count,
   intent_score,
+  intent_type,
   sentiment,
   classification_reason,
   classifier_prompt_version,
   keywords_matched,
   status,
+  reply_generation_status,
+  reply_generation_error,
+  reply_generation_requested_at,
+  reply_generation_completed_at,
   created_at,
   updated_at
+`;
+
+const xPostReplyColumns = `
+  id,
+  x_post_id,
+  project_id,
+  created_by,
+  style,
+  content,
+  prompt_version,
+  model,
+  input_tokens,
+  output_tokens,
+  was_used,
+  created_at
 `;
 
 function isMissingXTableError(error: PostgrestError | null): boolean {
@@ -110,6 +130,25 @@ export async function getXPostById(projectId: string, postId: string): Promise<X
     );
     if (isMissingXTableError(error)) return null;
     return null;
+  }
+
+  return data;
+}
+
+export async function listXPostReplies(projectId: string, xPostId: string): Promise<XPostReplyDTO[]> {
+  const parsedProjectId = projectIdSchema.parse(projectId);
+  const supabase = await createSupabaseServerClient();
+
+  const { data, error } = await supabase
+    .from("x_post_replies")
+    .select(xPostReplyColumns)
+    .eq("project_id", parsedProjectId)
+    .eq("x_post_id", xPostId)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    console.warn(`[x] listXPostReplies fallback: ${error.code ?? "unknown"} ${error.message}`);
+    return [];
   }
 
   return data;

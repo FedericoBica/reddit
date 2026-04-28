@@ -150,7 +150,7 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
     <DashboardShell
       user={user}
       currentProject={currentProject}
-      newLeadsCount={newLeadsCount}
+
     >
       <div className="app-page" style={{ minHeight: "100vh" }}>
         <header className="page-header">

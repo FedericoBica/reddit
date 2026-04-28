@@ -154,6 +154,77 @@ export async function createProjectFromCompanyProfile(formData: FormData) {
   redirect(`/signup/competitors?projectId=${projectId}`);
 }
 
+export async function createProjectManually(formData: FormData) {
+  await requireUser("/signup/company");
+
+  const website = String(formData.get("website") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (!description) {
+    redirect(`/signup/company?error=${encodeURIComponent("La descripción no puede estar vacía.")}`);
+  }
+
+  let hostname = website;
+  try {
+    hostname = new URL(website.startsWith("http") ? website : `https://${website}`).hostname.replace(/^www\./i, "");
+  } catch {
+    hostname = website.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0];
+  }
+
+  let projectId = "";
+  let errorMessage: string | null = null;
+
+  try {
+    const project = await createProject({
+      name: hostname || "my-company",
+      websiteUrl: website ? (website.startsWith("http") ? website : `https://${website}`) : null,
+      valueProposition: description,
+      region: null,
+      primaryLanguage: "en",
+      currencyCode: "USD",
+    });
+    projectId = project.id;
+    await setCurrentProject(project.id);
+
+    try {
+      const suggestions = await generateProjectSuggestions(project);
+      await replaceProjectSuggestions({
+        projectId: project.id,
+        keywords: suggestions.keywords,
+        subreddits: suggestions.subreddits,
+      });
+
+      const [keywordSuggestions, subredditSuggestions] = await Promise.all([
+        listProjectKeywordSuggestions(project.id),
+        listProjectSubredditSuggestions(project.id),
+      ]);
+
+      await saveProjectOnboarding({
+        projectId: project.id,
+        acceptedKeywordSuggestionIds: keywordSuggestions.map((k) => k.id),
+        acceptedSubredditSuggestionIds: subredditSuggestions.map((s) => s.id),
+        customKeywords: [],
+        customSubreddits: [],
+      });
+    } catch (suggestionError) {
+      console.error("Failed to auto-complete onboarding from manual entry", suggestionError);
+      await setProjectOnboardingStatus(
+        project.id,
+        "completed",
+        suggestionError instanceof Error ? suggestionError.message : null,
+      );
+    }
+  } catch (error) {
+    errorMessage = error instanceof Error ? error.message : "No pudimos crear el proyecto.";
+  }
+
+  if (errorMessage) {
+    redirect(`/signup/company?error=${encodeURIComponent(errorMessage)}`);
+  }
+
+  redirect(`/signup/competitors?projectId=${projectId}`);
+}
+
 async function setSignupCompanyDraft(website: string, description: string) {
   const cookieStore = await cookies();
   const options = {

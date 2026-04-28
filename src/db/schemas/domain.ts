@@ -169,6 +169,22 @@ export type Keyword = Tables<"keywords">;
 export type Subreddit = Tables<"subreddits">;
 export type XKeyword = Tables<"x_keywords">;
 export type XPost = Tables<"x_posts">;
+export type XPostReply = Tables<"x_post_replies">;
+export type XProfile = Tables<"x_profiles">;
+
+export type XProfileDTO = Pick<
+  XProfile,
+  | "id"
+  | "project_id"
+  | "interests"
+  | "favorite_creators"
+  | "use_own_tweets"
+  | "structure_types"
+  | "products"
+  | "x_rules"
+  | "created_at"
+  | "updated_at"
+>;
 
 export type KeywordDTO = Pick<
   Keyword,
@@ -337,13 +353,34 @@ export type XPostDTO = Pick<
   | "bookmark_count"
   | "impression_count"
   | "intent_score"
+  | "intent_type"
   | "sentiment"
   | "classification_reason"
   | "classifier_prompt_version"
   | "keywords_matched"
   | "status"
+  | "reply_generation_status"
+  | "reply_generation_error"
+  | "reply_generation_requested_at"
+  | "reply_generation_completed_at"
   | "created_at"
   | "updated_at"
+>;
+
+export type XPostReplyDTO = Pick<
+  XPostReply,
+  | "id"
+  | "x_post_id"
+  | "project_id"
+  | "created_by"
+  | "style"
+  | "content"
+  | "prompt_version"
+  | "model"
+  | "input_tokens"
+  | "output_tokens"
+  | "was_used"
+  | "created_at"
 >;
 
 export type LeadReplyDTO = Pick<

@@ -87,7 +87,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
     <DashboardShell
       user={user}
       currentProject={currentProject}
-      newLeadsCount={newLeadsCount}
+
       newSearchboxCount={newResultsCount}
     >
       {(isGenerating || isNew) && <AutoRefresh intervalMs={isNew ? 15000 : 4000} />}
