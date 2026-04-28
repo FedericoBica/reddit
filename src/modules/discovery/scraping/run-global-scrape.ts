@@ -173,7 +173,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
           sentimentEvidence: classification.sentimentEvidence,
           classificationReason: classification.classificationReason,
           classifierPromptVersion: classification.promptVersion,
-          keywordsMatched: effectiveKeywords.map((k) => k.term),
+          keywordsMatched: keywordsMatched.map((k) => k.term),
           rawData: post.rawData,
         });
 
