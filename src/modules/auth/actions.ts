@@ -148,6 +148,27 @@ export async function verifySignUpCode(formData: FormData) {
   redirect("/signup/company");
 }
 
+export async function signInWithPassword(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const password = String(formData.get("password") ?? "");
+  const next = sanitizeNextPath(String(formData.get("next") ?? "/dashboard"));
+
+  if (!email || !password) {
+    redirect(`/login?error=${encodeURIComponent("Ingresá tu email y contraseña")}&next=${encodeURIComponent(next)}`);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error) {
+    redirect(
+      `/login?error=${encodeURIComponent("Email o contraseña incorrectos")}&next=${encodeURIComponent(next)}`,
+    );
+  }
+
+  redirect(await resolvePostAuthPath(next));
+}
+
 export async function signOut() {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();

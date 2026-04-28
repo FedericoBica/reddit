@@ -98,8 +98,16 @@ export default async function MentionsPage({ searchParams }: MentionsPageProps) 
         ) : (
           <div className="searchbox-body">
             <section className="opportunity-column" aria-label="Brand mentions">
-              <div style={{ padding: "12px 14px 8px", borderBottom: "1px solid #DAE0E6", display: "grid", gap: 10 }}>
-                <div style={{ maxWidth: 320 }}>
+              <div
+                style={{
+                  padding: "10px 10px 8px",
+                  borderBottom: "1px solid #DAE0E6",
+                  background: "#F6F7F8",
+                  display: "grid",
+                  gap: 8,
+                }}
+              >
+                <div style={{ maxWidth: 220 }}>
                   <MentionTargetSwitcher options={targetOptions} />
                 </div>
                 <SortControl
@@ -354,7 +362,7 @@ function SentimentBar({
   ];
 
   return (
-    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
       {items.map((item) => {
         const count = item.value === "all" ? stats.all : (stats[item.value] ?? 0);
         const active = selectedSentiment === item.value;
@@ -391,8 +399,8 @@ function SortControl({
   selectedSort: string;
 }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-      <span style={{ fontSize: 12, color: "#8E8E93", fontWeight: 800 }}>Sort</span>
+    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+      <span style={{ fontSize: 11, color: "#8E8E93", fontWeight: 800 }}>Sort</span>
       {["relevant", "recent"].map((sort) => (
         <Link
           key={sort}

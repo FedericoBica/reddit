@@ -670,6 +670,121 @@ function Comparison() {
   );
 }
 
+function WhyReddit() {
+  const points = [
+    {
+      num: "01",
+      title: "Reddit shapes AI answers",
+      body: (
+        <>
+          Across <b>230K+ prompts</b> and <b>100M+ AI citations</b>, Reddit consistently
+          shows up as one of the most-cited domains in AI answers. What&apos;s said on Reddit
+          can materially influence what AI recommends.
+        </>
+      ),
+      source: "Source: Semrush",
+    },
+    {
+      num: "02",
+      title: "Google is ranking Reddit threads for buying searches",
+      body: (
+        <>
+          Reddit&apos;s US visibility jumped by <b>+1,274 points in 2024</b>, reaching{" "}
+          <b>#3 most visible site</b> in the US (up from #92 at the start of 2023).
+          If the ranking threads recommend you, you win the click.
+        </>
+      ),
+      source: "Source: SISTRIX",
+    },
+    {
+      num: "03",
+      title: "Reddit is the buyer backchannel",
+      body: (
+        <>
+          <b>74%</b> say Reddit helps them make faster purchase decisions, and <b>74%</b>{" "}
+          report satisfaction with a purchase based on information they found on Reddit.
+          This is where buyers validate options in public — before they convert.
+        </>
+      ),
+      source: "Source: Reddit for Business",
+    },
+  ];
+
+  const chart = [
+    { domain: "reddit.com",   pct: 9.8,  pctW: "98%", highlight: true },
+    { domain: "linkedin.com", pct: 9.2,  pctW: "92%" },
+    { domain: "wikipedia.org",pct: 7.5,  pctW: "75%" },
+    { domain: "medium.com",   pct: 5.2,  pctW: "52%" },
+    { domain: "youtube.com",  pct: 4.8,  pctW: "48%" },
+    { domain: "google.com",   pct: 4.5,  pctW: "45%" },
+    { domain: "nih.gov",      pct: 4.2,  pctW: "42%" },
+    { domain: "forbes.com",   pct: 3.8,  pctW: "38%" },
+  ];
+
+  return (
+    <section className="section-pad" id="why-reddit">
+      <div className="wrap">
+        <div className="why-header">
+          <span className="chip why-chip">
+            <span className="dot" /> Why Reddit
+          </span>
+          <h2 className="h-section">
+            Reddit is shaping <em>how buyers decide.</em>
+          </h2>
+          <p className="sub">
+            From AI citations to Google rankings, Reddit threads are influencing purchase decisions everywhere.
+          </p>
+        </div>
+
+        <div className="why-reddit-grid">
+          <div className="why-points">
+            {points.map((point) => (
+              <div className="why-point" key={point.num}>
+                <div className="why-num mono">{point.num}</div>
+                <div>
+                  <h3 className="why-h">{point.title}</h3>
+                  <p className="why-b">{point.body}</p>
+                  <a href="#" className="why-src">
+                    {point.source} <span aria-hidden="true">↗</span>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <aside className="why-chart">
+            <div>
+              <h4 className="why-chart-title">Top Cited Domains in AI Answers</h4>
+              <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.04em" }}>
+                ChatGPT, Google AI Mode, Perplexity · Oct 2025
+              </div>
+            </div>
+            <div className="why-bars">
+              {chart.map((row) => (
+                <div className="why-row" key={row.domain}>
+                  <span className={`why-dn${row.highlight ? " highlight" : ""}`}>{row.domain}</span>
+                  <div className="why-bar">
+                    <div className={`why-fill${row.highlight ? " highlight" : ""}`} style={{ width: row.pctW }} />
+                  </div>
+                  <span className="why-pct">{row.pct}%</span>
+                </div>
+              ))}
+            </div>
+            <div className="why-chart-foot">
+              Based on Semrush study of 230K prompts · Oct 2025
+            </div>
+          </aside>
+        </div>
+
+        <p className="why-closing">
+          If Reddit is influencing AI answers, showing up in Google, and shaping buyer decisions,{" "}
+          <b>winning comes down to consistent monitoring, execution, and measurement.</b>
+        </p>
+      </div>
+    </section>
+  );
+}
+
 function HonestTruth() {
   const risks = [
     "Reddit detects bots via IPs, fingerprints, and behavior",
@@ -1068,6 +1183,7 @@ export default function LandingPage() {
       </section>
 
       <IdealCustomers />
+      <WhyReddit />
       <HowItWorks />
       <TwoWays />
       <Features />

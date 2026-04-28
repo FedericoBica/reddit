@@ -20,7 +20,7 @@ export function MentionTargetSwitcher({
   const active = options.find((option) => option.active) ?? options[0];
 
   return (
-    <div style={{ position: "relative", minWidth: 240 }}>
+    <div style={{ position: "relative", width: "100%", minWidth: 0 }}>
       <button
         aria-expanded={open}
         aria-haspopup="menu"
@@ -30,14 +30,14 @@ export function MentionTargetSwitcher({
           width: "100%",
           display: "flex",
           alignItems: "center",
-          gap: 8,
-          padding: "9px 11px",
+          gap: 7,
+          padding: "8px 10px",
           border: "1px solid #EEEEED",
           borderRadius: 8,
           background: "#FFFFFF",
           boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
           color: "#1A1A1B",
-          fontSize: 13,
+          fontSize: 12,
           fontWeight: 800,
           textAlign: "left",
         }}
@@ -90,8 +90,8 @@ export function MentionTargetSwitcher({
               role="menuitem"
               style={{
                 display: "grid",
-                gap: 2,
-                padding: "8px 9px",
+                gap: 1,
+                padding: "7px 8px",
                 borderRadius: 7,
                 textDecoration: "none",
                 background: option.active ? "#FFF3EC" : "transparent",
@@ -100,7 +100,7 @@ export function MentionTargetSwitcher({
               <span
                 style={{
                   color: option.active ? "#1A1A1B" : "#7C7C83",
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: option.active ? 800 : 700,
                   overflow: "hidden",
                   textOverflow: "ellipsis",
@@ -109,7 +109,7 @@ export function MentionTargetSwitcher({
               >
                 {option.label}
               </span>
-              <span style={{ color: "#7C7C83", fontSize: 11, lineHeight: 1.35 }}>
+              <span style={{ color: "#7C7C83", fontSize: 10, lineHeight: 1.3 }}>
                 {option.description}
               </span>
             </Link>
