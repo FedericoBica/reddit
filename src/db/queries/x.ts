@@ -2,6 +2,7 @@ import "server-only";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { projectIdSchema, type XKeywordDTO, type XPostDTO } from "@/db/schemas/domain";
+import type { PostgrestError } from "@supabase/supabase-js";
 
 const xKeywordColumns = `id, project_id, query, is_active, created_at, updated_at`;
 const xPostColumns = `
@@ -33,6 +34,21 @@ const xPostColumns = `
   updated_at
 `;
 
+function isMissingXTableError(error: PostgrestError | null): boolean {
+  if (!error) return false;
+
+  const haystack = `${error.code ?? ""} ${error.message ?? ""} ${error.details ?? ""} ${error.hint ?? ""}`.toLowerCase();
+  return (
+    haystack.includes("x_keywords")
+    || haystack.includes("x_posts")
+    || haystack.includes("could not find the table")
+    || haystack.includes("relation")
+    || haystack.includes("does not exist")
+    || error.code === "PGRST205"
+    || error.code === "42P01"
+  );
+}
+
 export async function listProjectXKeywords(projectId: string): Promise<XKeywordDTO[]> {
   const parsedProjectId = projectIdSchema.parse(projectId);
   const supabase = await createSupabaseServerClient();
@@ -44,6 +60,7 @@ export async function listProjectXKeywords(projectId: string): Promise<XKeywordD
     .order("created_at", { ascending: true });
 
   if (error) {
+    if (isMissingXTableError(error)) return [];
     throw new Error(`Failed to list X keywords: ${error.message}`);
   }
 
@@ -63,6 +80,7 @@ export async function listProjectXPosts(projectId: string, limit = 200): Promise
     .limit(limit);
 
   if (error) {
+    if (isMissingXTableError(error)) return [];
     throw new Error(`Failed to list X posts: ${error.message}`);
   }
 
@@ -81,6 +99,7 @@ export async function getXPostById(projectId: string, postId: string): Promise<X
     .maybeSingle();
 
   if (error) {
+    if (isMissingXTableError(error)) return null;
     throw new Error(`Failed to load X post: ${error.message}`);
   }
 
