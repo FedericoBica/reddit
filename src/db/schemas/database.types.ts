@@ -1263,6 +1263,139 @@ export type Database = {
           },
         ]
       }
+      x_keywords: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          project_id: string
+          query: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          project_id: string
+          query: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          project_id?: string
+          query?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x_keywords_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      x_posts: {
+        Row: {
+          author_followers_count: number | null
+          author_id: string | null
+          author_name: string | null
+          author_username: string | null
+          author_verified: boolean | null
+          bookmark_count: number | null
+          classification_reason: string | null
+          classifier_prompt_version: string | null
+          created_at: string
+          id: string
+          impression_count: number | null
+          intent_score: number | null
+          keywords_matched: string[]
+          lang: string | null
+          like_count: number
+          permalink: string
+          posted_at: string | null
+          project_id: string
+          quote_count: number
+          raw_data: Json
+          reply_count: number
+          retweet_count: number
+          sentiment: Database["public"]["Enums"]["lead_sentiment"] | null
+          status: Database["public"]["Enums"]["lead_status"]
+          text: string
+          updated_at: string
+          x_post_id: string
+        }
+        Insert: {
+          author_followers_count?: number | null
+          author_id?: string | null
+          author_name?: string | null
+          author_username?: string | null
+          author_verified?: boolean | null
+          bookmark_count?: number | null
+          classification_reason?: string | null
+          classifier_prompt_version?: string | null
+          created_at?: string
+          id?: string
+          impression_count?: number | null
+          intent_score?: number | null
+          keywords_matched?: string[]
+          lang?: string | null
+          like_count?: number
+          permalink: string
+          posted_at?: string | null
+          project_id: string
+          quote_count?: number
+          raw_data?: Json
+          reply_count?: number
+          retweet_count?: number
+          sentiment?: Database["public"]["Enums"]["lead_sentiment"] | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          text: string
+          updated_at?: string
+          x_post_id: string
+        }
+        Update: {
+          author_followers_count?: number | null
+          author_id?: string | null
+          author_name?: string | null
+          author_username?: string | null
+          author_verified?: boolean | null
+          bookmark_count?: number | null
+          classification_reason?: string | null
+          classifier_prompt_version?: string | null
+          created_at?: string
+          id?: string
+          impression_count?: number | null
+          intent_score?: number | null
+          keywords_matched?: string[]
+          lang?: string | null
+          like_count?: number
+          permalink?: string
+          posted_at?: string | null
+          project_id?: string
+          quote_count?: number
+          raw_data?: Json
+          reply_count?: number
+          retweet_count?: number
+          sentiment?: Database["public"]["Enums"]["lead_sentiment"] | null
+          status?: Database["public"]["Enums"]["lead_status"]
+          text?: string
+          updated_at?: string
+          x_post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x_posts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       users: {
         Row: {
           avatar_url: string | null
@@ -1588,4 +1721,3 @@ export const Constants = {
     },
   },
 } as const
-
