@@ -167,6 +167,8 @@ export type SearchboxResultDTO = Pick<
 
 export type Keyword = Tables<"keywords">;
 export type Subreddit = Tables<"subreddits">;
+export type XKeyword = Tables<"x_keywords">;
+export type XPost = Tables<"x_posts">;
 
 export type KeywordDTO = Pick<
   Keyword,
@@ -176,6 +178,11 @@ export type KeywordDTO = Pick<
 export type SubredditDTO = Pick<
   Subreddit,
   "id" | "project_id" | "name" | "type" | "is_active" | "is_regional" | "last_scanned_at" | "avg_daily_posts" | "created_at" | "updated_at"
+>;
+
+export type XKeywordDTO = Pick<
+  XKeyword,
+  "id" | "project_id" | "query" | "is_active" | "created_at" | "updated_at"
 >;
 
 export type ProjectDTO = Pick<
@@ -308,6 +315,36 @@ export type BrandMentionDTO = {
   posted_at: string | null;
   created_at: string;
 };
+
+export type XPostDTO = Pick<
+  XPost,
+  | "id"
+  | "project_id"
+  | "x_post_id"
+  | "author_id"
+  | "author_username"
+  | "author_name"
+  | "author_verified"
+  | "author_followers_count"
+  | "text"
+  | "permalink"
+  | "lang"
+  | "posted_at"
+  | "like_count"
+  | "retweet_count"
+  | "reply_count"
+  | "quote_count"
+  | "bookmark_count"
+  | "impression_count"
+  | "intent_score"
+  | "sentiment"
+  | "classification_reason"
+  | "classifier_prompt_version"
+  | "keywords_matched"
+  | "status"
+  | "created_at"
+  | "updated_at"
+>;
 
 export type LeadReplyDTO = Pick<
   LeadReply,

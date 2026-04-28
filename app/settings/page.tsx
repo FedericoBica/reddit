@@ -5,8 +5,9 @@ import { getLocale, getTranslations } from "next-intl/server";
 import { LocaleSwitcher } from "@/app/components/locale-switcher";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listProjectKeywords, listProjectSubreddits } from "@/db/queries/settings";
+import { listProjectXKeywords } from "@/db/queries/x";
 import { listActiveExtensionTokens } from "@/db/queries/extension-tokens";
-import type { ExtensionTokenDTO, KeywordDTO } from "@/db/schemas/domain";
+import type { ExtensionTokenDTO, KeywordDTO, XKeywordDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { getCurrentAiReplyUsage, getCurrentBillingPlan } from "@/modules/billing/current";
 import { resolveCurrentProject } from "@/modules/projects/current";
@@ -18,6 +19,10 @@ import {
   removeKeywordFromForm,
   toggleKeywordFromForm,
   saveTelegramChatIdFromForm,
+  addXKeywordFromForm,
+  updateXKeywordFromForm,
+  toggleXKeywordFromForm,
+  removeXKeywordFromForm,
 } from "@/modules/projects/settings-actions";
 import { deleteProjectFromForm } from "@/modules/projects/delete-actions";
 import {
@@ -45,11 +50,12 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
   const selectedTab = parseSettingsTab(params?.tab);
 
-  const [currentLocale, t, keywords, subreddits, billingPlan, aiReplyUsage, extensionTokens] = await Promise.all([
+  const [currentLocale, t, keywords, subreddits, xKeywords, billingPlan, aiReplyUsage, extensionTokens] = await Promise.all([
     getLocale(),
     getTranslations("settings"),
     listProjectKeywords(currentProject.id),
     listProjectSubreddits(currentProject.id),
+    listProjectXKeywords(currentProject.id),
     getCurrentBillingPlan(),
     getCurrentAiReplyUsage(),
     selectedTab === "extension" ? listActiveExtensionTokens(user.id, currentProject.id) : Promise.resolve([]),
@@ -60,6 +66,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const activeKeywords = searchKeywords.filter((k) => k.is_active);
   const activeSubreddits = subreddits.filter((s) => s.is_active);
   const activeCompetitors = competitorKeywords.filter((k) => k.is_active);
+  const activeXKeywords = xKeywords.filter((k) => k.is_active);
 
   return (
     <DashboardShell
@@ -73,7 +80,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="page-kicker">{t("kicker")}</p>
             <h1 className="page-title">{currentProject.name}</h1>
             <p className="page-copy">
-              {activeKeywords.length} active keywords · {activeCompetitors.length} competitors · {activeSubreddits.length} communities monitored
+              {activeKeywords.length} active keywords · {activeCompetitors.length} competitors · {activeSubreddits.length} communities monitored · {activeXKeywords.length} X rules
             </p>
           </div>
         </header>
@@ -158,6 +165,29 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
               <form action={addKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
                 <input type="hidden" name="projectId" value={currentProject.id} />
                 <input className="settings-input" name="term" placeholder="Add custom keyword" required style={{ flex: 1 }} />
+                <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
+              </form>
+            </SettingsSection>
+          )}
+
+          {selectedTab === "x" && (
+            <SettingsSection
+              title="X"
+              description="Separate query set for X filtered stream rules. Use X syntax here: hashtags, exact phrases, from:, lang:, min_faves: and similar operators."
+              badge={`${activeXKeywords.length} active`}
+            >
+              <div style={{ display: "grid", gap: 0 }}>
+                {xKeywords.length === 0 ? (
+                  <EmptyHint>No X queries yet. Add your first filtered stream rule below.</EmptyHint>
+                ) : (
+                  xKeywords.map((keyword) => (
+                    <XKeywordRow key={keyword.id} keyword={keyword} projectId={currentProject.id} />
+                  ))
+                )}
+              </div>
+              <form action={addXKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                <input type="hidden" name="projectId" value={currentProject.id} />
+                <input className="settings-input" name="query" placeholder='Example: ("project management" OR asana) lang:en -is:retweet' required style={{ flex: 1 }} />
                 <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
               </form>
             </SettingsSection>
@@ -291,12 +321,13 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
 /* ─── Section wrapper ─── */
 
-type SettingsTab = "general" | "competitors" | "keywords" | "prompts" | "notifications" | "billing" | "extension";
+type SettingsTab = "general" | "competitors" | "keywords" | "x" | "prompts" | "notifications" | "billing" | "extension";
 
 const SETTINGS_TABS: Array<{ id: SettingsTab; label: string }> = [
   { id: "general", label: "General" },
   { id: "competitors", label: "Competitors" },
   { id: "keywords", label: "Keywords" },
+  { id: "x", label: "X" },
   { id: "prompts", label: "Prompts" },
   { id: "notifications", label: "Notifications" },
   { id: "billing", label: "Billing" },
@@ -674,6 +705,112 @@ function KeywordRow({
 
       {/* Remove */}
       <form action={removeKeywordFromForm}>
+        <input type="hidden" name="projectId" value={projectId} />
+        <input type="hidden" name="keywordId" value={keyword.id} />
+        <button
+          type="submit"
+          title="Remove"
+          style={{
+            width: 24,
+            height: 24,
+            border: "none",
+            background: "transparent",
+            color: "#C7C7CC",
+            cursor: "pointer",
+            borderRadius: 4,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            padding: 0,
+            fontSize: 16,
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function XKeywordRow({
+  keyword,
+  projectId,
+}: {
+  keyword: XKeywordDTO;
+  projectId: string;
+}) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 10,
+        padding: "9px 0",
+        borderBottom: "1px solid #EDEFF1",
+      }}
+    >
+      <form action={toggleXKeywordFromForm} style={{ display: "flex" }}>
+        <input type="hidden" name="projectId" value={projectId} />
+        <input type="hidden" name="keywordId" value={keyword.id} />
+        <input type="hidden" name="isActive" value={String(!keyword.is_active)} />
+        <button
+          type="submit"
+          title={keyword.is_active ? "Pause" : "Enable"}
+          style={{
+            width: 32,
+            height: 18,
+            borderRadius: 9,
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            background: keyword.is_active ? "#111827" : "#D1D1D6",
+            position: "relative",
+            flexShrink: 0,
+          }}
+        >
+          <span
+            style={{
+              position: "absolute",
+              top: 2,
+              left: keyword.is_active ? 14 : 2,
+              width: 14,
+              height: 14,
+              borderRadius: "50%",
+              background: "#FFF",
+            }}
+          />
+        </button>
+      </form>
+
+      <form action={updateXKeywordFromForm} style={{ display: "flex", gap: 8, flex: 1, minWidth: 0 }}>
+        <input type="hidden" name="projectId" value={projectId} />
+        <input type="hidden" name="keywordId" value={keyword.id} />
+        <input
+          className="settings-input"
+          name="query"
+          defaultValue={keyword.query}
+          required
+          style={{ opacity: keyword.is_active ? 1 : 0.58, fontFamily: "monospace" }}
+        />
+        <button type="submit" className="settings-btn-secondary">Save</button>
+      </form>
+
+      <span
+        style={{
+          fontSize: 10,
+          fontWeight: 700,
+          color: "#111827",
+          background: "#F3F4F6",
+          borderRadius: 4,
+          padding: "2px 6px",
+          letterSpacing: "0.02em",
+        }}
+      >
+        Rule
+      </span>
+
+      <form action={removeXKeywordFromForm}>
         <input type="hidden" name="projectId" value={projectId} />
         <input type="hidden" name="keywordId" value={keyword.id} />
         <button

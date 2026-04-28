@@ -13,7 +13,21 @@ import {
   removeSubreddit,
   toggleSubreddit,
 } from "@/db/mutations/settings";
+import {
+  addXKeyword,
+  removeXKeyword,
+  toggleXKeyword,
+  updateXKeyword,
+} from "@/db/mutations/x";
+import { inngest } from "@/inngest/client";
 import { requireUser } from "@/modules/auth/server";
+
+async function queueXRulesSync(projectId?: string) {
+  await inngest.send({
+    name: "x/rules.sync.requested",
+    data: { projectId: projectId ?? null },
+  });
+}
 
 export async function updateProjectFromForm(formData: FormData) {
   await requireUser("/dashboard");
@@ -140,5 +154,55 @@ export async function saveTelegramChatIdFromForm(formData: FormData): Promise<vo
 
   if (error) throw new Error(`Failed to save Telegram chat ID: ${error.message}`);
 
+  revalidatePath("/settings");
+}
+
+export async function addXKeywordFromForm(formData: FormData) {
+  await requireUser("/settings");
+
+  const projectId = String(formData.get("projectId") ?? "");
+  const query = String(formData.get("query") ?? "").trim();
+
+  if (!query) return;
+
+  await addXKeyword(projectId, query);
+  await queueXRulesSync(projectId);
+  revalidatePath("/settings");
+}
+
+export async function updateXKeywordFromForm(formData: FormData) {
+  await requireUser("/settings");
+
+  const projectId = String(formData.get("projectId") ?? "");
+  const keywordId = String(formData.get("keywordId") ?? "");
+  const query = String(formData.get("query") ?? "").trim();
+
+  if (!query) return;
+
+  await updateXKeyword(projectId, keywordId, query);
+  await queueXRulesSync(projectId);
+  revalidatePath("/settings");
+}
+
+export async function toggleXKeywordFromForm(formData: FormData) {
+  await requireUser("/settings");
+
+  const projectId = String(formData.get("projectId") ?? "");
+  const keywordId = String(formData.get("keywordId") ?? "");
+  const isActive = formData.get("isActive") === "true";
+
+  await toggleXKeyword(projectId, keywordId, isActive);
+  await queueXRulesSync(projectId);
+  revalidatePath("/settings");
+}
+
+export async function removeXKeywordFromForm(formData: FormData) {
+  await requireUser("/settings");
+
+  const projectId = String(formData.get("projectId") ?? "");
+  const keywordId = String(formData.get("keywordId") ?? "");
+
+  await removeXKeyword(projectId, keywordId);
+  await queueXRulesSync(projectId);
   revalidatePath("/settings");
 }

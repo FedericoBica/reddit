@@ -8,5 +8,7 @@ import { sendScrapeNotifications } from "./send-scrape-notifications";
 import { scrapeGlobalProjects } from "./scrape-global";
 import { scrapeBrandMentions } from "./scrape-brand-mentions";
 import { setupNewProject } from "./setup-new-project";
+import { processXPost } from "./process-x-post";
+import { syncXStreamRules } from "./sync-x-stream-rules";
 
-export const functions = [hourlyScheduler, scrapeGlobalProjects, generateLeadReplies, sendLeadPushNotification, sendScrapeNotifications, backfillNewProject, searchboxWeeklyScan, setupNewProject, searchboxForProject, scrapeBrandMentions];
+export const functions = [hourlyScheduler, scrapeGlobalProjects, generateLeadReplies, sendLeadPushNotification, sendScrapeNotifications, backfillNewProject, searchboxWeeklyScan, setupNewProject, searchboxForProject, scrapeBrandMentions, processXPost, syncXStreamRules];

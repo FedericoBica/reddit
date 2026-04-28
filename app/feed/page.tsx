@@ -7,26 +7,28 @@ import { ReplyEditor } from "@/app/components/reply-editor";
 import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { MentionReplyGenerator } from "@/app/mentions/mention-reply-generator";
-import { getLeadById, listFreshProjectLeads, listProjectLeads } from "@/db/queries/leads";
+import { getLeadById, listProjectLeads } from "@/db/queries/leads";
 import { listBrandMentions } from "@/db/queries/brand-mentions";
 import { listLeadReplies } from "@/db/queries/lead-replies";
 import { listProjectKeywords } from "@/db/queries/settings";
-import type { BrandMentionDTO, BrandMentionSentiment, KeywordDTO, LeadDTO, LeadReplyDTO } from "@/db/schemas/domain";
+import { getXPostById, listProjectXPosts } from "@/db/queries/x";
+import type { BrandMentionDTO, BrandMentionSentiment, KeywordDTO, LeadDTO, LeadReplyDTO, XPostDTO } from "@/db/schemas/domain";
 import { generateLeadRepliesFromForm, updateLeadStatusFromForm } from "@/modules/leads/actions";
 import { requireUser } from "@/modules/auth/server";
-import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { resolveCurrentProject } from "@/modules/projects/current";
+import { updateXPostStatusFromForm } from "@/modules/x/actions";
 import { toRedditUrl } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Leads" };
 
 const PAGE_SIZE = 10;
 
-type FeedType = "all" | "opportunities" | "mentions";
+type FeedType = "all" | "opportunities" | "mentions" | "x";
 
 type FeedItem =
   | { kind: "opportunity"; data: LeadDTO; sortKey: number }
-  | { kind: "mention"; data: BrandMentionDTO; sortKey: number };
+  | { kind: "mention"; data: BrandMentionDTO; sortKey: number }
+  | { kind: "x_post"; data: XPostDTO; sortKey: number };
 
 type FeedPageProps = {
   searchParams?: Promise<{
@@ -51,17 +53,14 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   const { currentProject } = projectState;
 
-  const plan = await getCurrentBillingPlan();
-  const windowHours = plan.keywordSearchTimeWindow === "week" ? 168 : 24;
-
-  const [freshLeadsRaw, allLeads, allMentionsRaw, keywords] = await Promise.all([
-    listFreshProjectLeads(currentProject.id, windowHours, 100),
-    listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
+  const [allLeads, allMentionsRaw, allXPosts, keywords] = await Promise.all([
+    listProjectLeads({ projectId: currentProject.id, limit: 200, page: 0 }),
     listBrandMentions({ projectId: currentProject.id }),
+    listProjectXPosts(currentProject.id),
     listProjectKeywords(currentProject.id),
   ]);
 
-  const freshLeads = freshLeadsRaw.filter((l) => l.status !== "irrelevant");
+  const feedLeads = allLeads.filter((l) => l.status !== "irrelevant");
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
   const competitors = keywords.filter((k) => k.type === "competitor" && k.is_active);
 
@@ -94,7 +93,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   // Build combined feed
   const allItems: FeedItem[] = [
-    ...freshLeads.map((lead): FeedItem => ({
+    ...feedLeads.map((lead): FeedItem => ({
       kind: "opportunity",
       data: lead,
       sortKey: lead.created_at ? new Date(lead.created_at).getTime() : 0,
@@ -104,6 +103,13 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       data: mention,
       sortKey: mention.created_at ? new Date(mention.created_at).getTime() : 0,
     })),
+    ...allXPosts
+      .filter((post) => post.status !== "irrelevant")
+      .map((post): FeedItem => ({
+        kind: "x_post",
+        data: post,
+        sortKey: post.created_at ? new Date(post.created_at).getTime() : 0,
+      })),
   ];
 
   const filteredItems = filterByType(allItems, feedType);
@@ -115,7 +121,12 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   // Resolve selected item
   const requestedId = params?.itemId;
-  const requestedKind = params?.itemType === "mention" ? "mention" : "opportunity";
+  const requestedKind =
+    params?.itemType === "mention"
+      ? "mention"
+      : params?.itemType === "x_post"
+      ? "x_post"
+      : "opportunity";
 
   const selectedFromList: FeedItem | null = requestedId
     ? (sortedItems.find((item) => item.data.id === requestedId && item.kind === requestedKind) ??
@@ -130,6 +141,11 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   const selectedMention: BrandMentionDTO | null =
     selectedFromList?.kind === "mention" ? selectedFromList.data : null;
+
+  const selectedXPost: XPostDTO | null =
+    selectedFromList?.kind === "x_post"
+      ? ((await getXPostById(currentProject.id, selectedFromList.data.id)) ?? selectedFromList.data)
+      : null;
 
   const replies: LeadReplyDTO[] = selectedLead
     ? await listLeadReplies(currentProject.id, selectedLead.id)
@@ -177,9 +193,11 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                 <span className="ds-topbar-sep">·</span>
                 <span>
                   {feedType === "all"
-                    ? `${freshLeads.length} opportunities · ${allMentionsRaw.length} mentions`
+                    ? `${feedLeads.length} opportunities · ${allMentionsRaw.length} mentions · ${allXPosts.filter((post) => post.status !== "irrelevant").length} X posts`
                     : feedType === "opportunities"
-                    ? `last ${windowHours >= 168 ? "7 days" : "24 hours"}`
+                    ? `${feedLeads.length} leads`
+                    : feedType === "x"
+                    ? `${allXPosts.filter((post) => post.status !== "irrelevant").length} X posts`
                     : "brand + competitors"}
                 </span>
               </div>
@@ -188,80 +206,83 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
         </header>
 
         <div className="searchbox-body">
-          <section className="opportunity-column" aria-label="Leads feed">
-            {/* Type filter */}
-            <div
-              style={{
-                padding: "10px 10px 8px",
-                borderBottom: feedType === "mentions" ? "none" : "1px solid #DAE0E6",
-                background: "#F6F7F8",
-                display: "flex",
-                gap: 6,
-                flexWrap: "wrap",
-              }}
-            >
-              {(["all", "opportunities", "mentions"] as const).map((type) => {
-                const active = feedType === type;
-                const count =
-                  type === "all"
-                    ? freshLeads.length + allMentionsRaw.length
-                    : type === "opportunities"
-                    ? freshLeads.length
-                    : allMentionsRaw.length;
-                const href = `/feed?projectId=${currentProject.id}${type !== "all" ? `&type=${type}` : ""}`;
-                return (
-                  <Link
-                    key={type}
-                    href={href}
-                    className={`filter-pill${active ? " filter-pill-active" : ""}`}
-                  >
-                    {type === "all" ? "All" : type === "opportunities" ? "Opportunities" : "Mentions"}
-                    {" "}
-                    <span style={{ fontWeight: 700, opacity: 0.7 }}>({count})</span>
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Mention triage controls — only when type=mentions */}
-            {feedType === "mentions" && (
+          {/* gridTemplateRows overrides opportunity-column's default "1fr auto" so the
+              header wrapper stays auto-height and only the list takes the remaining space */}
+          <section
+            className="opportunity-column"
+            style={{ gridTemplateRows: "auto 1fr auto" }}
+            aria-label="Leads feed"
+          >
+            {/* Header: type pills + optional mention triage controls — always auto-height */}
+            <div style={{ background: "#F6F7F8", borderBottom: "1px solid #DAE0E6" }}>
+              {/* Type pills */}
               <div
                 style={{
-                  padding: "8px 10px",
-                  borderBottom: "1px solid #DAE0E6",
-                  background: "#F6F7F8",
-                  display: "grid",
-                  gap: 8,
+                  padding: "10px 10px 8px",
+                  borderBottom: feedType === "mentions" ? "1px solid #E5E7EB" : "none",
+                  display: "flex",
+                  gap: 6,
+                  flexWrap: "wrap",
+                  alignItems: "center",
                 }}
               >
-                <TargetPills
-                  projectId={currentProject.id}
-                  companyName={currentProject.name}
-                  competitors={competitors}
-                  selectedTarget={selectedTarget}
-                  sentiment={selectedSentiment}
-                  sort={selectedSort}
-                  selectedItemId={selectedFromList?.kind === "mention" ? selectedFromList.data.id : undefined}
-                />
-                <SortControl
-                  projectId={currentProject.id}
-                  target={selectedTarget}
-                  sentiment={selectedSentiment}
-                  selectedSort={selectedSort}
-                />
-                <SentimentBar
-                  projectId={currentProject.id}
-                  target={selectedTarget}
-                  selectedSentiment={selectedSentiment}
-                  selectedSort={selectedSort}
-                  stats={sentimentStats}
-                />
+                {(["all", "opportunities", "mentions", "x"] as const).map((type) => {
+                  const active = feedType === type;
+                  const count =
+                    type === "all"
+                      ? feedLeads.length + allMentionsRaw.length + allXPosts.filter((post) => post.status !== "irrelevant").length
+                      : type === "opportunities"
+                      ? feedLeads.length
+                      : type === "x"
+                      ? allXPosts.filter((post) => post.status !== "irrelevant").length
+                      : allMentionsRaw.length;
+                  const href = `/feed?projectId=${currentProject.id}${type !== "all" ? `&type=${type}` : ""}`;
+                  return (
+                    <Link
+                      key={type}
+                      href={href}
+                      className={`filter-pill${active ? " filter-pill-active" : ""}`}
+                    >
+                      {type === "all" ? "All" : type === "opportunities" ? "Opportunities" : type === "mentions" ? "Mentions" : "X"}
+                      {" "}
+                      <span style={{ fontWeight: 700, opacity: 0.7 }}>({count})</span>
+                    </Link>
+                  );
+                })}
               </div>
-            )}
+
+              {/* Mention triage controls — only when type=mentions */}
+              {feedType === "mentions" && (
+                <div style={{ padding: "8px 10px", display: "grid", gap: 8 }}>
+                  <TargetPills
+                    projectId={currentProject.id}
+                    companyName={currentProject.name}
+                    competitors={competitors}
+                    selectedTarget={selectedTarget}
+                    sentiment={selectedSentiment}
+                    sort={selectedSort}
+                    selectedItemId={selectedFromList?.kind === "mention" ? selectedFromList.data.id : undefined}
+                  />
+                  <SortControl
+                    projectId={currentProject.id}
+                    target={selectedTarget}
+                    sentiment={selectedSentiment}
+                    selectedSort={selectedSort}
+                  />
+                  <SentimentBar
+                    projectId={currentProject.id}
+                    target={selectedTarget}
+                    selectedSentiment={selectedSentiment}
+                    selectedSort={selectedSort}
+                    stats={sentimentStats}
+                  />
+                </div>
+              )}
+            </div>
 
             <div className="opportunity-list">
               {paginatedItems.length === 0 ? (
-                <EmptyFeed feedType={feedType} windowHours={windowHours} lastScrapedAt={currentProject.last_scraped_at} />
+                <EmptyFeed feedType={feedType} lastScrapedAt={currentProject.last_scraped_at} />
               ) : (
                 paginatedItems.map((item) =>
                   item.kind === "opportunity" ? (
@@ -274,7 +295,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                       }
                       href={baseHref(`&itemId=${item.data.id}&itemType=opportunity`)}
                     />
-                  ) : (
+                  ) : item.kind === "mention" ? (
                     <MentionCard
                       key={`mention-${item.data.id}`}
                       mention={item.data}
@@ -283,6 +304,16 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                         selectedFromList.data.id === item.data.id
                       }
                       href={baseHref(`&itemId=${item.data.id}&itemType=mention`)}
+                    />
+                  ) : (
+                    <XPostCard
+                      key={`x-${item.data.id}`}
+                      post={item.data}
+                      active={
+                        selectedFromList?.kind === "x_post" &&
+                        selectedFromList.data.id === item.data.id
+                      }
+                      href={baseHref(`&itemId=${item.data.id}&itemType=x_post`)}
                     />
                   ),
                 )
@@ -330,6 +361,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
           <DetailPane
             lead={selectedLead}
             mention={selectedMention}
+            xPost={selectedXPost}
             replies={replies}
             projectId={currentProject.id}
             filterBase={filterBase}
@@ -407,23 +439,52 @@ function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; acti
   );
 }
 
+function XPostCard({ post, active, href }: { post: XPostDTO; active: boolean; href: string }) {
+  return (
+    <Link href={href} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
+      <div className="opportunity-meta">
+        <TypeDot kind="x_post" />
+        <span>@{post.author_username ?? "unknown"}</span>
+        {post.posted_at && <span>{formatRelative(post.posted_at)}</span>}
+        <span>{post.reply_count} replies</span>
+      </div>
+
+      <h2 className="opportunity-heading">{truncate(post.text, 140)}</h2>
+
+      {post.classification_reason && (
+        <p className="opportunity-reason">{post.classification_reason}</p>
+      )}
+
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
+        <span style={{ fontSize: 11, fontWeight: 800, color: "#111827" }}>
+          Relevance: {post.intent_score ?? "–"}
+        </span>
+        <span style={{ fontSize: 12, color: "#8E8E93", fontWeight: 700 }}>♥ {post.like_count}</span>
+      </div>
+    </Link>
+  );
+}
+
 // ── Detail pane ───────────────────────────────────────────────
 
 function DetailPane({
   lead,
   mention,
+  xPost,
   replies,
   projectId,
   filterBase,
 }: {
   lead: LeadDTO | null;
   mention: BrandMentionDTO | null;
+  xPost: XPostDTO | null;
   replies: LeadReplyDTO[];
   projectId: string;
   filterBase: string;
 }) {
   if (lead) return <LeadDetail lead={lead} replies={replies} projectId={projectId} filterBase={filterBase} />;
   if (mention) return <MentionDetail mention={mention} projectId={projectId} />;
+  if (xPost) return <XPostDetail post={xPost} projectId={projectId} />;
 
   return (
     <section className="detail-pane">
@@ -431,7 +492,7 @@ function DetailPane({
         <div className="empty-state">
           <p className="section-title">No items yet</p>
           <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
-            Opportunities and mentions will appear here as the scrapers run.
+            Opportunities, mentions, and X posts will appear here as the pipelines run.
           </p>
         </div>
       </div>
@@ -612,6 +673,61 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
   );
 }
 
+function XPostDetail({ post, projectId }: { post: XPostDTO; projectId: string }) {
+  return (
+    <section className="detail-pane" aria-label="X post detail">
+      <div className="detail-topbar">
+        <div className="opportunity-meta">
+          <TypeDot kind="x_post" />
+          <span>@{post.author_username ?? "unknown"}</span>
+          {post.posted_at && <span>{formatDate(post.posted_at)}</span>}
+          {post.author_verified && <span>verified</span>}
+        </div>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
+          {post.keywords_matched?.length > 0 && (
+            <KeywordsDropdown keywords={post.keywords_matched} />
+          )}
+          <form action={updateXPostStatusFromForm}>
+            <input type="hidden" name="projectId" value={projectId} />
+            <input type="hidden" name="postId" value={post.id} />
+            <input type="hidden" name="status" value="irrelevant" />
+            <button className="btn-reject" type="submit">Dismiss</button>
+          </form>
+          <a href={post.permalink} target="_blank" rel="noreferrer" className="btn-replied" style={{ textDecoration: "none" }}>
+            Open on X
+          </a>
+        </div>
+      </div>
+
+      <div className="detail-content">
+        <h2 style={{ fontSize: 22, lineHeight: 1.25, letterSpacing: "-0.02em", fontWeight: 700, color: "#1A1A1B" }}>
+          {post.author_name ? `${post.author_name} (@${post.author_username ?? "unknown"})` : `@${post.author_username ?? "unknown"}`}
+        </h2>
+        {post.classification_reason && (
+          <p style={{ fontSize: 12, color: "#7C7C83", fontWeight: 600, marginTop: 10 }}>
+            {post.classification_reason}
+          </p>
+        )}
+      </div>
+
+      <article className="lead-post">
+        <p className="reddit-body" style={{ fontSize: 14, whiteSpace: "pre-wrap" }}>
+          {post.text}
+        </p>
+        <div className="post-stats-bar">
+          <span>♥ {post.like_count} likes</span>
+          <span>↻ {post.retweet_count} reposts</span>
+          <span>💬 {post.reply_count} replies</span>
+          {post.impression_count != null && <span>👁 {post.impression_count} views</span>}
+          <a href={post.permalink} target="_blank" rel="noreferrer" className="post-stats-link">
+            View Post on X →
+          </a>
+        </div>
+      </article>
+    </section>
+  );
+}
+
 // ── Mention triage controls ───────────────────────────────────
 
 function TargetPills({
@@ -723,11 +839,11 @@ function SentimentBar({
 
 // ── Small UI pieces ───────────────────────────────────────────
 
-function TypeDot({ kind }: { kind: "opportunity" | "mention" }) {
+function TypeDot({ kind }: { kind: "opportunity" | "mention" | "x_post" }) {
   return (
     <span
       className="opportunity-dot"
-      style={{ background: kind === "opportunity" ? "#FF4500" : "#7C7C83" }}
+      style={{ background: kind === "opportunity" ? "#FF4500" : kind === "mention" ? "#7C7C83" : "#111827" }}
     />
   );
 }
@@ -782,22 +898,24 @@ function StatusPill({ status }: { status: LeadDTO["status"] }) {
 
 function EmptyFeed({
   feedType,
-  windowHours,
   lastScrapedAt,
 }: {
   feedType: FeedType;
-  windowHours: number;
   lastScrapedAt: string | null;
 }) {
   return (
     <div className="empty-state">
       <p className="section-title">
-        {feedType === "mentions" ? "No mentions match this filter" : "No fresh posts"}
+        {feedType === "mentions" ? "No mentions match this filter" : feedType === "x" ? "No X posts yet" : "No leads yet"}
       </p>
       <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
         {feedType === "mentions"
           ? "Try adjusting the target or sentiment filters above."
-          : `No leads in the last ${windowHours >= 168 ? "7 days" : "24 hours"}.${lastScrapedAt ? ` Last scan ${formatDate(lastScrapedAt)}.` : " Scraper hasn't run yet."}`}
+          : feedType === "x"
+          ? "Add active X queries in settings and connect the webhook delivery to start receiving posts."
+          : lastScrapedAt
+          ? `Last scan ${formatDate(lastScrapedAt)}. New posts will appear here automatically.`
+          : "Scraper hasn't run yet."}
       </p>
     </div>
   );
@@ -814,7 +932,7 @@ function CheckIcon() {
 // ── Helpers ───────────────────────────────────────────────────
 
 function parseFeedType(value: string | undefined): FeedType {
-  if (value === "opportunities" || value === "mentions") return value;
+  if (value === "opportunities" || value === "mentions" || value === "x") return value;
   return "all";
 }
 
@@ -837,6 +955,7 @@ function resolveTarget(
 function filterByType(items: FeedItem[], feedType: FeedType): FeedItem[] {
   if (feedType === "opportunities") return items.filter((i) => i.kind === "opportunity");
   if (feedType === "mentions") return items.filter((i) => i.kind === "mention");
+  if (feedType === "x") return items.filter((i) => i.kind === "x_post");
   return items;
 }
 
@@ -936,4 +1055,8 @@ function formatAge(minutes: number): string {
   const hours = Math.floor(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
+}
+
+function truncate(value: string, max: number) {
+  return value.length <= max ? value : `${value.slice(0, max - 1)}…`;
 }
