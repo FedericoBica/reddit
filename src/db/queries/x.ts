@@ -60,8 +60,11 @@ export async function listProjectXKeywords(projectId: string): Promise<XKeywordD
     .order("created_at", { ascending: true });
 
   if (error) {
+    console.warn(
+      `[x] listProjectXKeywords fallback for project ${parsedProjectId}: ${error.code ?? "unknown"} ${error.message}`,
+    );
     if (isMissingXTableError(error)) return [];
-    throw new Error(`Failed to list X keywords: ${error.message}`);
+    return [];
   }
 
   return data;
@@ -80,8 +83,11 @@ export async function listProjectXPosts(projectId: string, limit = 200): Promise
     .limit(limit);
 
   if (error) {
+    console.warn(
+      `[x] listProjectXPosts fallback for project ${parsedProjectId}: ${error.code ?? "unknown"} ${error.message}`,
+    );
     if (isMissingXTableError(error)) return [];
-    throw new Error(`Failed to list X posts: ${error.message}`);
+    return [];
   }
 
   return data;
@@ -99,8 +105,11 @@ export async function getXPostById(projectId: string, postId: string): Promise<X
     .maybeSingle();
 
   if (error) {
+    console.warn(
+      `[x] getXPostById fallback for project ${parsedProjectId}, post ${postId}: ${error.code ?? "unknown"} ${error.message}`,
+    );
     if (isMissingXTableError(error)) return null;
-    throw new Error(`Failed to load X post: ${error.message}`);
+    return null;
   }
 
   return data;

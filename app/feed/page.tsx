@@ -54,7 +54,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   const { currentProject } = projectState;
 
   const [allLeads, allMentionsRaw, allXPosts, keywords] = await Promise.all([
-    listProjectLeads({ projectId: currentProject.id, limit: 200, page: 0 }),
+    listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
     listBrandMentions({ projectId: currentProject.id }),
     listProjectXPosts(currentProject.id),
     listProjectKeywords(currentProject.id),
