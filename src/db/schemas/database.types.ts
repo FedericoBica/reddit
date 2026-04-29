@@ -1011,6 +1011,7 @@ export type Database = {
           owner_id: string
           primary_language: string
           region: string | null
+          reply_length: string
           scrape_backoff_until: string | null
           scrape_fail_count: number
           secondary_language: string | null
@@ -1036,6 +1037,7 @@ export type Database = {
           owner_id: string
           primary_language?: string
           region?: string | null
+          reply_length?: string
           scrape_backoff_until?: string | null
           scrape_fail_count?: number
           secondary_language?: string | null
@@ -1061,6 +1063,7 @@ export type Database = {
           owner_id?: string
           primary_language?: string
           region?: string | null
+          reply_length?: string
           scrape_backoff_until?: string | null
           scrape_fail_count?: number
           secondary_language?: string | null
@@ -1308,6 +1311,59 @@ export type Database = {
         }
         Relationships: []
       }
+      x_connected_accounts: {
+        Row: {
+          access_token: string
+          created_at: string
+          id: string
+          project_id: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+          x_name: string | null
+          x_profile_image_url: string | null
+          x_user_id: string
+          x_username: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          id?: string
+          project_id: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+          x_name?: string | null
+          x_profile_image_url?: string | null
+          x_user_id: string
+          x_username: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          id?: string
+          project_id?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+          x_name?: string | null
+          x_profile_image_url?: string | null
+          x_user_id?: string
+          x_username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x_connected_accounts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       x_keywords: {
         Row: {
           created_at: string
@@ -1401,152 +1457,6 @@ export type Database = {
             referencedRelation: "x_posts"
             referencedColumns: ["id"]
           },
-        ]
-      }
-      x_connected_accounts: {
-        Row: {
-          id: string
-          project_id: string
-          user_id: string
-          x_user_id: string
-          x_username: string
-          x_name: string | null
-          x_profile_image_url: string | null
-          access_token: string
-          refresh_token: string | null
-          token_expires_at: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          user_id: string
-          x_user_id: string
-          x_username: string
-          x_name?: string | null
-          x_profile_image_url?: string | null
-          access_token: string
-          refresh_token?: string | null
-          token_expires_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          user_id?: string
-          x_user_id?: string
-          x_username?: string
-          x_name?: string | null
-          x_profile_image_url?: string | null
-          access_token?: string
-          refresh_token?: string | null
-          token_expires_at?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      x_scheduled_posts: {
-        Row: {
-          id: string
-          project_id: string
-          created_by: string
-          connected_account_id: string | null
-          content: string
-          scheduled_for: string | null
-          status: "draft" | "scheduled" | "publishing" | "published" | "failed"
-          published_at: string | null
-          x_tweet_id: string | null
-          error: string | null
-          source: "ai_writer" | "inspiration" | "manual"
-          category: string | null
-          hook_explanation: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          created_by: string
-          connected_account_id?: string | null
-          content: string
-          scheduled_for?: string | null
-          status?: "draft" | "scheduled" | "publishing" | "published" | "failed"
-          published_at?: string | null
-          x_tweet_id?: string | null
-          error?: string | null
-          source?: "ai_writer" | "inspiration" | "manual"
-          category?: string | null
-          hook_explanation?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          created_by?: string
-          connected_account_id?: string | null
-          content?: string
-          scheduled_for?: string | null
-          status?: "draft" | "scheduled" | "publishing" | "published" | "failed"
-          published_at?: string | null
-          x_tweet_id?: string | null
-          error?: string | null
-          source?: "ai_writer" | "inspiration" | "manual"
-          category?: string | null
-          hook_explanation?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      x_profiles: {
-        Row: {
-          id: string
-          project_id: string
-          interests: string[]
-          favorite_creators: string[]
-          use_own_tweets: boolean
-          structure_types: string[]
-          products: string[]
-          x_rules: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          project_id: string
-          interests?: string[]
-          favorite_creators?: string[]
-          use_own_tweets?: boolean
-          structure_types?: string[]
-          products?: string[]
-          x_rules?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          project_id?: string
-          interests?: string[]
-          favorite_creators?: string[]
-          use_own_tweets?: boolean
-          structure_types?: string[]
-          products?: string[]
-          x_rules?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "x_profiles_project_id_fkey"
-            columns: ["project_id"]
-            isOneToOne: true
-            referencedRelation: "projects"
-            referencedColumns: ["id"]
-          }
         ]
       }
       x_posts: {
@@ -1662,6 +1572,122 @@ export type Database = {
           },
         ]
       }
+      x_profiles: {
+        Row: {
+          created_at: string
+          favorite_creators: string[]
+          id: string
+          interests: string[]
+          products: string[]
+          project_id: string
+          structure_types: string[]
+          updated_at: string
+          use_own_tweets: boolean
+          x_rules: string | null
+        }
+        Insert: {
+          created_at?: string
+          favorite_creators?: string[]
+          id?: string
+          interests?: string[]
+          products?: string[]
+          project_id: string
+          structure_types?: string[]
+          updated_at?: string
+          use_own_tweets?: boolean
+          x_rules?: string | null
+        }
+        Update: {
+          created_at?: string
+          favorite_creators?: string[]
+          id?: string
+          interests?: string[]
+          products?: string[]
+          project_id?: string
+          structure_types?: string[]
+          updated_at?: string
+          use_own_tweets?: boolean
+          x_rules?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x_profiles_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: true
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      x_scheduled_posts: {
+        Row: {
+          category: string | null
+          connected_account_id: string | null
+          content: string
+          created_at: string
+          created_by: string
+          error: string | null
+          hook_explanation: string | null
+          id: string
+          project_id: string
+          published_at: string | null
+          scheduled_for: string | null
+          source: string
+          status: string
+          updated_at: string
+          x_tweet_id: string | null
+        }
+        Insert: {
+          category?: string | null
+          connected_account_id?: string | null
+          content: string
+          created_at?: string
+          created_by: string
+          error?: string | null
+          hook_explanation?: string | null
+          id?: string
+          project_id: string
+          published_at?: string | null
+          scheduled_for?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          x_tweet_id?: string | null
+        }
+        Update: {
+          category?: string | null
+          connected_account_id?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string
+          error?: string | null
+          hook_explanation?: string | null
+          id?: string
+          project_id?: string
+          published_at?: string | null
+          scheduled_for?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+          x_tweet_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "x_scheduled_posts_connected_account_id_fkey"
+            columns: ["connected_account_id"]
+            isOneToOne: false
+            referencedRelation: "x_connected_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "x_scheduled_posts_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1692,6 +1718,7 @@ export type Database = {
           owner_id: string
           primary_language: string
           region: string | null
+          reply_length: string
           scrape_backoff_until: string | null
           scrape_fail_count: number
           secondary_language: string | null

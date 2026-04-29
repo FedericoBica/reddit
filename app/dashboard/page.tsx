@@ -161,6 +161,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
             lead={selectedLead}
             replies={replies}
             projectId={currentProject.id}
+            replyLength={(currentProject.reply_length ?? "medium") as import("@/db/schemas/domain").ReplyLength}
             isNew={isNew}
           />
         </div>
@@ -229,12 +230,14 @@ function ResultDetail({
   lead,
   replies,
   projectId,
+  replyLength,
   isNew,
 }: {
   result: SearchboxResultDTO | null;
   lead: LeadDTO | null;
   replies: LeadReplyDTO[];
   projectId: string;
+  replyLength: import("@/db/schemas/domain").ReplyLength;
   isNew?: boolean;
 }) {
   if (!result) {
@@ -342,6 +345,7 @@ function ResultDetail({
             projectId={projectId}
             leadId={lead?.id ?? ""}
             returnTo={returnTo}
+            replyLength={replyLength}
             generateForm={
               <form action={generateSearchboxReplyFromForm}>
                 <input type="hidden" name="projectId" value={projectId} />

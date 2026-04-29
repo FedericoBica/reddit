@@ -6,39 +6,35 @@ import { useState } from "react";
 
 export function SidebarLinks({
   currentProjectId,
-  newLeadsCount = 0,
+  newOpportunitiesCount = 0,
+  newMentionsCount = 0,
   newSearchboxCount = 0,
-  xEnabled = false,
 }: {
   currentProjectId: string;
-  newLeadsCount?: number;
+  newOpportunitiesCount?: number;
+  newMentionsCount?: number;
   newSearchboxCount?: number;
-  xEnabled?: boolean;
 }) {
   const pathname = usePathname();
-  const [archiveOpen, setArchiveOpen] = useState(
-    pathname.startsWith("/archive"),
-  );
+  const [archiveOpen, setArchiveOpen] = useState(pathname.startsWith("/archive"));
 
-  const isActive = (href: string) => {
-    if (href === "/dashboard") return pathname === "/dashboard" || pathname.startsWith("/leads/");
-    if (href === "/feed") return pathname === "/feed" || pathname === "/opportunities" || pathname === "/mentions";
-    return pathname === href || pathname.startsWith(href + "/") || pathname.startsWith(href + "?");
+  const isActive = (href: string, type?: string) => {
+    if (!pathname.startsWith("/feed")) return pathname === href || pathname.startsWith(href + "/");
+    if (href === "/dashboard") return false;
+    if (href === "/feed" && type) {
+      if (typeof window === "undefined") return false;
+      const params = new URLSearchParams(window.location.search);
+      return params.get("type") === type;
+    }
+    return false;
   };
 
-  const REDDIT_NAV = [
-    { href: "/dashboard",  label: "Search Box", icon: InboxIcon,  badge: newSearchboxCount },
-    { href: "/feed",       label: "Leads",      icon: FlashIcon,  badge: newLeadsCount     },
-    { href: "/analytics",  label: "Analytics",  icon: ChartIcon,  badge: 0                 },
-  ];
-
-  const X_NAV = [
-    { href: "/x/queue",        label: "My Queue",       icon: QueueIcon },
-    { href: "/x/inspiration",  label: "Inspiration",    icon: SparkIcon },
-    { href: "/x/studio",       label: "Content Studio", icon: PenIcon   },
-    { href: "/x/engage",       label: "Engage",         icon: EngageIcon },
-    { href: "/x/context",      label: "My Context",     icon: ProfileIcon },
-  ];
+  const isFeedActive = (type: string) => {
+    if (typeof window === "undefined") return pathname === "/feed" && type === "opportunities";
+    const params = new URLSearchParams(window.location.search);
+    const current = params.get("type") ?? "opportunities";
+    return pathname === "/feed" && current === type;
+  };
 
   const inArchive = pathname.startsWith("/archive");
   const archiveIsOpen = archiveOpen || inArchive;
@@ -57,23 +53,48 @@ export function SidebarLinks({
       {/* ── REDDIT ── */}
       <GroupLabel>Reddit</GroupLabel>
 
-      {REDDIT_NAV.map((item) => {
-        const active = isActive(item.href);
-        const Icon = item.icon;
-        return (
-          <Link
-            key={item.href}
-            href={`${item.href}?projectId=${currentProjectId}`}
-            className={`sidebar-link${active ? " sidebar-link-active" : ""}`}
-          >
-            <Icon className="sidebar-icon" />
-            <span style={{ flex: 1 }}>{item.label}</span>
-            {item.badge > 0 && (
-              <span className="ds-nav-badge">{item.badge}</span>
-            )}
-          </Link>
-        );
-      })}
+      <Link
+        href={`/dashboard?projectId=${currentProjectId}`}
+        className={`sidebar-link${pathname === "/dashboard" || pathname.startsWith("/leads/") ? " sidebar-link-active" : ""}`}
+      >
+        <InboxIcon className="sidebar-icon" />
+        <span style={{ flex: 1 }}>Search Box</span>
+        {newSearchboxCount > 0 && <span className="ds-nav-badge">{newSearchboxCount}</span>}
+      </Link>
+
+      <Link
+        href={`/feed?projectId=${currentProjectId}&type=opportunities`}
+        className={`sidebar-link${isFeedActive("opportunities") ? " sidebar-link-active" : ""}`}
+      >
+        <FlashIcon className="sidebar-icon" />
+        <span style={{ flex: 1 }}>Opportunities</span>
+        {newOpportunitiesCount > 0 && <span className="ds-nav-badge">{newOpportunitiesCount}</span>}
+      </Link>
+
+      <Link
+        href={`/feed?projectId=${currentProjectId}&type=mentions`}
+        className={`sidebar-link${isFeedActive("mentions") ? " sidebar-link-active" : ""}`}
+      >
+        <MentionIcon className="sidebar-icon" />
+        <span style={{ flex: 1 }}>Mentions</span>
+        {newMentionsCount > 0 && <span className="ds-nav-badge">{newMentionsCount}</span>}
+      </Link>
+
+      <Link
+        href={`/feed?projectId=${currentProjectId}&type=x`}
+        className={`sidebar-link${isFeedActive("x") ? " sidebar-link-active" : ""}`}
+      >
+        <XIcon className="sidebar-icon" />
+        <span style={{ flex: 1 }}>X Leads</span>
+      </Link>
+
+      <Link
+        href={`/analytics?projectId=${currentProjectId}`}
+        className={`sidebar-link${pathname === "/analytics" ? " sidebar-link-active" : ""}`}
+      >
+        <ChartIcon className="sidebar-icon" />
+        <span style={{ flex: 1 }}>Analytics</span>
+      </Link>
 
       {/* Archive sub-group */}
       <button
@@ -106,32 +127,11 @@ export function SidebarLinks({
         </>
       )}
 
-      {/* ── X ── */}
-      {xEnabled && (
-        <>
-          <GroupLabel style={{ marginTop: 10 }}>X</GroupLabel>
-          {X_NAV.map((item) => {
-            const active = isActive(item.href);
-            const Icon = item.icon;
-            return (
-              <Link
-                key={item.href}
-                href={`${item.href}?projectId=${currentProjectId}`}
-                className={`sidebar-link${active ? " sidebar-link-active" : ""}`}
-              >
-                <Icon className="sidebar-icon" />
-                <span style={{ flex: 1 }}>{item.label}</span>
-              </Link>
-            );
-          })}
-        </>
-      )}
-
       {/* ── Settings ── */}
       <div style={{ marginTop: "auto", paddingTop: 8 }}>
         <Link
           href={`/settings?projectId=${currentProjectId}`}
-          className={`sidebar-link${isActive("/settings") ? " sidebar-link-active" : ""}`}
+          className={`sidebar-link${pathname === "/settings" ? " sidebar-link-active" : ""}`}
         >
           <GearIcon className="sidebar-icon" />
           <span style={{ flex: 1 }}>Settings</span>
@@ -195,6 +195,24 @@ function GearIcon({ className }: { className?: string }) {
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" stroke="currentColor" strokeWidth="1.8" />
       <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function MentionIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M20 12a8 8 0 1 0-2.87 6.13" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M17.13 18.13 20 20v-4h-4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function XIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M4 4l16 16M20 4 4 20" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
     </svg>
   );
 }

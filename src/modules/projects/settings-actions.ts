@@ -39,6 +39,10 @@ export async function updateProjectFromForm(formData: FormData) {
   if (formData.has("websiteUrl")) input.websiteUrl = String(formData.get("websiteUrl") ?? "").trim() || null;
   if (formData.has("valueProposition")) input.valueProposition = String(formData.get("valueProposition") ?? "").trim() || null;
   if (formData.has("tone")) input.tone = String(formData.get("tone") ?? "").trim() || null;
+  if (formData.has("replyLength")) {
+    const val = String(formData.get("replyLength") ?? "").trim();
+    if (val === "short" || val === "medium" || val === "long") input.replyLength = val;
+  }
   if (formData.has("region")) input.region = String(formData.get("region") ?? "").trim() || null;
 
   await updateProject(projectId, input);

@@ -229,6 +229,47 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             >
               <form action={updateProjectFromForm}>
                 <input type="hidden" name="projectId" value={currentProject.id} />
+                <FieldRow label="Reply length" vertical>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    {(["short", "medium", "long"] as const).map((opt) => {
+                      const selected = (currentProject.reply_length ?? "medium") === opt;
+                      const labels: Record<string, string> = {
+                        short: "Short — 1-2 sentences",
+                        medium: "Medium — 3-5 sentences",
+                        long: "Long — full reply",
+                      };
+                      return (
+                        <label
+                          key={opt}
+                          style={{
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            padding: "8px 12px",
+                            borderRadius: 8,
+                            border: `1.5px solid ${selected ? "#FF4500" : "#E5E7EB"}`,
+                            background: selected ? "#FFF3EC" : "#fff",
+                            cursor: "pointer",
+                            fontSize: 12,
+                            fontWeight: selected ? 700 : 500,
+                            color: selected ? "#E03D00" : "#4B5563",
+                            transition: "all 0.1s",
+                          }}
+                        >
+                          <input
+                            type="radio"
+                            name="replyLength"
+                            value={opt}
+                            defaultChecked={selected}
+                            style={{ display: "none" }}
+                          />
+                          {labels[opt]}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </FieldRow>
                 <FieldRow label="Reply generator tone" vertical>
                   <textarea
                     className="settings-input"

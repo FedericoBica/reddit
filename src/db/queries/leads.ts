@@ -215,7 +215,10 @@ export async function getLeadById(projectId: string, leadId: string): Promise<Le
   return data ? withLegacyLeadCompatibility(data) : null;
 }
 
-export async function getNewItemsCount(projectId: string): Promise<number> {
+export async function getNewItemsCount(projectId: string): Promise<{
+  opportunities: number;
+  mentions: number;
+}> {
   const supabase = await createSupabaseServerClient();
 
   const [leadsResult, mentionsResult] = await Promise.all([
@@ -232,5 +235,8 @@ export async function getNewItemsCount(projectId: string): Promise<number> {
       .is("opened_at", null),
   ]);
 
-  return (leadsResult.count ?? 0) + (mentionsResult.count ?? 0);
+  return {
+    opportunities: leadsResult.count ?? 0,
+    mentions: mentionsResult.count ?? 0,
+  };
 }

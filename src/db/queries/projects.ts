@@ -13,6 +13,7 @@ const projectColumns = `
   website_url,
   value_proposition,
   tone,
+  reply_length,
   region,
   currency_code,
   primary_language,

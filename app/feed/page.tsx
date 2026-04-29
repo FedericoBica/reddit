@@ -365,6 +365,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             xPost={selectedXPost}
             replies={replies}
             projectId={currentProject.id}
+            replyLength={(currentProject.reply_length ?? "medium") as import("@/db/schemas/domain").ReplyLength}
             filterBase={filterBase}
           />
         </div>
@@ -376,7 +377,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 // ── Lead card ─────────────────────────────────────────────────
 
 function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href: string }) {
-  const ageMs = lead.created_at ? Date.now() - new Date(lead.created_at).getTime() : null;
+  const ageMs = lead.created_utc ? Date.now() - new Date(lead.created_utc).getTime() : null;
   const ageMinutes = ageMs !== null ? Math.floor(ageMs / 60_000) : null;
   const isUnread = lead.opened_at === null;
 
@@ -459,6 +460,7 @@ function DetailPane({
   xPost,
   replies,
   projectId,
+  replyLength,
   filterBase,
 }: {
   lead: LeadDTO | null;
@@ -466,9 +468,10 @@ function DetailPane({
   xPost: XPostDTO | null;
   replies: LeadReplyDTO[];
   projectId: string;
+  replyLength: import("@/db/schemas/domain").ReplyLength;
   filterBase: string;
 }) {
-  if (lead) return <LeadDetail lead={lead} replies={replies} projectId={projectId} filterBase={filterBase} />;
+  if (lead) return <LeadDetail lead={lead} replies={replies} projectId={projectId} replyLength={replyLength} filterBase={filterBase} />;
   if (mention) return <MentionDetail mention={mention} projectId={projectId} />;
   if (xPost) return <XPostDetail post={xPost} />;
 
@@ -490,11 +493,13 @@ function LeadDetail({
   lead,
   replies,
   projectId,
+  replyLength,
   filterBase,
 }: {
   lead: LeadDTO;
   replies: LeadReplyDTO[];
   projectId: string;
+  replyLength: import("@/db/schemas/domain").ReplyLength;
   filterBase: string;
 }) {
   const isGenerating = lead.reply_generation_status === "generating";
@@ -586,6 +591,7 @@ function LeadDetail({
             projectId={projectId}
             leadId={lead.id}
             returnTo={returnTo}
+            replyLength={replyLength}
             generateForm={
               <form action={generateLeadRepliesFromForm}>
                 <input type="hidden" name="projectId" value={projectId} />

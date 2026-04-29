@@ -27,11 +27,14 @@ export const projectOnboardingStatusSchema = z.enum([
   ...Enums<"project_onboarding_status">[],
 ]);
 
+export const replyLengthSchema = z.enum(["short", "medium", "long"]);
+
 export const createProjectSchema = z.object({
   name: z.string().trim().min(1).max(120),
   websiteUrl: z.string().url().max(500).optional().nullable(),
   valueProposition: z.string().trim().max(2_000).optional().nullable(),
   tone: z.string().trim().max(2_000).optional().nullable(),
+  replyLength: replyLengthSchema.optional(),
   region: z.string().trim().max(80).optional().nullable(),
   currencyCode: z.string().trim().length(3).toUpperCase().default("USD"),
   primaryLanguage: z.string().trim().min(2).max(20).default("en"),
@@ -217,6 +220,8 @@ export type XKeywordDTO = Pick<
   "id" | "project_id" | "query" | "is_active" | "created_at" | "updated_at"
 >;
 
+export type ReplyLength = "short" | "medium" | "long";
+
 export type ProjectDTO = Pick<
   Project,
   | "id"
@@ -224,6 +229,7 @@ export type ProjectDTO = Pick<
   | "website_url"
   | "value_proposition"
   | "tone"
+  | "reply_length"
   | "region"
   | "currency_code"
   | "primary_language"

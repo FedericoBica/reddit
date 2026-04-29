@@ -12,10 +12,10 @@ import {
   type ReplyStyle,
 } from "@/db/schemas/domain";
 
-export const REPLY_PROMPT_VERSION = "v3_intent_aware";
+export const REPLY_PROMPT_VERSION = "v4_natural";
 
 const replyResponseSchema = z.object({
-  content: z.string().trim().min(40).max(1_500),
+  content: z.string().trim().min(1).max(1_500),
 });
 
 type ReplyGenerationContext = {
@@ -216,26 +216,77 @@ Why good: Opens with specific empathy, asks before pitching, product mention is 
 
 const ANTI_PATTERNS = `
 ═══════════════════════════════════════════════
-ANTI-PATTERNS — never use these phrases or structures
+ANTI-PATTERNS — instant AI tells, never use these
 ═══════════════════════════════════════════════
-- "Great question!" / "Great post!" / "This is such a valid concern"
-- "I work at [Product]" or "Disclaimer: I'm from [Product]" — sounds like legal CYA
-- "Game-changer" / "revolutionary" / "best-in-class" / "industry-leading"
-- "Thousands of teams use [Product]" — unverifiable, reads as marketing copy
-- "Happy to help!" / "Feel free to reach out!" / "Let me know if you have questions!"
-- Opening with the product name in the first sentence
-- Ending with just a URL and nothing else
-- Bullet-point lists of product features as the entire reply
-- "As someone who works in this space..." — vague and suspicious
+
+BANNED OPENERS (first sentence must NEVER start with any of these):
+- "You're definitely onto something"
+- "You're on the right track"
+- "That's a valid concern" / "This is a valid question"
+- "It's frustrating to feel like..." / "I can understand your frustration"
+- "Great question!" / "Great post!" / "This is great"
+- "As someone who works in this space..."
+- "Absolutely!" / "Definitely!" / "Totally!"
+- Restating what the person said before adding anything
+
+BANNED PHRASES anywhere in the reply:
+- "game-changer" / "revolutionary" / "best-in-class" / "industry-leading"
+- "it's great that you're thinking ahead"
+- "Just a thought!" / "Hope that helps!" / "Feel free to reach out!"
+- "Happy to help!" / "Let me know if you have questions!"
+- "Thousands of teams use [Product]" — unverifiable
+- "I work at [Product]" / "Disclaimer: I'm from [Product]"
+- "In terms of [topic]," — corporate transition phrase
+- "That being said," / "With that said," — filler
+- Bullet-point lists of product features as the reply body
+
+BANNED STRUCTURES:
+- 5 clean paragraphs each addressing a different topic — looks like an essay
+- Ending with a generic follow-up question ("What's your next step?") if it adds nothing
+- Ending with just a URL on its own line
+- Pivoting to the product mid-reply after 3+ paragraphs of advice — the pitch pivot is obvious
 `.trim();
+
+// ─── Length Instructions ──────────────────────────────────────
+
+function lengthInstruction(length: string): string {
+  if (length === "short") {
+    return [
+      "LENGTH — Short (1-2 sentences):",
+      "- Maximum 2 sentences. This is a tight constraint — do not exceed it.",
+      "- Pick the single most relevant point and make it count.",
+      "- If mentioning the product, it must fit naturally in those 2 sentences.",
+      "- No warm-up, no closing, no questions — just the point.",
+      "Example of correct length: \"The Amazon SP-API requires seller consent per account which is the main integration friction — most teams start with report uploads and layer live sync later. [Product] does this automatically if you want a reference: [URL]\"",
+    ].join("\n");
+  }
+
+  if (length === "long") {
+    return [
+      "LENGTH — Long (6-10 sentences across 2-3 paragraphs):",
+      "- Go deeper: explain tradeoffs, add a concrete tip, give context on the problem.",
+      "- Still must sound like a person — use fragments, casual transitions, vary sentence length.",
+      "- Product mention should appear once, in its natural place (not at the end as an afterthought).",
+      "- Avoid the 5-paragraph essay structure — write like a thread reply, not a blog post.",
+    ].join("\n");
+  }
+
+  return [
+    "LENGTH — Medium (3-5 sentences):",
+    "- 3 to 5 sentences. No more.",
+    "- One or two paragraphs at most.",
+    "- Get to the point fast, include one concrete observation, mention product if it fits.",
+    "- Think of it as a Reddit reply from someone who knows the space but isn't trying to write a thesis.",
+  ].join("\n");
+}
 
 // ─── System Prompt (stable — maximizes cache hits) ────────────
 
-function buildSystemPrompt(style: ReplyStyle): string {
+function buildSystemPrompt(style: ReplyStyle, replyLength: string): string {
   return [
     "You write Reddit replies on behalf of a B2B SaaS company.",
-    "Your goal: write a reply that sounds like a knowledgeable human Reddit user — not a marketer, not a bot.",
-    "The reply should add genuine value to the conversation. If mentioning the product, it should feel like a natural, honest recommendation — not a pitch.",
+    "Your goal: write a reply that sounds like a real person who knows the space — not a marketer, not a chatbot.",
+    "The best Reddit replies sound like someone who typed this on their phone between meetings, not someone who drafted it in Google Docs.",
     "",
     FEW_SHOT_EXAMPLES,
     "",
@@ -244,14 +295,16 @@ function buildSystemPrompt(style: ReplyStyle): string {
     "═══════════════════════════════════════════════",
     "GENERAL RULES",
     "═══════════════════════════════════════════════",
-    "- Match the language of the post (casual post → casual reply; technical post → technical reply)",
-    "- Never invent product features not mentioned in the project context",
-    "- Never fabricate user numbers, case studies, or results",
-    "- If the product genuinely doesn't fit what the user needs, say so or stay silent on fit",
-    "- Reddit readers detect inauthenticity immediately",
-    "- Do not mention that you are an AI",
+    "- NEVER open with validation ('you're onto something', 'great question', 'totally valid'). Open with a specific observation or fact.",
+    "- Match register: casual post → casual reply. Technical post → technical reply. Don't be more formal than the OP.",
+    "- Vary sentence length. Short punchy sentences mix with longer ones. Real humans don't write uniform paragraphs.",
+    "- Never invent product features, user numbers, or case studies.",
+    "- If the product doesn't fit what the user needs, say so or omit the mention entirely.",
+    "- Do not mention that you are an AI.",
     "",
     styleInstruction(style),
+    "",
+    lengthInstruction(replyLength),
   ].join("\n");
 }
 
@@ -263,6 +316,7 @@ function buildUserPrompt(
 ): string {
   const { project, lead } = context;
   const toneTemplate = resolveToneTemplate(project.tone);
+  const replyLength = project.reply_length ?? "medium";
   const lines: string[] = [];
 
   lines.push("── PRODUCT ──");
@@ -295,8 +349,9 @@ function buildUserPrompt(
   lines.push("\n── YOUR TASK ──");
   lines.push(
     `Write a Reddit reply for this post using the ${style} style and ${toneTemplate.label} tone.\n` +
+    `Reply length: ${replyLength.toUpperCase()} — enforce the length rule strictly from the system prompt.\n` +
     `Follow the intent strategy above — it determines how prominently to feature the product.\n` +
-    `Use the GOOD examples in the system prompt as your quality and length benchmark.\n` +
+    `Do not use any opener from the BANNED OPENERS list. Start with something specific to this post.\n` +
     `Do not use any of the anti-patterns listed.`,
   );
 
@@ -345,6 +400,7 @@ const projectColumns = `
   website_url,
   value_proposition,
   tone,
+  reply_length,
   region,
   currency_code,
   primary_language,
@@ -418,13 +474,16 @@ export async function generateLeadReplyVariant(
   const timeoutMs = Number(process.env.OPENAI_REPLY_TIMEOUT_MS ?? "30000");
   const client = new OpenAI({ apiKey, timeout: timeoutMs });
 
+  const replyLength = context.project.reply_length ?? "medium";
+  const maxTokens = replyLength === "short" ? 120 : replyLength === "long" ? 900 : 400;
+
   const response = await client.responses.parse(
     {
       model,
       temperature,
-      instructions: buildSystemPrompt(style),
+      instructions: buildSystemPrompt(style, replyLength),
       input: buildUserPrompt(context, style),
-      max_output_tokens: 900,
+      max_output_tokens: maxTokens,
       text: {
         format: zodTextFormat(replyResponseSchema, `lead_reply_${style}`),
       },
