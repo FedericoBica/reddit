@@ -24,6 +24,7 @@ import { inngest } from "@/inngest/client";
 import { analyzeCompanyWithAI, fetchWebsiteText } from "@/modules/onboarding/company-analyzer";
 import { setCurrentProject } from "@/modules/projects/current";
 import { generateProjectSuggestions, type CompetitorContext } from "@/modules/projects/suggestion-generator";
+import { generateXKeywords } from "@/modules/projects/x-keyword-generator";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
 import { getProjectById } from "@/db/queries/projects";
 
@@ -282,12 +283,25 @@ export async function saveCompetitorsFromSignup(formData: FormData) {
         })),
       );
 
-      const suggestions = await generateProjectSuggestions(project, competitorContexts);
+      const [suggestions, xKeywords] = await Promise.all([
+        generateProjectSuggestions(project, competitorContexts),
+        generateXKeywords(project, competitorContexts).catch((err) => {
+          console.error("Failed to generate X keywords", err);
+          return null;
+        }),
+      ]);
+
       await replaceProjectSuggestions({
         projectId,
         keywords: suggestions.keywords,
         subreddits: suggestions.subreddits,
       });
+
+      if (xKeywords?.queries.length) {
+        await Promise.all(
+          xKeywords.queries.map((q) => addXKeyword(projectId, q.query).catch(() => null)),
+        );
+      }
 
       try {
         await logSignupSuggestionUsage({

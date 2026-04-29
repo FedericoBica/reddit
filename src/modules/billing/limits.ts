@@ -58,7 +58,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxGhostwriterThreads: 15,
     maxTeamMembers: 2,
     maxRedditAccounts: 2,
-    xEnabled: true,
+    xEnabled: false,
     integrations: {
       slack: false,
       telegram: true,
@@ -79,7 +79,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxGhostwriterThreads: null,
     maxTeamMembers: 3,
     maxRedditAccounts: null,
-    xEnabled: true,
+    xEnabled: false,
     integrations: {
       slack: true,
       telegram: true,

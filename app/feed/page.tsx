@@ -12,7 +12,8 @@ import { getLeadById, listProjectLeads } from "@/db/queries/leads";
 import { listBrandMentions } from "@/db/queries/brand-mentions";
 import { listLeadReplies } from "@/db/queries/lead-replies";
 import { listProjectKeywords } from "@/db/queries/settings";
-import type { BrandMentionDTO, BrandMentionSentiment, KeywordDTO, LeadDTO, LeadReplyDTO } from "@/db/schemas/domain";
+import { listProjectXPosts } from "@/db/queries/x";
+import type { BrandMentionDTO, BrandMentionSentiment, KeywordDTO, LeadDTO, LeadReplyDTO, XPostDTO } from "@/db/schemas/domain";
 import { generateLeadRepliesFromForm, updateLeadStatusFromForm } from "@/modules/leads/actions";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
@@ -22,7 +23,7 @@ export const metadata: Metadata = { title: "Leads" };
 
 const PAGE_SIZE = 10;
 
-type FeedType = "all" | "opportunities" | "mentions";
+type FeedType = "all" | "opportunities" | "mentions" | "x";
 
 type FeedItem =
   | { kind: "opportunity"; data: LeadDTO; sortKey: number }
@@ -53,14 +54,16 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   const rawFeedType = parseFeedType(params?.type);
 
-  const [allLeads, allMentionsRaw, keywords] = await Promise.all([
+  const [allLeads, allMentionsRaw, keywords, allXPosts] = await Promise.all([
     listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
     listBrandMentions({ projectId: currentProject.id }),
     listProjectKeywords(currentProject.id),
+    listProjectXPosts(currentProject.id),
   ]);
 
   const feedLeads = allLeads.filter((l) => l.status !== "irrelevant");
   const competitors = keywords.filter((k) => k.type === "competitor" && k.is_active);
+  const xPosts = allXPosts.filter((p) => p.status !== "irrelevant");
 
   const feedType = rawFeedType;
 
@@ -109,16 +112,25 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       ? filteredItems
       : [...filteredItems].sort((a, b) => b.sortKey - a.sortKey);
 
+  // X tab: separate sorted list
+  const sortedXPosts = feedType === "x"
+    ? [...xPosts].sort((a, b) => (b.intent_score ?? 0) - (a.intent_score ?? 0))
+    : [];
+
   // Resolve selected item
   const requestedId = params?.itemId;
   const requestedKind =
     params?.itemType === "mention" ? "mention" : "opportunity";
 
-  const selectedFromList: FeedItem | null = requestedId
-    ? (sortedItems.find((item) => item.data.id === requestedId && item.kind === requestedKind) ??
-       sortedItems[0] ??
-       null)
-    : sortedItems[0] ?? null;
+  const selectedXPost: XPostDTO | null = feedType === "x"
+    ? (requestedId ? (sortedXPosts.find((p) => p.id === requestedId) ?? sortedXPosts[0] ?? null) : sortedXPosts[0] ?? null)
+    : null;
+
+  const selectedFromList: FeedItem | null = feedType !== "x"
+    ? (requestedId
+        ? (sortedItems.find((item) => item.data.id === requestedId && item.kind === requestedKind) ?? sortedItems[0] ?? null)
+        : sortedItems[0] ?? null)
+    : null;
 
   const selectedLead: LeadDTO | null =
     selectedFromList?.kind === "opportunity"
@@ -136,18 +148,22 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   // Pagination
   const pageFromParam = Math.max(0, parseInt(params?.page ?? "0") || 0);
-  const selectedIndex = selectedFromList
-    ? sortedItems.findIndex(
-        (item) => item.data.id === selectedFromList.data.id && item.kind === selectedFromList.kind,
-      )
-    : -1;
+  const activeList = feedType === "x" ? sortedXPosts : sortedItems;
+  const selectedIndex = feedType === "x"
+    ? (selectedXPost ? sortedXPosts.findIndex((p) => p.id === selectedXPost.id) : -1)
+    : (selectedFromList ? sortedItems.findIndex((item) => item.data.id === selectedFromList.data.id && item.kind === selectedFromList.kind) : -1);
   const autoPage = selectedIndex >= 0 ? Math.floor(selectedIndex / PAGE_SIZE) : 0;
   const currentPage =
     params?.itemId && !params?.page
       ? autoPage
-      : Math.min(pageFromParam, Math.max(0, Math.ceil(sortedItems.length / PAGE_SIZE) - 1));
-  const totalPages = Math.max(1, Math.ceil(sortedItems.length / PAGE_SIZE));
-  const paginatedItems = sortedItems.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE);
+      : Math.min(pageFromParam, Math.max(0, Math.ceil(activeList.length / PAGE_SIZE) - 1));
+  const totalPages = Math.max(1, Math.ceil(activeList.length / PAGE_SIZE));
+  const paginatedItems = feedType !== "x"
+    ? sortedItems.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+    : [];
+  const paginatedXPosts = feedType === "x"
+    ? sortedXPosts.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
+    : [];
 
   // Shared href builder — preserves all active filter state
   const filterBase = buildFilterBase({
@@ -170,13 +186,15 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             <div className="ds-topbar-titles">
               <h1 className="ds-topbar-title"><em>Leads</em></h1>
               <div className="ds-topbar-sub">
-                <span><strong>{sortedItems.length}</strong> posts</span>
+                <span><strong>{feedType === "x" ? xPosts.length : sortedItems.length}</strong> posts</span>
                 <span className="ds-topbar-sep">·</span>
                 <span>
                   {feedType === "all"
                     ? `${feedLeads.length} opportunities · ${allMentionsRaw.length} mentions`
                     : feedType === "opportunities"
                     ? `${feedLeads.length} leads`
+                    : feedType === "x"
+                    ? `${xPosts.length} X leads`
                     : "brand + competitors"}
                 </span>
               </div>
@@ -205,22 +223,25 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                   alignItems: "center",
                 }}
               >
-                {(["all", "opportunities", "mentions"] as const).map((type) => {
+                {(["all", "opportunities", "mentions", "x"] as const).map((type) => {
                   const active = feedType === type;
                   const count =
                     type === "all"
                       ? feedLeads.length + allMentionsRaw.length
                       : type === "opportunities"
                       ? feedLeads.length
-                      : allMentionsRaw.length;
+                      : type === "mentions"
+                      ? allMentionsRaw.length
+                      : xPosts.length;
                   const href = `/feed?projectId=${currentProject.id}${type !== "all" ? `&type=${type}` : ""}`;
+                  const label = type === "all" ? "All" : type === "opportunities" ? "Opportunities" : type === "mentions" ? "Mentions" : "X";
                   return (
                     <Link
                       key={type}
                       href={href}
                       className={`filter-pill${active ? " filter-pill-active" : ""}`}
                     >
-                      {type === "all" ? "All" : type === "opportunities" ? "Opportunities" : "Mentions"}
+                      {label}
                       {" "}
                       <span style={{ fontWeight: 700, opacity: 0.7 }}>({count})</span>
                     </Link>
@@ -258,7 +279,20 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             </div>
 
             <div className="opportunity-list">
-              {paginatedItems.length === 0 ? (
+              {feedType === "x" ? (
+                paginatedXPosts.length === 0 ? (
+                  <EmptyFeed feedType={feedType} lastScrapedAt={currentProject.last_scraped_at} projectId={currentProject.id} />
+                ) : (
+                  paginatedXPosts.map((post) => (
+                    <XPostCard
+                      key={post.id}
+                      post={post}
+                      active={selectedXPost?.id === post.id}
+                      href={`/feed?projectId=${currentProject.id}&type=x&itemId=${post.id}`}
+                    />
+                  ))
+                )
+              ) : paginatedItems.length === 0 ? (
                 <EmptyFeed feedType={feedType} lastScrapedAt={currentProject.last_scraped_at} projectId={currentProject.id} />
               ) : (
                 paginatedItems.map((item) =>
@@ -328,6 +362,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
           <DetailPane
             lead={selectedLead}
             mention={selectedMention}
+            xPost={selectedXPost}
             replies={replies}
             projectId={currentProject.id}
             filterBase={filterBase}
@@ -421,18 +456,21 @@ function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; acti
 function DetailPane({
   lead,
   mention,
+  xPost,
   replies,
   projectId,
   filterBase,
 }: {
   lead: LeadDTO | null;
   mention: BrandMentionDTO | null;
+  xPost: XPostDTO | null;
   replies: LeadReplyDTO[];
   projectId: string;
   filterBase: string;
 }) {
   if (lead) return <LeadDetail lead={lead} replies={replies} projectId={projectId} filterBase={filterBase} />;
   if (mention) return <MentionDetail mention={mention} projectId={projectId} />;
+  if (xPost) return <XPostDetail post={xPost} />;
 
   return (
     <section className="detail-pane">
@@ -623,6 +661,103 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
   );
 }
 
+
+// ── X post card ───────────────────────────────────────────────
+
+function XPostCard({ post, active, href }: { post: XPostDTO; active: boolean; href: string }) {
+  return (
+    <Link
+      href={href}
+      className={`opportunity-card${active ? " opportunity-card-active" : ""}`}
+    >
+      <div className="opportunity-meta">
+        <span className="opportunity-dot" style={{ background: "#000" }} />
+        {post.author_username && <span>@{post.author_username}</span>}
+        {post.posted_at && <span>{formatRelative(post.posted_at)}</span>}
+        {post.like_count != null && <span>♥ {post.like_count}</span>}
+      </div>
+      <h2 className="opportunity-heading" style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.5 }}>
+        {post.text.length > 160 ? `${post.text.slice(0, 160)}…` : post.text}
+      </h2>
+      {post.classification_reason && (
+        <p style={{ fontSize: 11, color: "#46A758", fontWeight: 500, lineHeight: 1.4, marginTop: 4 }}>
+          {post.classification_reason.slice(0, 100)}
+        </p>
+      )}
+      {post.intent_score != null && (
+        <div style={{ marginTop: 4 }}>
+          <span style={{ fontSize: 10, fontWeight: 700, color: "#46A758" }}>
+            Score: {post.intent_score}
+          </span>
+        </div>
+      )}
+    </Link>
+  );
+}
+
+// ── X post detail ─────────────────────────────────────────────
+
+function XPostDetail({ post }: { post: XPostDTO }) {
+  return (
+    <section className="detail-pane" aria-label="X post detail">
+      <div className="detail-topbar">
+        <div className="opportunity-meta">
+          <span className="opportunity-dot" style={{ background: "#000" }} />
+          {post.author_name && <span>{post.author_name}</span>}
+          {post.author_username && <span>@{post.author_username}</span>}
+          {post.posted_at && <span>{formatDate(post.posted_at)}</span>}
+        </div>
+        {post.permalink && (
+          <a
+            href={post.permalink}
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              fontSize: 12, fontWeight: 700, color: "#000", textDecoration: "none",
+              padding: "5px 14px", borderRadius: 20, border: "1px solid #000",
+              flexShrink: 0,
+            }}
+          >
+            View on X →
+          </a>
+        )}
+      </div>
+
+      <div className="detail-content">
+        <p style={{ fontSize: 18, lineHeight: 1.6, fontWeight: 400, color: "#1A1A1B", whiteSpace: "pre-wrap" }}>
+          {post.text}
+        </p>
+
+        {post.keywords_matched && post.keywords_matched.length > 0 && (
+          <p style={{ fontSize: 11, color: "#7C7C83", fontWeight: 600, marginTop: 16 }}>
+            Keywords: {post.keywords_matched.join(", ")}
+          </p>
+        )}
+      </div>
+
+      <article className="lead-post">
+        <div className="post-stats-bar">
+          {post.like_count != null && <span>♥ {post.like_count} likes</span>}
+          {post.retweet_count != null && <span>↺ {post.retweet_count} retweets</span>}
+          {post.reply_count != null && <span>💬 {post.reply_count} replies</span>}
+          {post.impression_count != null && <span>👁 {post.impression_count} views</span>}
+        </div>
+
+        {post.classification_reason && (
+          <div style={{ marginTop: 12, padding: "10px 14px", background: "#F6F7F8", borderRadius: 8, border: "1px solid #E5E7EB" }}>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#7C7C83", marginBottom: 4 }}>AI ANALYSIS</p>
+            <p style={{ fontSize: 13, color: "#1A1A1B", lineHeight: 1.5 }}>{post.classification_reason}</p>
+            {post.intent_score != null && (
+              <p style={{ fontSize: 11, fontWeight: 700, color: "#46A758", marginTop: 6 }}>
+                Intent score: {post.intent_score}/100
+              </p>
+            )}
+          </div>
+        )}
+      </article>
+    </section>
+  );
+}
 
 // ── Mention triage controls ───────────────────────────────────
 
@@ -915,7 +1050,7 @@ function CheckIcon() {
 // ── Helpers ───────────────────────────────────────────────────
 
 function parseFeedType(value: string | undefined): FeedType {
-  if (value === "opportunities" || value === "mentions") return value;
+  if (value === "opportunities" || value === "mentions" || value === "x") return value;
   return "all";
 }
 
