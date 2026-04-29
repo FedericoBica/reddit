@@ -218,18 +218,19 @@ export async function getLeadById(projectId: string, leadId: string): Promise<Le
 export async function getNewItemsCount(projectId: string): Promise<number> {
   const supabase = await createSupabaseServerClient();
 
-  const [leadsResult, xPostsResult] = await Promise.all([
+  const [leadsResult, mentionsResult] = await Promise.all([
     supabase
       .from("leads")
       .select("id", { count: "exact", head: true })
       .eq("project_id", projectId)
-      .eq("status", "new"),
+      .neq("status", "irrelevant")
+      .is("opened_at", null),
     supabase
-      .from("x_posts")
+      .from("brand_mentions")
       .select("id", { count: "exact", head: true })
       .eq("project_id", projectId)
-      .eq("status", "new"),
+      .is("opened_at", null),
   ]);
 
-  return (leadsResult.count ?? 0) + (xPostsResult.count ?? 0);
+  return (leadsResult.count ?? 0) + (mentionsResult.count ?? 0);
 }

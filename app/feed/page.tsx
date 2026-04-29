@@ -6,6 +6,7 @@ import { KeywordsDropdown } from "@/app/components/keywords-dropdown";
 import { ReplyEditor } from "@/app/components/reply-editor";
 import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
+import { ReadMarker } from "@/app/components/read-marker";
 import { MentionReplyGenerator } from "@/app/mentions/mention-reply-generator";
 import { getLeadById, listProjectLeads } from "@/db/queries/leads";
 import { listBrandMentions } from "@/db/queries/brand-mentions";
@@ -342,9 +343,14 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href: string }) {
   const ageMs = lead.created_at ? Date.now() - new Date(lead.created_at).getTime() : null;
   const ageMinutes = ageMs !== null ? Math.floor(ageMs / 60_000) : null;
+  const isUnread = lead.opened_at === null;
 
   return (
-    <Link href={href} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
+    <Link
+      href={href}
+      className={`opportunity-card${active ? " opportunity-card-active" : ""}`}
+      style={isUnread && !active ? { boxShadow: "inset 3px 0 0 #FF4500" } : undefined}
+    >
       <div className="opportunity-meta">
         <TypeDot kind="opportunity" />
         <span>r/{lead.subreddit}</span>
@@ -380,8 +386,14 @@ function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href
 // ── Mention card ──────────────────────────────────────────────
 
 function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; active: boolean; href: string }) {
+  const isUnread = mention.opened_at === null;
+
   return (
-    <Link href={href} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
+    <Link
+      href={href}
+      className={`opportunity-card${active ? " opportunity-card-active" : ""}`}
+      style={isUnread && !active ? { boxShadow: "inset 3px 0 0 #4F46E5" } : undefined}
+    >
       <div className="opportunity-meta">
         <TypeDot kind="mention" />
         <TargetBadge type={mention.target_type} label={mention.target_label} />
@@ -454,6 +466,7 @@ function LeadDetail({
 
   return (
     <section className="detail-pane" aria-label="Lead detail">
+      <ReadMarker itemId={lead.id} itemType="lead" projectId={projectId} />
       <div className="detail-topbar">
         <div className="opportunity-meta">
           <span
@@ -560,6 +573,7 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
 
   return (
     <section className="detail-pane" aria-label="Mention detail">
+      <ReadMarker itemId={mention.id} itemType="mention" projectId={projectId} />
       <div className="detail-topbar">
         <div className="opportunity-meta">
           <TargetBadge type={mention.target_type} label={mention.target_label} />

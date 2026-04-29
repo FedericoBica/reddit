@@ -345,6 +345,7 @@ export type BrandMentionDTO = {
   summary: string | null;
   wrong_region: boolean | null;
   posted_at: string | null;
+  opened_at: string | null;
   created_at: string;
 };
 

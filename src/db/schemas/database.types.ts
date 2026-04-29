@@ -101,6 +101,7 @@ export type Database = {
           id: string
           mention_context: string | null
           num_comments: number | null
+          opened_at: string | null
           permalink: string
           post_type: string | null
           posted_at: string | null
@@ -126,6 +127,7 @@ export type Database = {
           id?: string
           mention_context?: string | null
           num_comments?: number | null
+          opened_at?: string | null
           permalink: string
           post_type?: string | null
           posted_at?: string | null
@@ -151,6 +153,7 @@ export type Database = {
           id?: string
           mention_context?: string | null
           num_comments?: number | null
+          opened_at?: string | null
           permalink?: string
           post_type?: string | null
           posted_at?: string | null
