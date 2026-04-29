@@ -184,18 +184,17 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
           <div className="ds-topbar-left">
             <div className="ds-topbar-icon">✦</div>
             <div className="ds-topbar-titles">
-              <h1 className="ds-topbar-title"><em>Leads</em></h1>
+              <h1 className="ds-topbar-title">
+                <em>
+                  {feedType === "opportunities" ? "Opportunities" : feedType === "mentions" ? "Mentions" : "X Leads"}
+                </em>
+              </h1>
               <div className="ds-topbar-sub">
-                <span><strong>{feedType === "x" ? xPosts.length : sortedItems.length}</strong> posts</span>
-                <span className="ds-topbar-sep">·</span>
                 <span>
-                  {feedType === "all"
-                    ? `${feedLeads.length} opportunities · ${allMentionsRaw.length} mentions`
-                    : feedType === "opportunities"
-                    ? `${feedLeads.length} leads`
-                    : feedType === "x"
-                    ? `${xPosts.length} X leads`
-                    : "brand + competitors"}
+                  <strong>
+                    {feedType === "x" ? xPosts.length : feedType === "opportunities" ? feedLeads.length : allMentionsRaw.length}
+                  </strong>{" "}
+                  {feedType === "x" ? "X posts" : feedType === "opportunities" ? "opportunities" : "mentions"}
                 </span>
               </div>
             </div>
@@ -210,48 +209,13 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             style={{ gridTemplateRows: "auto 1fr auto" }}
             aria-label="Leads feed"
           >
-            {/* Header: type pills + optional mention triage controls — always auto-height */}
+            {/* Header: page description + optional mention triage controls */}
             <div style={{ background: "#F6F7F8", borderBottom: "1px solid #DAE0E6" }}>
-              {/* Type pills */}
-              <div
-                style={{
-                  padding: "10px 10px 8px",
-                  borderBottom: feedType === "mentions" ? "1px solid #E5E7EB" : "none",
-                  display: "flex",
-                  gap: 6,
-                  flexWrap: "wrap",
-                  alignItems: "center",
-                }}
-              >
-                {(["all", "opportunities", "mentions", "x"] as const).map((type) => {
-                  const active = feedType === type;
-                  const count =
-                    type === "all"
-                      ? feedLeads.length + allMentionsRaw.length
-                      : type === "opportunities"
-                      ? feedLeads.length
-                      : type === "mentions"
-                      ? allMentionsRaw.length
-                      : xPosts.length;
-                  const href = `/feed?projectId=${currentProject.id}${type !== "all" ? `&type=${type}` : ""}`;
-                  const label = type === "all" ? "All" : type === "opportunities" ? "Opportunities" : type === "mentions" ? "Mentions" : "X";
-                  return (
-                    <Link
-                      key={type}
-                      href={href}
-                      className={`filter-pill${active ? " filter-pill-active" : ""}`}
-                    >
-                      {label}
-                      {" "}
-                      <span style={{ fontWeight: 700, opacity: 0.7 }}>({count})</span>
-                    </Link>
-                  );
-                })}
-              </div>
+              <FeedDescription feedType={feedType} />
 
               {/* Mention triage controls — only when type=mentions */}
               {feedType === "mentions" && (
-                <div style={{ padding: "8px 10px 10px", display: "grid", gap: 10 }}>
+                <div style={{ padding: "0 10px 10px", display: "grid", gap: 10 }}>
                   <TargetDropdown
                     projectId={currentProject.id}
                     companyName={currentProject.name}
@@ -371,6 +335,38 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
         </div>
       </section>
     </DashboardShell>
+  );
+}
+
+// ── Feed description ──────────────────────────────────────────
+
+const FEED_META: Record<Exclude<FeedType, "all">, { title: string; description: string }> = {
+  opportunities: {
+    title: "Opportunities",
+    description:
+      "Reddit posts where users are actively looking for a solution like yours. Each lead is ranked by buyer intent — the higher the score, the closer they are to making a decision. Reply early, reply human.",
+  },
+  mentions: {
+    title: "Mentions",
+    description:
+      "Conversations where your brand or competitors come up organically. Track sentiment, spot criticism before it spreads, and jump in when it makes sense. Filter by target or sentiment to triage faster.",
+  },
+  x: {
+    title: "X Leads",
+    description:
+      "Posts on X/Twitter that match your tracked keywords. These are people voicing pain points or needs your product solves — a fast reply with real value can turn a tweet into a customer.",
+  },
+};
+
+function FeedDescription({ feedType }: { feedType: FeedType }) {
+  const meta = feedType !== "all" ? FEED_META[feedType] : null;
+  if (!meta) return null;
+  return (
+    <div style={{ padding: "12px 12px 10px" }}>
+      <p style={{ fontSize: 11, color: "#7C7C83", lineHeight: 1.55, margin: 0 }}>
+        {meta.description}
+      </p>
+    </div>
   );
 }
 
