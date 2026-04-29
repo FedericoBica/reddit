@@ -180,42 +180,29 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       {isGenerating && <AutoRefresh intervalMs={4000} />}
 
       <section className="searchbox-workspace">
-        <header className="ds-topbar">
-          <div className="ds-topbar-left">
-            <div className="ds-topbar-icon">✦</div>
-            <div className="ds-topbar-titles">
-              <h1 className="ds-topbar-title">
-                <em>
-                  {feedType === "opportunities" ? "Opportunities" : feedType === "mentions" ? "Mentions" : "X Leads"}
-                </em>
-              </h1>
-              <div className="ds-topbar-sub">
-                <span>
-                  <strong>
-                    {feedType === "x" ? xPosts.length : feedType === "opportunities" ? feedLeads.length : allMentionsRaw.length}
-                  </strong>{" "}
-                  {feedType === "x" ? "X posts" : feedType === "opportunities" ? "opportunities" : "mentions"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
-
         <div className="searchbox-body">
-          {/* gridTemplateRows overrides opportunity-column's default "1fr auto" so the
-              header wrapper stays auto-height and only the list takes the remaining space */}
           <section
             className="opportunity-column"
-            style={{ gridTemplateRows: "auto 1fr auto" }}
             aria-label="Leads feed"
           >
-            {/* Header: page description + optional mention triage controls */}
-            <div style={{ background: "#F6F7F8", borderBottom: "1px solid #DAE0E6" }}>
-              <FeedDescription feedType={feedType} />
+            {/* Column header: title, description, count + optional mention filters */}
+            <div className="feed-col-header">
+              <h2 className="feed-col-title">
+                {feedType === "opportunities" ? "New Opportunities" : feedType === "mentions" ? "Mentions" : "X Leads"}
+              </h2>
+              {feedType !== "all" && (
+                <p className="feed-col-desc">{FEED_META[feedType].description}</p>
+              )}
+              <div className="feed-col-meta">
+                <span>
+                  {feedType === "x" ? xPosts.length : feedType === "opportunities" ? feedLeads.length : allMentionsRaw.length}
+                  {" "}posts found
+                </span>
+              </div>
 
-              {/* Mention triage controls — only when type=mentions */}
+              {/* Mention triage controls */}
               {feedType === "mentions" && (
-                <div style={{ padding: "0 10px 10px", display: "grid", gap: 10 }}>
+                <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
                   <TargetDropdown
                     projectId={currentProject.id}
                     companyName={currentProject.name}
@@ -358,18 +345,6 @@ const FEED_META: Record<Exclude<FeedType, "all">, { title: string; description: 
   },
 };
 
-function FeedDescription({ feedType }: { feedType: FeedType }) {
-  const meta = feedType !== "all" ? FEED_META[feedType] : null;
-  if (!meta) return null;
-  return (
-    <div style={{ padding: "12px 12px 10px" }}>
-      <p style={{ fontSize: 11, color: "#7C7C83", lineHeight: 1.55, margin: 0 }}>
-        {meta.description}
-      </p>
-    </div>
-  );
-}
-
 // ── Lead card ─────────────────────────────────────────────────
 
 function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href: string }) {
@@ -381,7 +356,7 @@ function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href
     <Link
       href={href}
       className={`opportunity-card${active ? " opportunity-card-active" : ""}`}
-      style={isUnread && !active ? { boxShadow: "inset 3px 0 0 #FF4500" } : undefined}
+      style={isUnread && !active ? { borderLeftColor: "#FF4500" } : undefined}
     >
       <div className="opportunity-meta">
         <TypeDot kind="opportunity" />
