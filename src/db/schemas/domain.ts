@@ -171,6 +171,22 @@ export type XKeyword = Tables<"x_keywords">;
 export type XPost = Tables<"x_posts">;
 export type XPostReply = Tables<"x_post_replies">;
 export type XProfile = Tables<"x_profiles">;
+export type XConnectedAccount = Tables<"x_connected_accounts">;
+export type XScheduledPost = Tables<"x_scheduled_posts">;
+
+export type XConnectedAccountDTO = Pick<
+  XConnectedAccount,
+  | "id" | "project_id" | "user_id" | "x_user_id" | "x_username"
+  | "x_name" | "x_profile_image_url" | "token_expires_at" | "created_at"
+>;
+
+export type XScheduledPostDTO = Pick<
+  XScheduledPost,
+  | "id" | "project_id" | "created_by" | "connected_account_id"
+  | "content" | "scheduled_for" | "status" | "published_at"
+  | "x_tweet_id" | "error" | "source" | "category" | "hook_explanation"
+  | "created_at" | "updated_at"
+>;
 
 export type XProfileDTO = Pick<
   XProfile,

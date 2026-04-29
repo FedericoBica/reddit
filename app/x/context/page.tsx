@@ -4,6 +4,8 @@ import { DashboardShell } from "@/app/components/dashboard-shell";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import { getXProfile, saveXContextFromForm } from "@/modules/x/context-actions";
+import { getConnectedAccount } from "@/modules/x/x-oauth";
+import { disconnectXAccountAction } from "@/modules/x/post-actions";
 
 export const metadata: Metadata = { title: "My X Context" };
 
@@ -30,7 +32,10 @@ export default async function XContextPage({ searchParams }: { searchParams?: Pr
   if (projectState.status === "missing") redirect("/bootstrap");
   const { currentProject } = projectState;
 
-  const profile = await getXProfile(currentProject.id);
+  const [profile, connectedAccount] = await Promise.all([
+    getXProfile(currentProject.id),
+    getConnectedAccount(currentProject.id),
+  ]);
 
   const saved = params?.saved === "1";
 
@@ -51,6 +56,51 @@ export default async function XContextPage({ searchParams }: { searchParams?: Pr
               Context saved successfully.
             </div>
           )}
+
+          {/* ── X Account Connection ── */}
+          <section style={{ marginBottom: 32 }}>
+            <div style={{ marginBottom: 14 }}>
+              <h2 style={{ fontSize: 15, fontWeight: 800, color: "#1A1A1B", marginBottom: 4 }}>X Account</h2>
+              <p style={{ fontSize: 13, color: "#7C7C83" }}>Connect your X account to post directly from the Content Studio and Queue.</p>
+            </div>
+            {connectedAccount ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", borderRadius: 8, border: "1px solid #E5E5E5", background: "#FAFAFA" }}>
+                {connectedAccount.x_profile_image_url && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={connectedAccount.x_profile_image_url} alt="" width={36} height={36} style={{ borderRadius: "50%" }} />
+                )}
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: 14, fontWeight: 700, color: "#1A1A1B" }}>{connectedAccount.x_name}</p>
+                  <p style={{ fontSize: 12, color: "#7C7C83" }}>@{connectedAccount.x_username}</p>
+                </div>
+                <form action={disconnectXAccountAction}>
+                  <input type="hidden" name="projectId" value={currentProject.id} />
+                  <button type="submit" style={{ fontSize: 12, color: "#D93025", fontWeight: 600, background: "none", border: "none", cursor: "pointer", padding: "4px 8px" }}>
+                    Disconnect
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <a
+                href={`/api/x/oauth/authorize?projectId=${currentProject.id}`}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 8,
+                  padding: "9px 18px",
+                  borderRadius: 8,
+                  background: "#000",
+                  color: "#fff",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.746l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622Zm-1.161 17.52h1.833L7.084 4.126H5.117Z"/></svg>
+                Connect X account
+              </a>
+            )}
+          </section>
 
           <form action={saveXContextFromForm}>
             <input type="hidden" name="projectId" value={currentProject.id} />

@@ -1400,6 +1400,105 @@ export type Database = {
           },
         ]
       }
+      x_connected_accounts: {
+        Row: {
+          id: string
+          project_id: string
+          user_id: string
+          x_user_id: string
+          x_username: string
+          x_name: string | null
+          x_profile_image_url: string | null
+          access_token: string
+          refresh_token: string | null
+          token_expires_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          user_id: string
+          x_user_id: string
+          x_username: string
+          x_name?: string | null
+          x_profile_image_url?: string | null
+          access_token: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          user_id?: string
+          x_user_id?: string
+          x_username?: string
+          x_name?: string | null
+          x_profile_image_url?: string | null
+          access_token?: string
+          refresh_token?: string | null
+          token_expires_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      x_scheduled_posts: {
+        Row: {
+          id: string
+          project_id: string
+          created_by: string
+          connected_account_id: string | null
+          content: string
+          scheduled_for: string | null
+          status: "draft" | "scheduled" | "publishing" | "published" | "failed"
+          published_at: string | null
+          x_tweet_id: string | null
+          error: string | null
+          source: "ai_writer" | "inspiration" | "manual"
+          category: string | null
+          hook_explanation: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          project_id: string
+          created_by: string
+          connected_account_id?: string | null
+          content: string
+          scheduled_for?: string | null
+          status?: "draft" | "scheduled" | "publishing" | "published" | "failed"
+          published_at?: string | null
+          x_tweet_id?: string | null
+          error?: string | null
+          source?: "ai_writer" | "inspiration" | "manual"
+          category?: string | null
+          hook_explanation?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          project_id?: string
+          created_by?: string
+          connected_account_id?: string | null
+          content?: string
+          scheduled_for?: string | null
+          status?: "draft" | "scheduled" | "publishing" | "published" | "failed"
+          published_at?: string | null
+          x_tweet_id?: string | null
+          error?: string | null
+          source?: "ai_writer" | "inspiration" | "manual"
+          category?: string | null
+          hook_explanation?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       x_profiles: {
         Row: {
           id: string

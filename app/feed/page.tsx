@@ -7,34 +7,25 @@ import { ReplyEditor } from "@/app/components/reply-editor";
 import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { MentionReplyGenerator } from "@/app/mentions/mention-reply-generator";
-import { XReplyEditor } from "@/app/components/x-reply-editor";
 import { getLeadById, listProjectLeads } from "@/db/queries/leads";
 import { listBrandMentions } from "@/db/queries/brand-mentions";
 import { listLeadReplies } from "@/db/queries/lead-replies";
 import { listProjectKeywords } from "@/db/queries/settings";
-import { getXPostById, listProjectXPosts, listXPostReplies } from "@/db/queries/x";
-import type { BrandMentionDTO, BrandMentionSentiment, KeywordDTO, LeadDTO, LeadReplyDTO, XPostDTO, XPostReplyDTO } from "@/db/schemas/domain";
+import type { BrandMentionDTO, BrandMentionSentiment, KeywordDTO, LeadDTO, LeadReplyDTO } from "@/db/schemas/domain";
 import { generateLeadRepliesFromForm, updateLeadStatusFromForm } from "@/modules/leads/actions";
 import { requireUser } from "@/modules/auth/server";
-import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { resolveCurrentProject } from "@/modules/projects/current";
-import { updateXPostStatusFromForm, generateXReplyFromForm } from "@/modules/x/actions";
 import { toRedditUrl } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Leads" };
 
 const PAGE_SIZE = 10;
 
-type FeedType = "all" | "opportunities" | "mentions" | "x";
+type FeedType = "all" | "opportunities" | "mentions";
 
 type FeedItem =
   | { kind: "opportunity"; data: LeadDTO; sortKey: number }
-  | { kind: "mention"; data: BrandMentionDTO; sortKey: number }
-  | { kind: "x_post"; data: XPostDTO; sortKey: number };
-
-type XScore = "all" | "high" | "medium";
-type XSentiment = "all" | "positive" | "negative" | "neutral";
-type XSort = "relevant" | "recent";
+  | { kind: "mention"; data: BrandMentionDTO; sortKey: number };
 
 type FeedPageProps = {
   searchParams?: Promise<{
@@ -47,10 +38,6 @@ type FeedPageProps = {
     target?: string;
     sentiment?: string;
     sort?: string;
-    // x-specific filters
-    xScore?: string;
-    xSentiment?: string;
-    xSort?: string;
   }>;
 };
 
@@ -63,17 +50,11 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
   const { currentProject } = projectState;
 
-  const billingPlan = await getCurrentBillingPlan();
-  const xEnabled = billingPlan.xEnabled;
-
-  // Redirect away from X tab if plan doesn't include X
   const rawFeedType = parseFeedType(params?.type);
-  if (rawFeedType === "x" && !xEnabled) redirect(`/feed?projectId=${currentProject.id}`);
 
-  const [allLeads, allMentionsRaw, allXPosts, keywords] = await Promise.all([
+  const [allLeads, allMentionsRaw, keywords] = await Promise.all([
     listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
     listBrandMentions({ projectId: currentProject.id }),
-    xEnabled ? listProjectXPosts(currentProject.id) : Promise.resolve([]),
     listProjectKeywords(currentProject.id),
   ]);
 
@@ -107,25 +88,6 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     filterByTarget(allMentionsRaw, selectedTarget, currentProject.name),
   );
 
-  // X-specific filters — only applied when type=x
-  const xScore: XScore = feedType === "x" ? parseXScore(params?.xScore) : "all";
-  const xSentiment: XSentiment = feedType === "x" ? parseXSentiment(params?.xSentiment) : "all";
-  const xSort: XSort = feedType === "x" ? parseXSort(params?.xSort) : "recent";
-
-  const visibleXPosts = allXPosts
-    .filter((post) => post.status !== "irrelevant")
-    .filter((post) => {
-      if (xScore === "high") return (post.intent_score ?? 0) >= 70;
-      if (xScore === "medium") return (post.intent_score ?? 0) >= 40 && (post.intent_score ?? 0) < 70;
-      return true;
-    })
-    .filter((post) => xSentiment === "all" || post.sentiment === xSentiment);
-
-  const sortedXPosts = [...visibleXPosts].sort((a, b) => {
-    if (xSort === "relevant") return (b.intent_score ?? 0) - (a.intent_score ?? 0);
-    return new Date(b.posted_at ?? b.created_at).getTime() - new Date(a.posted_at ?? a.created_at).getTime();
-  });
-
   // Build combined feed
   const allItems: FeedItem[] = [
     ...feedLeads.map((lead): FeedItem => ({
@@ -138,28 +100,18 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       data: mention,
       sortKey: mention.created_at ? new Date(mention.created_at).getTime() : 0,
     })),
-    ...sortedXPosts.map((post): FeedItem => ({
-      kind: "x_post",
-      data: post,
-      sortKey: post.created_at ? new Date(post.created_at).getTime() : 0,
-    })),
   ];
 
   const filteredItems = filterByType(allItems, feedType);
-  // X posts are pre-sorted; mentions are pre-sorted; opportunities sort by date.
   const sortedItems =
-    feedType === "mentions" || feedType === "x"
+    feedType === "mentions"
       ? filteredItems
       : [...filteredItems].sort((a, b) => b.sortKey - a.sortKey);
 
   // Resolve selected item
   const requestedId = params?.itemId;
   const requestedKind =
-    params?.itemType === "mention"
-      ? "mention"
-      : params?.itemType === "x_post"
-      ? "x_post"
-      : "opportunity";
+    params?.itemType === "mention" ? "mention" : "opportunity";
 
   const selectedFromList: FeedItem | null = requestedId
     ? (sortedItems.find((item) => item.data.id === requestedId && item.kind === requestedKind) ??
@@ -175,21 +127,11 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
   const selectedMention: BrandMentionDTO | null =
     selectedFromList?.kind === "mention" ? selectedFromList.data : null;
 
-  const selectedXPost: XPostDTO | null =
-    selectedFromList?.kind === "x_post"
-      ? ((await getXPostById(currentProject.id, selectedFromList.data.id)) ?? selectedFromList.data)
-      : null;
-
   const replies: LeadReplyDTO[] = selectedLead
     ? await listLeadReplies(currentProject.id, selectedLead.id)
     : [];
 
-  const xReplies: XPostReplyDTO[] = selectedXPost
-    ? await listXPostReplies(currentProject.id, selectedXPost.id)
-    : [];
-
   const isGenerating = selectedLead?.reply_generation_status === "generating";
-  const isXGenerating = selectedXPost?.reply_generation_status === "generating";
 
   // Pagination
   const pageFromParam = Math.max(0, parseInt(params?.page ?? "0") || 0);
@@ -213,15 +155,12 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     target: selectedTarget,
     sentiment: selectedSentiment,
     sort: selectedSort,
-    xScore,
-    xSentiment,
-    xSort,
   });
   const baseHref = (extra?: string) => `/feed?${filterBase}${extra ?? ""}`;
 
   return (
     <DashboardShell user={user} currentProject={currentProject}>
-      {(isGenerating || isXGenerating) && <AutoRefresh intervalMs={4000} />}
+      {isGenerating && <AutoRefresh intervalMs={4000} />}
 
       <section className="searchbox-workspace">
         <header className="ds-topbar">
@@ -234,11 +173,9 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                 <span className="ds-topbar-sep">·</span>
                 <span>
                   {feedType === "all"
-                    ? `${feedLeads.length} opportunities · ${allMentionsRaw.length} mentions${xEnabled ? ` · ${allXPosts.filter((post) => post.status !== "irrelevant").length} X posts` : ""}`
+                    ? `${feedLeads.length} opportunities · ${allMentionsRaw.length} mentions`
                     : feedType === "opportunities"
                     ? `${feedLeads.length} leads`
-                    : feedType === "x"
-                    ? `${allXPosts.filter((post) => post.status !== "irrelevant").length} X posts`
                     : "brand + competitors"}
                 </span>
               </div>
@@ -260,22 +197,20 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
               <div
                 style={{
                   padding: "10px 10px 8px",
-                  borderBottom: (feedType === "mentions" || feedType === "x") ? "1px solid #E5E7EB" : "none",
+                  borderBottom: feedType === "mentions" ? "1px solid #E5E7EB" : "none",
                   display: "flex",
                   gap: 6,
                   flexWrap: "wrap",
                   alignItems: "center",
                 }}
               >
-                {(["all", "opportunities", "mentions", "x"] as const).filter((type) => type !== "x" || xEnabled).map((type) => {
+                {(["all", "opportunities", "mentions"] as const).map((type) => {
                   const active = feedType === type;
                   const count =
                     type === "all"
-                      ? feedLeads.length + allMentionsRaw.length + allXPosts.filter((post) => post.status !== "irrelevant").length
+                      ? feedLeads.length + allMentionsRaw.length
                       : type === "opportunities"
                       ? feedLeads.length
-                      : type === "x"
-                      ? allXPosts.filter((post) => post.status !== "irrelevant").length
                       : allMentionsRaw.length;
                   const href = `/feed?projectId=${currentProject.id}${type !== "all" ? `&type=${type}` : ""}`;
                   return (
@@ -284,22 +219,13 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                       href={href}
                       className={`filter-pill${active ? " filter-pill-active" : ""}`}
                     >
-                      {type === "all" ? "All" : type === "opportunities" ? "Opportunities" : type === "mentions" ? "Mentions" : "X"}
+                      {type === "all" ? "All" : type === "opportunities" ? "Opportunities" : "Mentions"}
                       {" "}
                       <span style={{ fontWeight: 700, opacity: 0.7 }}>({count})</span>
                     </Link>
                   );
                 })}
               </div>
-
-              {/* X triage controls — only when type=x */}
-              {feedType === "x" && (
-                <div style={{ padding: "8px 10px", display: "grid", gap: 8 }}>
-                  <XScorePills projectId={currentProject.id} selected={xScore} xSentiment={xSentiment} xSort={xSort} />
-                  <XSentimentPills projectId={currentProject.id} xScore={xScore} selected={xSentiment} xSort={xSort} />
-                  <XSortControl projectId={currentProject.id} xScore={xScore} xSentiment={xSentiment} selected={xSort} />
-                </div>
-              )}
 
               {/* Mention triage controls — only when type=mentions */}
               {feedType === "mentions" && (
@@ -345,7 +271,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                       }
                       href={baseHref(`&itemId=${item.data.id}&itemType=opportunity`)}
                     />
-                  ) : item.kind === "mention" ? (
+                  ) : (
                     <MentionCard
                       key={`mention-${item.data.id}`}
                       mention={item.data}
@@ -354,16 +280,6 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                         selectedFromList.data.id === item.data.id
                       }
                       href={baseHref(`&itemId=${item.data.id}&itemType=mention`)}
-                    />
-                  ) : (
-                    <XPostCard
-                      key={`x-${item.data.id}`}
-                      post={item.data}
-                      active={
-                        selectedFromList?.kind === "x_post" &&
-                        selectedFromList.data.id === item.data.id
-                      }
-                      href={baseHref(`&itemId=${item.data.id}&itemType=x_post`)}
                     />
                   ),
                 )
@@ -411,12 +327,9 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
           <DetailPane
             lead={selectedLead}
             mention={selectedMention}
-            xPost={selectedXPost}
             replies={replies}
-            xReplies={xReplies}
             projectId={currentProject.id}
             filterBase={filterBase}
-            isXGenerating={isXGenerating}
           />
         </div>
       </section>
@@ -491,72 +404,23 @@ function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; acti
   );
 }
 
-function XPostCard({ post, active, href }: { post: XPostDTO; active: boolean; href: string }) {
-  return (
-    <Link href={href} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
-      <div className="opportunity-meta">
-        <TypeDot kind="x_post" />
-        <span>
-          @{post.author_username ?? "unknown"}
-          {post.author_verified && <span style={{ color: "#1D9BF0", marginLeft: 3 }}>✓</span>}
-        </span>
-        {post.author_followers_count != null && (
-          <span>{formatFollowers(post.author_followers_count)} followers</span>
-        )}
-        {post.posted_at && <span>{formatRelative(post.posted_at)}</span>}
-      </div>
-
-      <h2 className="opportunity-heading">{truncate(post.text, 140)}</h2>
-
-      {post.classification_reason && (
-        <p className="opportunity-reason">{post.classification_reason}</p>
-      )}
-
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-        <div style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-          {post.intent_score != null && (
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#46A758" }}>
-              {post.intent_score}
-            </span>
-          )}
-          {post.intent_type && <XIntentTypeBadge intentType={post.intent_type} />}
-          {post.sentiment && <SentimentPill sentiment={post.sentiment} />}
-        </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          {post.status !== "new" && <StatusPill status={post.status} />}
-          <span style={{ fontSize: 11, color: "#8E8E93", fontWeight: 700 }}>
-            ♥ {post.like_count} · ↻ {post.retweet_count}
-          </span>
-        </div>
-      </div>
-    </Link>
-  );
-}
-
 // ── Detail pane ───────────────────────────────────────────────
 
 function DetailPane({
   lead,
   mention,
-  xPost,
   replies,
-  xReplies,
   projectId,
   filterBase,
-  isXGenerating,
 }: {
   lead: LeadDTO | null;
   mention: BrandMentionDTO | null;
-  xPost: XPostDTO | null;
   replies: LeadReplyDTO[];
-  xReplies: XPostReplyDTO[];
   projectId: string;
   filterBase: string;
-  isXGenerating: boolean;
 }) {
   if (lead) return <LeadDetail lead={lead} replies={replies} projectId={projectId} filterBase={filterBase} />;
   if (mention) return <MentionDetail mention={mention} projectId={projectId} />;
-  if (xPost) return <XPostDetail post={xPost} xReplies={xReplies} projectId={projectId} filterBase={filterBase} isGenerating={isXGenerating} />;
 
   return (
     <section className="detail-pane">
@@ -564,7 +428,7 @@ function DetailPane({
         <div className="empty-state">
           <p className="section-title">No items yet</p>
           <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
-            Opportunities, mentions, and X posts will appear here as the pipelines run.
+            Opportunities and mentions will appear here as the pipelines run.
           </p>
         </div>
       </div>
@@ -745,139 +609,6 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
   );
 }
 
-function XPostDetail({
-  post,
-  xReplies,
-  projectId,
-  filterBase,
-  isGenerating,
-}: {
-  post: XPostDTO;
-  xReplies: XPostReplyDTO[];
-  projectId: string;
-  filterBase: string;
-  isGenerating: boolean;
-}) {
-  const statusDotColor =
-    post.status === "new" ? "#FF4500" : post.status === "replied" ? "#46A758" : "#B0B0B5";
-  const returnTo = `/feed?${filterBase}&itemId=${post.id}&itemType=x_post`;
-
-  return (
-    <section className="detail-pane" aria-label="X post detail">
-      <div className="detail-topbar">
-        <div className="opportunity-meta">
-          <span className="opportunity-dot" style={{ background: statusDotColor }} />
-          <span>
-            @{post.author_username ?? "unknown"}
-            {post.author_verified && <span style={{ color: "#1D9BF0", marginLeft: 3 }}>✓</span>}
-          </span>
-          {post.posted_at && <span>{formatDate(post.posted_at)}</span>}
-          {post.author_followers_count != null && (
-            <span>{formatFollowers(post.author_followers_count)} followers</span>
-          )}
-        </div>
-        <div style={{ display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
-          {post.keywords_matched?.length > 0 && (
-            <KeywordsDropdown keywords={post.keywords_matched} />
-          )}
-          {post.status !== "replied" && (
-            <form action={updateXPostStatusFromForm}>
-              <input type="hidden" name="projectId" value={projectId} />
-              <input type="hidden" name="postId" value={post.id} />
-              <input type="hidden" name="status" value="irrelevant" />
-              <button className="btn-reject" type="submit">Dismiss</button>
-            </form>
-          )}
-          {post.status !== "replied" && (
-            <form action={updateXPostStatusFromForm}>
-              <input type="hidden" name="projectId" value={projectId} />
-              <input type="hidden" name="postId" value={post.id} />
-              <input type="hidden" name="status" value="replied" />
-              <button className="btn-replied" type="submit">
-                <CheckIcon />
-                Mark as Replied
-              </button>
-            </form>
-          )}
-          <a href={post.permalink} target="_blank" rel="noreferrer"
-            style={{ fontSize: 12, fontWeight: 700, color: "#1A1A1B", textDecoration: "none", padding: "5px 10px", borderRadius: 6, border: "1px solid #DAE0E6" }}>
-            Open on X →
-          </a>
-        </div>
-      </div>
-
-      <div className="detail-content">
-        <h2 style={{ fontSize: 22, lineHeight: 1.25, letterSpacing: "-0.02em", fontWeight: 700, color: "#1A1A1B" }}>
-          {post.author_name
-            ? `${post.author_name} (@${post.author_username ?? "unknown"})`
-            : `@${post.author_username ?? "unknown"}`}
-        </h2>
-        <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 8, flexWrap: "wrap" }}>
-          {post.sentiment && <SentimentPill sentiment={post.sentiment} />}
-          {post.intent_type && <XIntentTypeBadge intentType={post.intent_type} />}
-          {post.intent_score != null && (
-            <span style={{ fontSize: 11, fontWeight: 800, color: "#46A758" }}>
-              Relevance: {post.intent_score}
-            </span>
-          )}
-        </div>
-        {post.classification_reason && (
-          <p style={{ fontSize: 12, color: "#7C7C83", fontWeight: 600, marginTop: 8 }}>
-            {post.classification_reason}
-          </p>
-        )}
-      </div>
-
-      <article className="lead-post">
-        <p className="reddit-body" style={{ fontSize: 14, whiteSpace: "pre-wrap" }}>
-          {post.text}
-        </p>
-        <div className="post-stats-bar">
-          <span>♥ {post.like_count} likes</span>
-          <span>↻ {post.retweet_count} reposts</span>
-          <span>💬 {post.reply_count} replies</span>
-          {post.impression_count != null && <span>👁 {post.impression_count} views</span>}
-          <a href={post.permalink} target="_blank" rel="noreferrer" className="post-stats-link">
-            View on X →
-          </a>
-        </div>
-      </article>
-
-      <div className="lead-comment-box">
-        {post.reply_generation_error && (
-          <div style={{ padding: "10px 12px", borderRadius: 4, background: "#FBE2E5", border: "1px solid #F2B7BD", color: "#EA0027", fontSize: 12, marginBottom: 12 }}>
-            {post.reply_generation_error}
-          </div>
-        )}
-        {isGenerating ? (
-          <div style={{ padding: "14px 0", color: "#7C7C83", fontSize: 13, fontWeight: 600 }}>
-            Generating replies…
-          </div>
-        ) : (
-          <XReplyEditor
-            key={post.id}
-            replies={xReplies}
-            projectId={projectId}
-            xPostId={post.id}
-            postStatus={post.status}
-            generateForm={
-              <form action={generateXReplyFromForm}>
-                <input type="hidden" name="projectId" value={projectId} />
-                <input type="hidden" name="xPostId" value={post.id} />
-                <button
-                  type="submit"
-                  className={`composer-btn${xReplies.length === 0 ? " composer-btn-accent" : ""}`}
-                >
-                  {xReplies.length > 0 ? "⥁ Regenerate" : "✦ Generate Reply Suggestions"}
-                </button>
-              </form>
-            }
-          />
-        )}
-      </div>
-    </section>
-  );
-}
 
 // ── Mention triage controls ───────────────────────────────────
 
@@ -990,11 +721,11 @@ function SentimentBar({
 
 // ── Small UI pieces ───────────────────────────────────────────
 
-function TypeDot({ kind }: { kind: "opportunity" | "mention" | "x_post" }) {
+function TypeDot({ kind }: { kind: "opportunity" | "mention" }) {
   return (
     <span
       className="opportunity-dot"
-      style={{ background: kind === "opportunity" ? "#FF4500" : kind === "mention" ? "#7C7C83" : "#111827" }}
+      style={{ background: kind === "opportunity" ? "#FF4500" : "#7C7C83" }}
     />
   );
 }
@@ -1033,23 +764,6 @@ function SentimentPill({ sentiment }: { sentiment: BrandMentionSentiment }) {
   );
 }
 
-const X_INTENT_LABELS: Record<string, string> = {
-  problem_expression:   "Problem",
-  recommendation_request: "Rec. Request",
-  competitor_mention:   "Competitor",
-  product_discovery:    "Discovery",
-  conversation_starter: "Conversation",
-};
-
-function XIntentTypeBadge({ intentType }: { intentType: string }) {
-  const label = X_INTENT_LABELS[intentType] ?? intentType;
-  return (
-    <span style={{ fontSize: 10, fontWeight: 800, padding: "2px 7px", borderRadius: 6, color: "#1D9BF0", background: "#E8F5FE", whiteSpace: "nowrap" }}>
-      {label}
-    </span>
-  );
-}
-
 function StatusPill({ status }: { status: LeadDTO["status"] }) {
   const styles: Record<string, { bg: string; color: string }> = {
     new:        { bg: "#FFF3EC", color: "#E03D00" },
@@ -1073,31 +787,6 @@ function EmptyFeed({
   lastScrapedAt: string | null;
   projectId: string;
 }) {
-  if (feedType === "x") {
-    return (
-      <div className="empty-state">
-        <p className="section-title">No X posts yet</p>
-        <p className="section-copy" style={{ maxWidth: 440, margin: "10px auto 16px" }}>
-          Add X keyword rules in Settings to start monitoring. Posts matching your queries will appear here in real time.
-        </p>
-        <Link
-          href={`/settings?projectId=${projectId}&tab=x`}
-          style={{
-            display: "inline-block",
-            padding: "7px 18px",
-            background: "#FF4500",
-            color: "#FFF",
-            borderRadius: 8,
-            fontSize: 13,
-            fontWeight: 600,
-            textDecoration: "none",
-          }}
-        >
-          Configure X keywords →
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="empty-state">
@@ -1126,7 +815,7 @@ function CheckIcon() {
 // ── Helpers ───────────────────────────────────────────────────
 
 function parseFeedType(value: string | undefined): FeedType {
-  if (value === "opportunities" || value === "mentions" || value === "x") return value;
+  if (value === "opportunities" || value === "mentions") return value;
   return "all";
 }
 
@@ -1149,7 +838,6 @@ function resolveTarget(
 function filterByType(items: FeedItem[], feedType: FeedType): FeedItem[] {
   if (feedType === "opportunities") return items.filter((i) => i.kind === "opportunity");
   if (feedType === "mentions") return items.filter((i) => i.kind === "mention");
-  if (feedType === "x") return items.filter((i) => i.kind === "x_post");
   return items;
 }
 
@@ -1192,18 +880,12 @@ function buildFilterBase({
   target,
   sentiment,
   sort,
-  xScore,
-  xSentiment,
-  xSort,
 }: {
   projectId: string;
   feedType: FeedType;
   target: string;
   sentiment: BrandMentionSentiment | "all";
   sort: string;
-  xScore: XScore;
-  xSentiment: XSentiment;
-  xSort: XSort;
 }): string {
   const p = new URLSearchParams({ projectId });
   if (feedType !== "all") p.set("type", feedType);
@@ -1212,34 +894,7 @@ function buildFilterBase({
     if (sentiment !== "all") p.set("sentiment", sentiment);
     if (sort !== "relevant") p.set("sort", sort);
   }
-  if (feedType === "x") {
-    if (xScore !== "all") p.set("xScore", xScore);
-    if (xSentiment !== "all") p.set("xSentiment", xSentiment);
-    if (xSort !== "recent") p.set("xSort", xSort);
-  }
   return p.toString();
-}
-
-function buildXHref({
-  projectId,
-  xScore,
-  xSentiment,
-  xSort,
-  itemId,
-}: {
-  projectId: string;
-  xScore?: XScore;
-  xSentiment?: XSentiment;
-  xSort?: XSort;
-  itemId?: string;
-}): string {
-  const p = new URLSearchParams({ projectId, type: "x" });
-  if (xScore && xScore !== "all") p.set("xScore", xScore);
-  if (xSentiment && xSentiment !== "all") p.set("xSentiment", xSentiment);
-  if (xSort && xSort !== "recent") p.set("xSort", xSort);
-  if (itemId) p.set("itemId", itemId);
-  if (itemId) p.set("itemType", "x_post");
-  return `/feed?${p.toString()}`;
 }
 
 function buildMentionHref({
@@ -1294,117 +949,3 @@ function formatFollowers(count: number): string {
   return String(count);
 }
 
-// ── X parse helpers ───────────────────────────────────────────
-
-function parseXScore(v?: string): XScore {
-  if (v === "high" || v === "medium") return v;
-  return "all";
-}
-
-function parseXSentiment(v?: string): XSentiment {
-  if (v === "positive" || v === "negative" || v === "neutral") return v;
-  return "all";
-}
-
-function parseXSort(v?: string): XSort {
-  if (v === "relevant") return "relevant";
-  return "recent";
-}
-
-// ── X triage controls ─────────────────────────────────────────
-
-function XScorePills({
-  projectId,
-  selected,
-  xSentiment,
-  xSort,
-}: {
-  projectId: string;
-  selected: XScore;
-  xSentiment: XSentiment;
-  xSort: XSort;
-}) {
-  const options: { id: XScore; label: string }[] = [
-    { id: "all", label: "All" },
-    { id: "high", label: "High (≥70)" },
-    { id: "medium", label: "Medium (40–69)" },
-  ];
-  return (
-    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-      <span style={{ fontSize: 11, color: "#8E8E93", fontWeight: 800 }}>Relevance</span>
-      {options.map((o) => (
-        <Link
-          key={o.id}
-          href={buildXHref({ projectId, xScore: o.id, xSentiment, xSort })}
-          className={`filter-pill${selected === o.id ? " filter-pill-active" : ""}`}
-        >
-          {o.label}
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-function XSentimentPills({
-  projectId,
-  xScore,
-  selected,
-  xSort,
-}: {
-  projectId: string;
-  xScore: XScore;
-  selected: XSentiment;
-  xSort: XSort;
-}) {
-  const options: { id: XSentiment; label: string }[] = [
-    { id: "all", label: "All" },
-    { id: "positive", label: "Positive" },
-    { id: "neutral", label: "Neutral" },
-    { id: "negative", label: "Negative" },
-  ];
-  return (
-    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-      <span style={{ fontSize: 11, color: "#8E8E93", fontWeight: 800 }}>Sentiment</span>
-      {options.map((o) => (
-        <Link
-          key={o.id}
-          href={buildXHref({ projectId, xScore, xSentiment: o.id, xSort })}
-          className={`filter-pill${selected === o.id ? " filter-pill-active" : ""}`}
-        >
-          {o.label}
-        </Link>
-      ))}
-    </div>
-  );
-}
-
-function XSortControl({
-  projectId,
-  xScore,
-  xSentiment,
-  selected,
-}: {
-  projectId: string;
-  xScore: XScore;
-  xSentiment: XSentiment;
-  selected: XSort;
-}) {
-  const options: { id: XSort; label: string }[] = [
-    { id: "relevant", label: "Most relevant" },
-    { id: "recent", label: "Most recent" },
-  ];
-  return (
-    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-      <span style={{ fontSize: 11, color: "#8E8E93", fontWeight: 800 }}>Sort</span>
-      {options.map((o) => (
-        <Link
-          key={o.id}
-          href={buildXHref({ projectId, xScore, xSentiment, xSort: o.id })}
-          className={`filter-pill${selected === o.id ? " filter-pill-active" : ""}`}
-        >
-          {o.label}
-        </Link>
-      ))}
-    </div>
-  );
-}
