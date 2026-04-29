@@ -95,7 +95,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
       const posts = provider.searchPostsBatch
         ? await provider.searchPostsBatch({
             queries,
-            sort: "new",
+            sort: "relevance",
             time: target.plan.keywordSearchTimeWindow,
             limitPerQuery: target.plan.maxPostsPerKeyword,
           })
@@ -103,7 +103,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
             target.keywords.map((k) =>
               provider.searchPosts!({
                 query: k.term,
-                sort: "new",
+                sort: "relevance",
                 time: target.plan.keywordSearchTimeWindow,
                 limit: target.plan.maxPostsPerKeyword,
               }),

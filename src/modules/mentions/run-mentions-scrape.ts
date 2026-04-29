@@ -24,7 +24,6 @@ type ProjectMentionTarget = {
   owner_id: string;
 };
 
-const MENTIONS_TIME_WINDOW = "month" as const;
 const ERROR_RATE_THRESHOLD = 0.5; // fail loudly if >50% of candidates error
 
 type ScrapeResult = { saved: number; errors: number; lastError: string | null };
@@ -55,6 +54,7 @@ export async function runMentionsScrapeWithCompetitors(
 
   const plan = await getBillingPlanForUser(project.owner_id);
   const maxCommentsPerKeyword = plan.maxCommentsPerKeyword;
+  const timeWindow = plan.keywordSearchTimeWindow;
 
   const targets = buildMentionTargets(project as ProjectMentionTarget);
 
@@ -81,13 +81,13 @@ export async function runMentionsScrapeWithCompetitors(
     comments = await provider.searchCommentsBatch({
       queries,
       sort: "new",
-      time: MENTIONS_TIME_WINDOW,
+      time: timeWindow,
       limitPerQuery: maxCommentsPerKeyword,
     });
   } else if (provider.searchComments) {
     const results = await Promise.all(
       queries.map((q) =>
-        provider.searchComments!({ query: q, sort: "new", time: MENTIONS_TIME_WINDOW, limit: maxCommentsPerKeyword }),
+        provider.searchComments!({ query: q, sort: "new", time: timeWindow, limit: maxCommentsPerKeyword }),
       ),
     );
     comments = results.flat();
@@ -97,7 +97,7 @@ export async function runMentionsScrapeWithCompetitors(
 
   if (comments.length === 0) {
     console.warn(
-      `[scrape/mentions] Project ${projectId} returned 0 comments for ${queries.length} mention targets in window ${MENTIONS_TIME_WINDOW}.`,
+      `[scrape/mentions] Project ${projectId} returned 0 comments for ${queries.length} mention targets using sort=new, time=${timeWindow}.`,
     );
   }
 
