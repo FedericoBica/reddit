@@ -275,7 +275,7 @@ export async function deletePostAction(_prev: void, formData: FormData): Promise
   revalidatePath("/x/queue");
 }
 
-export async function disconnectXAccountAction(formData: FormData): Promise<void> {
+export async function disconnectXAccountAction(_prev: void, formData: FormData): Promise<void> {
   await requireUser("/x/context");
 
   const requestedProjectId = String(formData.get("projectId") ?? "");

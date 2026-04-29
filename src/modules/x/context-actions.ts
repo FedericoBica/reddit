@@ -15,11 +15,14 @@ export async function getXProfile(projectId: string): Promise<XProfileDTO | null
   return data ?? null;
 }
 
-export async function saveXContextFromForm(formData: FormData): Promise<void> {
+export async function saveXContextFromForm(
+  _prev: { ok: boolean; error?: string } | undefined,
+  formData: FormData,
+): Promise<{ ok: boolean; error?: string }> {
   await requireUser("/x/context");
 
   const projectId = String(formData.get("projectId") ?? "");
-  if (!projectId) return;
+  if (!projectId) return { ok: false, error: "Missing project" };
 
   const interests = formData.getAll("interests").map(String).filter(Boolean);
   const favoriteCreators = formData.getAll("favoriteCreators").map(String).map((s) => s.trim().replace(/^@/, "")).filter(Boolean).slice(0, 3);
@@ -44,4 +47,5 @@ export async function saveXContextFromForm(formData: FormData): Promise<void> {
   );
 
   revalidatePath("/x/context");
+  return { ok: true };
 }
