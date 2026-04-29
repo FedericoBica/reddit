@@ -1942,8 +1942,33 @@ textarea:focus-visible {
 .searchbox-workspace {
   height: 100vh;
   display: grid;
-  grid-template-rows: 1fr;
+  grid-template-rows: auto 1fr;
   background: #DAE0E6;
+}
+
+/* ── Feed page header (spans full width above both panes) ── */
+.feed-page-header {
+  padding: 22px 28px 18px;
+  border-bottom: 1px solid #E4E6EA;
+  background: #FFFFFF;
+}
+
+.feed-page-title {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: #1A1A1B;
+  font-family: var(--ds-font-serif);
+  font-style: italic;
+  margin: 0 0 7px;
+}
+
+.feed-page-desc {
+  font-size: 13px;
+  color: #2C2C2E;
+  line-height: 1.55;
+  margin: 0;
+  max-width: 640px;
 }
 
 .searchbox-header {
@@ -2009,26 +2034,11 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
-/* ── Feed column header ── */
+/* ── Feed column header (count + filters) ── */
 .feed-col-header {
-  padding: 18px 16px 14px;
+  padding: 10px 14px 10px;
   border-bottom: 1px solid #E8E8EC;
   background: #FFFFFF;
-}
-
-.feed-col-title {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #1A1A1B;
-  margin: 0 0 6px;
-}
-
-.feed-col-desc {
-  font-size: 11.5px;
-  color: #7C7C83;
-  line-height: 1.55;
-  margin: 0 0 12px;
 }
 
 .feed-col-meta {

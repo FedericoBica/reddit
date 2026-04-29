@@ -180,19 +180,23 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
       {isGenerating && <AutoRefresh intervalMs={4000} />}
 
       <section className="searchbox-workspace">
+        {/* Full-width page header — sits above both panes */}
+        <header className="feed-page-header">
+          <h1 className="feed-page-title">
+            {feedType === "opportunities" ? "New Opportunities" : feedType === "mentions" ? "Mentions" : "X Leads"}
+          </h1>
+          {feedType !== "all" && (
+            <p className="feed-page-desc">{FEED_META[feedType].description}</p>
+          )}
+        </header>
+
         <div className="searchbox-body">
           <section
             className="opportunity-column"
             aria-label="Leads feed"
           >
-            {/* Column header: title, description, count + optional mention filters */}
+            {/* Column header: count + optional mention filters */}
             <div className="feed-col-header">
-              <h2 className="feed-col-title">
-                {feedType === "opportunities" ? "New Opportunities" : feedType === "mentions" ? "Mentions" : "X Leads"}
-              </h2>
-              {feedType !== "all" && (
-                <p className="feed-col-desc">{FEED_META[feedType].description}</p>
-              )}
               <div className="feed-col-meta">
                 <span>
                   {feedType === "x" ? xPosts.length : feedType === "opportunities" ? feedLeads.length : allMentionsRaw.length}
@@ -202,7 +206,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
               {/* Mention triage controls */}
               {feedType === "mentions" && (
-                <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+                <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
                   <TargetDropdown
                     projectId={currentProject.id}
                     companyName={currentProject.name}
