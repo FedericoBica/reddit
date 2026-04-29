@@ -1,5 +1,3 @@
-"use server";
-
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
 import { BrandLink } from "./logo";
