@@ -34,8 +34,23 @@ export type RedditBatchSearchInput = {
   limitPerQuery: number;
 };
 
+export type RedditComment = {
+  id: string;
+  body: string;
+  author: string | null;
+  subreddit: string;
+  permalink: string;
+  score: number | null;
+  createdUtc: string | null;
+  parentPostId: string;
+  parentPostTitle: string;
+  parentPostUrl: string;
+};
+
 export type RedditDiscoveryProvider = {
   fetchNewPosts(input: { subreddit: string; limit: number }): Promise<RedditPost[]>;
   searchPosts?(input: RedditSearchInput): Promise<RedditPost[]>;
   searchPostsBatch?(input: RedditBatchSearchInput): Promise<RedditPost[]>;
+  searchComments?(input: RedditSearchInput): Promise<RedditComment[]>;
+  searchCommentsBatch?(input: RedditBatchSearchInput): Promise<RedditComment[]>;
 };

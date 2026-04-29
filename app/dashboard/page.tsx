@@ -93,30 +93,26 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
       {(isGenerating || isNew) && <AutoRefresh intervalMs={isNew ? 15000 : 4000} />}
 
       <section className="searchbox-workspace">
-        <header className="ds-topbar">
-          <div className="ds-topbar-left">
-            <div className="ds-topbar-icon">⌕</div>
-            <div className="ds-topbar-titles">
-              <h1 className="ds-topbar-title">Searchbox · <em>high-intent threads</em></h1>
-              <div className="ds-topbar-sub">
-                <span><strong>{displayResults.length}</strong> posts found</span>
-                <span className="ds-topbar-sep">·</span>
-                <span>sorted by {sort === "recent" ? "date" : "intent"}</span>
-              </div>
-            </div>
-          </div>
-          <div className="ds-topbar-actions">
-            <Link
-              href={`/dashboard?projectId=${currentProject.id}&sort=${sort === "recent" ? "relevance" : "recent"}`}
-              className="ds-btn-sm"
-            >
-              {sort === "recent" ? "Sort by Intent" : "Sort by Recent"}
-            </Link>
-          </div>
+        <header className="feed-page-header">
+          <h1 className="feed-page-title">Search Box</h1>
+          <p className="feed-page-desc">
+            High-intent Reddit threads found via Google — posts where people are actively searching for a solution like yours. Ranked by relevance to your keywords so the best leads surface first.
+          </p>
         </header>
 
         <div className="searchbox-body">
           <section className="opportunity-column" aria-label="Searchbox results">
+            <div className="feed-col-header">
+              <div className="feed-col-meta">
+                <span>{displayResults.length} posts found · sorted by {sort === "recent" ? "date" : "intent"}</span>
+                <Link
+                  href={`/dashboard?projectId=${currentProject.id}&sort=${sort === "recent" ? "relevance" : "recent"}`}
+                  style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none" }}
+                >
+                  {sort === "recent" ? "Sort by Intent" : "Sort by Recent"}
+                </Link>
+              </div>
+            </div>
 
             <div className="opportunity-list">
               {allResults.length > 0 ? (

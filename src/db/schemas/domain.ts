@@ -353,6 +353,8 @@ export type BrandMentionDTO = {
   posted_at: string | null;
   opened_at: string | null;
   created_at: string;
+  is_comment: boolean;
+  parent_post_id: string | null;
 };
 
 export type XPostDTO = Pick<

@@ -99,9 +99,11 @@ export type Database = {
           body: string | null
           created_at: string
           id: string
+          is_comment: boolean
           mention_context: string | null
           num_comments: number | null
           opened_at: string | null
+          parent_post_id: string | null
           permalink: string
           post_type: string | null
           posted_at: string | null
@@ -125,9 +127,11 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          is_comment?: boolean
           mention_context?: string | null
           num_comments?: number | null
           opened_at?: string | null
+          parent_post_id?: string | null
           permalink: string
           post_type?: string | null
           posted_at?: string | null
@@ -151,9 +155,11 @@ export type Database = {
           body?: string | null
           created_at?: string
           id?: string
+          is_comment?: boolean
           mention_context?: string | null
           num_comments?: number | null
           opened_at?: string | null
+          parent_post_id?: string | null
           permalink?: string
           post_type?: string | null
           posted_at?: string | null

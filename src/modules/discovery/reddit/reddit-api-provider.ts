@@ -1,7 +1,7 @@
 import "server-only";
 
 import { requireEnv } from "@/lib/env";
-import type { RedditDiscoveryProvider, RedditPost, RedditSearchInput } from "./types";
+import type { RedditBatchSearchInput, RedditComment, RedditDiscoveryProvider, RedditPost, RedditSearchInput } from "./types";
 import {
   getRedditUserAgent,
   mapRedditListingResponse,
@@ -72,6 +72,43 @@ export class RedditApiProvider implements RedditDiscoveryProvider {
     return mapRedditListingResponse(payload);
   }
 
+  async searchComments(input: RedditSearchInput): Promise<RedditComment[]> {
+    const accessToken = await this.getAccessToken();
+    const userAgent = getRedditUserAgent();
+    const url = new URL("https://oauth.reddit.com/search");
+    url.searchParams.set("q", input.query);
+    url.searchParams.set("sort", input.sort ?? "new");
+    url.searchParams.set("limit", String(Math.min(Math.max(input.limit, 1), 100)));
+    url.searchParams.set("type", "comment");
+
+    if (input.time) url.searchParams.set("t", input.time);
+
+    const response = await fetch(url, {
+      headers: { Authorization: `Bearer ${accessToken}`, "User-Agent": userAgent },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Reddit comment search failed for "${input.query}": ${response.status}`);
+    }
+
+    const payload = (await response.json()) as RedditListingResponse;
+    return mapCommentListingResponse(payload);
+  }
+
+  async searchCommentsBatch(input: RedditBatchSearchInput): Promise<RedditComment[]> {
+    const results = await Promise.all(
+      input.queries.map((q) =>
+        this.searchComments({
+          query: q,
+          sort: input.sort,
+          time: input.time,
+          limit: input.limitPerQuery,
+        }),
+      ),
+    );
+    return results.flat();
+  }
+
   private async getAccessToken() {
     if (cachedAccessToken && cachedAccessToken.expiresAt > Date.now()) {
       return cachedAccessToken.token;
@@ -110,4 +147,43 @@ export class RedditApiProvider implements RedditDiscoveryProvider {
 
     return payload.access_token;
   }
+}
+
+type RawComment = {
+  id?: string;
+  body?: string;
+  author?: string;
+  subreddit?: string;
+  permalink?: string;
+  score?: number;
+  created_utc?: number;
+  link_id?: string;
+  link_title?: string;
+  link_permalink?: string;
+  link_url?: string;
+};
+
+function mapCommentListingResponse(listing: RedditListingResponse): RedditComment[] {
+  const children = listing?.data?.children ?? [];
+  return children
+    .map((child): RedditComment | null => {
+      const d = child?.data as RawComment | undefined;
+      if (!d?.id || !d?.body || d.body === "[deleted]" || d.body === "[removed]") return null;
+      const parentId = d.link_id?.replace(/^t3_/, "") ?? "";
+      return {
+        id: d.id,
+        body: d.body,
+        author: d.author && d.author !== "[deleted]" ? d.author : null,
+        subreddit: d.subreddit ?? "",
+        permalink: d.permalink ? `https://www.reddit.com${d.permalink}` : "",
+        score: d.score ?? null,
+        createdUtc: d.created_utc ? new Date(d.created_utc * 1_000).toISOString() : null,
+        parentPostId: parentId,
+        parentPostTitle: d.link_title ?? "",
+        parentPostUrl: d.link_permalink
+          ? `https://www.reddit.com${d.link_permalink}`
+          : (d.link_url ?? ""),
+      };
+    })
+    .filter((c): c is RedditComment => c !== null);
 }

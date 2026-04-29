@@ -25,7 +25,6 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
   const provider = options.provider ?? createRedditDiscoveryProvider();
   const runId = options.runId ?? crypto.randomUUID();
   const maxProjects = readPositiveIntEnv("SCRAPE_MAX_PROJECTS_PER_RUN", 10);
-  const maxPosts = readPositiveIntEnv("SCRAPE_MAX_POSTS_PER_KEYWORD", 25);
   const leadIntentThreshold = readPositiveIntEnv("LEAD_INTENT_THRESHOLD", 50);
   const candidates = await listProjectsDueForScraping(maxProjects);
   const now = Date.now();
@@ -53,7 +52,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
       subredditsCount: 0,
       metadata: {
         max_projects: maxProjects,
-        max_posts_per_keyword: maxPosts,
+        max_posts_per_keyword: target.plan.maxPostsPerKeyword,
         lead_intent_threshold: leadIntentThreshold,
       },
     });
@@ -98,7 +97,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
             queries,
             sort: "new",
             time: target.plan.keywordSearchTimeWindow,
-            limitPerQuery: maxPosts,
+            limitPerQuery: target.plan.maxPostsPerKeyword,
           })
         : await Promise.all(
             target.keywords.map((k) =>
@@ -106,7 +105,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
                 query: k.term,
                 sort: "new",
                 time: target.plan.keywordSearchTimeWindow,
-                limit: maxPosts,
+                limit: target.plan.maxPostsPerKeyword,
               }),
             ),
           ).then((r) => r.flat());
@@ -310,7 +309,7 @@ export async function fetchBackfillPosts(
     metadata: { backfill: true, time_window: "all" },
   });
   // Cap per-query so total requested posts stay ≤ BACKFILL_MAX_POSTS regardless of keyword count.
-  // Apify counts maxPostsCount per search term, not total.
+  // Apify counts target.plan.maxPostsPerKeywordCount per search term, not total.
   const limitPerQuery = Math.max(1, Math.floor(BACKFILL_MAX_POSTS / queries.length));
   const allPosts = provider.searchPostsBatch
     ? await provider.searchPostsBatch({

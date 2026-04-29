@@ -4,6 +4,7 @@ import { requireEnv } from "@/lib/env";
 import type { Json } from "@/db/schemas/database.types";
 import type {
   RedditBatchSearchInput,
+  RedditComment,
   RedditDiscoveryProvider,
   RedditPost,
   RedditSearchInput,
@@ -46,6 +47,12 @@ type ApifyRedditItem = {
   posts?: unknown;
   post?: unknown;
   data?: unknown;
+  // comment-specific fields
+  postTitle?: string;
+  linkTitle?: string;
+  linkId?: string;
+  linkUrl?: string;
+  commentId?: string;
 };
 
 export class ApifyRedditProvider implements RedditDiscoveryProvider {
@@ -105,6 +112,33 @@ export class ApifyRedditProvider implements RedditDiscoveryProvider {
       mappedPosts: posts.length,
     });
     return posts;
+  }
+
+  async searchComments(input: RedditSearchInput): Promise<RedditComment[]> {
+    return this.searchCommentsBatch({
+      queries: [input.query],
+      sort: input.sort,
+      time: input.time,
+      limitPerQuery: input.limit,
+    });
+  }
+
+  async searchCommentsBatch(input: RedditBatchSearchInput): Promise<RedditComment[]> {
+    const maxPostsCount = Math.min(Math.max(input.limitPerQuery, 1), 100);
+
+    const body: Record<string, unknown> = {
+      searchTerms: input.queries,
+      searchPosts: false,
+      searchComments: true,
+      searchCommunities: false,
+      searchSort: input.sort ?? "new",
+      searchTime: input.time ?? "week",
+      maxPostsCount,
+      includeNSFW: false,
+    };
+
+    const items = await this.runActor(body);
+    return items.flatMap(mapApifyCommentItem).filter((c): c is RedditComment => c !== null);
   }
 
   private async runActor(body: Record<string, unknown>): Promise<ApifyRedditItem[]> {
@@ -284,4 +318,34 @@ function warnIfItemsUnmapped(input: {
   }));
 
   console.warn(`[apify] Received ${input.items.length} items for ${input.context}, but mapped 0 posts. Sample:`, sample);
+}
+
+function mapApifyCommentItem(item: ApifyRedditItem): RedditComment | null {
+  const body = item.body ?? item.text ?? item.selftext;
+  if (!body || body === "[deleted]" || body === "[removed]") return null;
+
+  const id = item.commentId ?? item.parsedId ?? item.id;
+  if (!id) return null;
+
+  const subreddit = normalizeSubredditName(
+    item.parsedCommunityName ?? item.communityName ?? item.subredditName ?? item.subreddit ?? "",
+  );
+
+  const parentPostId = (item.postId ?? item.linkId ?? "").replace(/^t3_/i, "");
+  const parentPostTitle = item.postTitle ?? item.linkTitle ?? item.title ?? "";
+  const parentPostUrl = normalizePermalink(item.postUrl ?? item.linkUrl ?? item.url ?? "");
+  const permalink = normalizePermalink(item.permalink ?? "");
+
+  return {
+    id,
+    body,
+    author: item.author ?? item.userName ?? item.authorName ?? null,
+    subreddit,
+    permalink,
+    score: item.upVotes ?? item.upvotes ?? item.score ?? null,
+    createdUtc: normalizeCreatedAt(item),
+    parentPostId,
+    parentPostTitle,
+    parentPostUrl,
+  };
 }

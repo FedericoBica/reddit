@@ -25,9 +25,11 @@ export type UpsertBrandMentionInput = {
   sentimentEvidence?: string | null;
   summary?: string | null;
   wrongRegion?: boolean | null;
+  isComment?: boolean;
+  parentPostId?: string | null;
 };
 
-const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, post_type, mention_context, response_priority, sentiment_evidence, summary, wrong_region, posted_at, created_at`;
+const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, post_type, mention_context, response_priority, sentiment_evidence, summary, wrong_region, posted_at, opened_at, created_at, is_comment, parent_post_id`;
 
 export async function upsertBrandMention(input: UpsertBrandMentionInput): Promise<BrandMentionDTO | null> {
   const supabase = createSupabaseAdminClient();
@@ -57,6 +59,8 @@ export async function upsertBrandMention(input: UpsertBrandMentionInput): Promis
         summary: input.summary ?? null,
         wrong_region: input.wrongRegion ?? false,
         posted_at: input.postedAt,
+        is_comment: input.isComment ?? false,
+        parent_post_id: input.parentPostId ?? null,
       },
       {
         onConflict: "project_id,reddit_post_id,target_label",

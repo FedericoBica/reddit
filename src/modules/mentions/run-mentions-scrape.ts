@@ -5,6 +5,8 @@ import { upsertBrandMention, updateProjectLastMentionsScrapedAt } from "@/db/mut
 import { classifyMention } from "./mention-classifier";
 import { createRedditDiscoveryProvider } from "@/modules/discovery/reddit/provider";
 import type { RedditDiscoveryProvider } from "@/modules/discovery/reddit/types";
+import { getBillingPlanForUser } from "@/modules/billing/current";
+import type { RedditComment } from "@/modules/discovery/reddit/types";
 import { inngest } from "@/inngest/client";
 
 type MentionTarget = {
@@ -22,7 +24,6 @@ type ProjectMentionTarget = {
   owner_id: string;
 };
 
-const MENTIONS_MAX_PER_TERM = 25;
 const MENTIONS_TIME_WINDOW = "month" as const;
 const ERROR_RATE_THRESHOLD = 0.5; // fail loudly if >50% of candidates error
 
@@ -52,6 +53,9 @@ export async function runMentionsScrapeWithCompetitors(
 
   if (!project) return 0;
 
+  const plan = await getBillingPlanForUser(project.owner_id);
+  const maxCommentsPerKeyword = plan.maxCommentsPerKeyword;
+
   const targets = buildMentionTargets(project as ProjectMentionTarget);
 
   for (const competitor of competitors ?? []) {
@@ -72,32 +76,32 @@ export async function runMentionsScrapeWithCompetitors(
 
   const queries = targets.map((t) => t.term);
 
-  let posts;
-  if (provider.searchPostsBatch) {
-    posts = await provider.searchPostsBatch({
+  let comments;
+  if (provider.searchCommentsBatch) {
+    comments = await provider.searchCommentsBatch({
       queries,
       sort: "new",
       time: MENTIONS_TIME_WINDOW,
-      limitPerQuery: MENTIONS_MAX_PER_TERM,
+      limitPerQuery: maxCommentsPerKeyword,
     });
-  } else if (provider.searchPosts) {
+  } else if (provider.searchComments) {
     const results = await Promise.all(
       queries.map((q) =>
-        provider.searchPosts!({ query: q, sort: "new", time: MENTIONS_TIME_WINDOW, limit: MENTIONS_MAX_PER_TERM }),
+        provider.searchComments!({ query: q, sort: "new", time: MENTIONS_TIME_WINDOW, limit: maxCommentsPerKeyword }),
       ),
     );
-    posts = results.flat();
+    comments = results.flat();
   } else {
     return 0;
   }
 
-  if (posts.length === 0) {
+  if (comments.length === 0) {
     console.warn(
-      `[scrape/mentions] Project ${projectId} returned 0 posts for ${queries.length} mention targets in window ${MENTIONS_TIME_WINDOW}.`,
+      `[scrape/mentions] Project ${projectId} returned 0 comments for ${queries.length} mention targets in window ${MENTIONS_TIME_WINDOW}.`,
     );
   }
 
-  const { saved, errors, lastError } = await processAndSavePosts(posts, targets, projectId, project as ProjectMentionTarget);
+  const { saved, errors, lastError } = await processAndSaveComments(comments, targets, projectId, project as ProjectMentionTarget);
 
   if (errors > 0) {
     const total = saved + errors;
@@ -120,8 +124,8 @@ export async function runMentionsScrapeWithCompetitors(
   return saved;
 }
 
-async function processAndSavePosts(
-  posts: Awaited<ReturnType<ReturnType<typeof createRedditDiscoveryProvider>["fetchNewPosts"]>>,
+async function processAndSaveComments(
+  comments: RedditComment[],
   targets: MentionTarget[],
   projectId: string,
   project: ProjectMentionTarget,
@@ -131,13 +135,13 @@ async function processAndSavePosts(
   let errors = 0;
   let lastError: string | null = null;
 
-  for (const post of posts) {
-    const postText = `${post.title} ${post.body ?? ""}`.toLowerCase();
+  for (const comment of comments) {
+    const commentText = comment.body.toLowerCase();
 
     for (const target of targets) {
-      const key = `${post.id}::${target.targetLabel}`;
+      const key = `${comment.id}::${target.targetLabel}`;
       if (seen.has(key)) continue;
-      if (!postText.includes(target.term.toLowerCase())) continue;
+      if (!commentText.includes(target.term.toLowerCase())) continue;
       seen.add(key);
 
       try {
@@ -146,24 +150,24 @@ async function processAndSavePosts(
           targetType: target.targetType,
           valueProposition: project.value_proposition,
           region: project.region,
-          subreddit: post.subreddit,
-          title: post.title,
-          body: post.body,
+          subreddit: comment.subreddit,
+          title: comment.parentPostTitle,
+          body: comment.body,
         });
 
         await upsertBrandMention({
           projectId,
-          redditPostId: post.id,
+          redditPostId: comment.id,
           targetType: target.targetType,
           targetLabel: target.targetLabel,
-          title: post.title,
-          body: post.body,
-          subreddit: post.subreddit,
-          author: post.author,
-          permalink: post.permalink,
-          url: post.url,
-          redditScore: post.score ?? 0,
-          numComments: post.numComments ?? 0,
+          title: comment.parentPostTitle,
+          body: comment.body,
+          subreddit: comment.subreddit,
+          author: comment.author,
+          permalink: comment.permalink,
+          url: comment.parentPostUrl,
+          redditScore: comment.score ?? 0,
+          numComments: 0,
           sentiment: classification.sentiment,
           sentimentReason: classification.sentimentReason,
           postType: classification.postType,
@@ -172,7 +176,9 @@ async function processAndSavePosts(
           sentimentEvidence: classification.sentimentEvidence,
           summary: classification.summary,
           wrongRegion: classification.wrongRegion,
-          postedAt: post.createdUtc,
+          postedAt: comment.createdUtc,
+          isComment: true,
+          parentPostId: comment.parentPostId,
         });
 
         saved++;
@@ -180,7 +186,7 @@ async function processAndSavePosts(
         errors++;
         lastError = err instanceof Error ? err.message : String(err);
         console.error(
-          `[mentions] Failed to classify/save post ${post.id} for "${target.targetLabel}":`,
+          `[mentions] Failed to classify/save comment ${comment.id} for "${target.targetLabel}":`,
           lastError,
         );
       }

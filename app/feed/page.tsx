@@ -403,26 +403,43 @@ function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; acti
     <Link
       href={href}
       className={`opportunity-card${active ? " opportunity-card-active" : ""}`}
-      style={isUnread && !active ? { boxShadow: "inset 3px 0 0 #4F46E5" } : undefined}
+      style={isUnread && !active ? { borderLeftColor: "#4F46E5" } : undefined}
     >
+      {/* Post context row */}
       <div className="opportunity-meta">
         <TypeDot kind="mention" />
-        <TargetBadge type={mention.target_type} label={mention.target_label} />
         <span>r/{mention.subreddit}</span>
         {mention.posted_at && <span>{formatRelative(mention.posted_at)}</span>}
-        {mention.num_comments != null && <span>{mention.num_comments} comments</span>}
+        <TargetBadge type={mention.target_type} label={mention.target_label} />
+        <SentimentPill sentiment={mention.sentiment} />
       </div>
 
+      {/* Parent post title */}
       <h2 className="opportunity-heading">{mention.title}</h2>
 
-      {mention.sentiment_reason && (
-        <p className="opportunity-reason">{mention.sentiment_reason}</p>
+      {/* Comment block */}
+      {mention.is_comment && mention.body && (
+        <div style={{
+          background: "#F6F7F8",
+          borderRadius: 6,
+          padding: "8px 10px",
+          borderLeft: "3px solid #DAE0E6",
+        }}>
+          {mention.author && (
+            <p style={{ fontSize: 10, fontWeight: 700, color: "#7C7C83", marginBottom: 4 }}>
+              u/{mention.author}
+            </p>
+          )}
+          <p style={{ fontSize: 12, color: "#1A1A1B", lineHeight: 1.45 }}>
+            {mention.body.length > 200 ? `${mention.body.slice(0, 200)}…` : mention.body}
+          </p>
+        </div>
       )}
 
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 8 }}>
-        <SentimentPill sentiment={mention.sentiment} />
-        <span style={{ fontSize: 12, color: "#8E8E93", fontWeight: 700 }}>▲ {mention.reddit_score}</span>
-      </div>
+      {/* Summary / reason */}
+      {mention.summary && (
+        <p className="opportunity-reason">{mention.summary}</p>
+      )}
     </Link>
   );
 }

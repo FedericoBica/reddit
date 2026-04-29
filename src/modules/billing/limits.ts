@@ -10,6 +10,8 @@ export type ProjectLimit = {
   maxCompetitors: number | null;
   scrapeIntervalHours: number;
   keywordSearchTimeWindow: KeywordSearchTimeWindow;
+  maxPostsPerKeyword: number;
+  maxCommentsPerKeyword: number;
   maxAiRepliesPerMonth: number | null;
   maxGhostwriterThreads: number | null;
   maxTeamMembers: number | null;
@@ -33,6 +35,8 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxCompetitors: 3,
     scrapeIntervalHours: 168,
     keywordSearchTimeWindow: "week",
+    maxPostsPerKeyword: 25,
+    maxCommentsPerKeyword: 25,
     maxAiRepliesPerMonth: 100,
     maxGhostwriterThreads: 5,
     maxTeamMembers: 1,
@@ -54,6 +58,8 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxCompetitors: 6,
     scrapeIntervalHours: 24,
     keywordSearchTimeWindow: "day",
+    maxPostsPerKeyword: 10,
+    maxCommentsPerKeyword: 13,
     maxAiRepliesPerMonth: 300,
     maxGhostwriterThreads: 15,
     maxTeamMembers: 2,
@@ -75,6 +81,8 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxCompetitors: 8,
     scrapeIntervalHours: 24,
     keywordSearchTimeWindow: "day",
+    maxPostsPerKeyword: 10,
+    maxCommentsPerKeyword: 13,
     maxAiRepliesPerMonth: 500,
     maxGhostwriterThreads: null,
     maxTeamMembers: 3,
