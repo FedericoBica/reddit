@@ -229,8 +229,8 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
 
               {/* Mention triage controls — only when type=mentions */}
               {feedType === "mentions" && (
-                <div style={{ padding: "8px 10px", display: "grid", gap: 8 }}>
-                  <TargetPills
+                <div style={{ padding: "8px 10px 10px", display: "grid", gap: 10 }}>
+                  <TargetDropdown
                     projectId={currentProject.id}
                     companyName={currentProject.name}
                     competitors={competitors}
@@ -239,18 +239,18 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                     sort={selectedSort}
                     selectedItemId={selectedFromList?.kind === "mention" ? selectedFromList.data.id : undefined}
                   />
-                  <SortControl
-                    projectId={currentProject.id}
-                    target={selectedTarget}
-                    sentiment={selectedSentiment}
-                    selectedSort={selectedSort}
-                  />
                   <SentimentBar
                     projectId={currentProject.id}
                     target={selectedTarget}
                     selectedSentiment={selectedSentiment}
                     selectedSort={selectedSort}
                     stats={sentimentStats}
+                  />
+                  <SortControl
+                    projectId={currentProject.id}
+                    target={selectedTarget}
+                    sentiment={selectedSentiment}
+                    selectedSort={selectedSort}
                   />
                 </div>
               )}
@@ -612,7 +612,7 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
 
 // ── Mention triage controls ───────────────────────────────────
 
-function TargetPills({
+function TargetDropdown({
   projectId,
   companyName,
   competitors,
@@ -635,18 +635,78 @@ function TargetPills({
     ...competitors.map((c) => ({ id: c.term, label: c.term })),
   ];
 
+  const selectedLabel = targets.find((t) => t.id === selectedTarget)?.label ?? "All mentions";
+
   return (
-    <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-      <span style={{ fontSize: 11, color: "#8E8E93", fontWeight: 800 }}>Target</span>
-      {targets.map((t) => {
-        const active = selectedTarget === t.id;
-        const href = buildMentionHref({ projectId, target: t.id === "all" ? undefined : t.id, sentiment: sentiment === "all" ? undefined : sentiment, sort: sort === "relevant" ? undefined : sort, itemId: selectedItemId });
-        return (
-          <Link key={t.id} href={href} className={`filter-pill${active ? " filter-pill-active" : ""}`}>
-            {t.label}
-          </Link>
-        );
-      })}
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <span style={{ fontSize: 11, color: "#8E8E93", fontWeight: 700, flexShrink: 0 }}>Target</span>
+      <details style={{ position: "relative" }}>
+        <summary
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 6,
+            padding: "4px 10px 4px 12px",
+            borderRadius: 20,
+            border: "1px solid #DAE0E6",
+            background: selectedTarget !== "all" ? "#FFF3EC" : "#fff",
+            color: selectedTarget !== "all" ? "#E03D00" : "#1A1A1B",
+            fontSize: 12,
+            fontWeight: 700,
+            cursor: "pointer",
+            listStyle: "none",
+            userSelect: "none",
+          }}
+        >
+          {selectedLabel}
+          <svg width="10" height="10" viewBox="0 0 10 10" fill="none" style={{ opacity: 0.5 }}>
+            <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </summary>
+        <div
+          style={{
+            position: "absolute",
+            top: "calc(100% + 4px)",
+            left: 0,
+            zIndex: 50,
+            background: "#fff",
+            border: "1px solid #E5E7EB",
+            borderRadius: 8,
+            boxShadow: "0 4px 16px rgba(0,0,0,0.10)",
+            minWidth: 160,
+            overflow: "hidden",
+          }}
+        >
+          {targets.map((t) => {
+            const active = selectedTarget === t.id;
+            const href = buildMentionHref({
+              projectId,
+              target: t.id === "all" ? undefined : t.id,
+              sentiment: sentiment === "all" ? undefined : sentiment,
+              sort: sort === "relevant" ? undefined : sort,
+              itemId: selectedItemId,
+            });
+            return (
+              <Link
+                key={t.id}
+                href={href}
+                style={{
+                  display: "block",
+                  padding: "8px 14px",
+                  fontSize: 13,
+                  fontWeight: active ? 700 : 400,
+                  color: active ? "#FF4500" : "#1A1A1B",
+                  background: active ? "#FFF3EC" : "transparent",
+                  textDecoration: "none",
+                  borderBottom: "1px solid #F5F5F5",
+                }}
+              >
+                {t.label}
+              </Link>
+            );
+          })}
+        </div>
+      </details>
     </div>
   );
 }
@@ -662,18 +722,44 @@ function SortControl({
   sentiment: BrandMentionSentiment | "all";
   selectedSort: string;
 }) {
+  const options = [
+    { value: "relevant", label: "Most discussed" },
+    { value: "recent",   label: "Most recent" },
+  ] as const;
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
-      <span style={{ fontSize: 11, color: "#8E8E93", fontWeight: 800 }}>Sort</span>
-      {(["relevant", "recent"] as const).map((sort) => (
-        <Link
-          key={sort}
-          href={buildMentionHref({ projectId, target: target === "all" ? undefined : target, sentiment: sentiment === "all" ? undefined : sentiment, sort: sort === "relevant" ? undefined : sort })}
-          className={`filter-pill${selectedSort === sort ? " filter-pill-active" : ""}`}
-        >
-          {sort === "recent" ? "Most recent" : "Most discussed"}
-        </Link>
-      ))}
+    <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <span style={{ fontSize: 11, color: "#8E8E93", fontWeight: 700 }}>Sort</span>
+      <div style={{ display: "flex", alignItems: "center", gap: 0, borderRadius: 6, border: "1px solid #E5E7EB", overflow: "hidden" }}>
+        {options.map((opt, i) => {
+          const active = selectedSort === opt.value;
+          const href = buildMentionHref({
+            projectId,
+            target: target === "all" ? undefined : target,
+            sentiment: sentiment === "all" ? undefined : sentiment,
+            sort: opt.value === "relevant" ? undefined : opt.value,
+          });
+          return (
+            <Link
+              key={opt.value}
+              href={href}
+              style={{
+                display: "inline-block",
+                padding: "4px 12px",
+                fontSize: 11,
+                fontWeight: active ? 700 : 500,
+                color: active ? "#fff" : "#6B7280",
+                background: active ? "#1A1A1B" : "transparent",
+                textDecoration: "none",
+                borderLeft: i > 0 ? "1px solid #E5E7EB" : "none",
+                transition: "background 0.1s",
+              }}
+            >
+              {opt.label}
+            </Link>
+          );
+        })}
+      </div>
     </div>
   );
 }
