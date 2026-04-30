@@ -1,9 +1,15 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/modules/auth/server";
-import LandingPage from "./landing";
 
 export default async function Page() {
   const user = await getCurrentUser();
   if (user) redirect("/dashboard");
-  return <LandingPage />;
+
+  const headersList = await headers();
+  const acceptLanguage = headersList.get("accept-language") ?? "";
+  const primary = acceptLanguage.split(",")[0]?.split("-")[0]?.toLowerCase();
+
+  if (primary === "es") redirect("/es");
+  redirect("/en");
 }

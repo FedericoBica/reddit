@@ -36,7 +36,7 @@ const PLANS = [
       "Reddit + X Monitoring",
       "Analytics Dashboard",
       "2 Seats (Owner + 1 Member)",
-      "Email & Telegram Alerts",
+      "Email Alerts",
     ],
   },
   {
@@ -52,7 +52,7 @@ const PLANS = [
       "Reddit + X Monitoring",
       "Analytics Dashboard",
       "3 Seats (Owner + 2 Members)",
-      "Email, Telegram & Slack Alerts",
+      "Email & Slack Alerts",
     ],
   },
 ] as const;

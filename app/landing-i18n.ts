@@ -1,0 +1,667 @@
+export type Locale = "en" | "es";
+
+// Using a mapped type approach so each locale value is string, not a literal
+type TranslationMap = {
+  nav: {
+    features: string; pricing: string; howItWorks: string; about: string;
+    login: string; startFree: string; langLabel: string;
+  };
+  hero: {
+    eyebrow: string; h1_1: string; h1_em: string; h1_2: string; lede: string;
+    ctaPrimary: string; ctaSecondary: string; stat1: string; stat2: string; stat3: string;
+  };
+  logobar: { label: string };
+  dashboard: {
+    tabThreads: string; tabLeads: string; tabReplies: string; trackingLabel: string;
+    liveChip: string; chartTitle: string; chartDelta: string; chartMeta: string;
+    statMatchScore: string; statMatchSub: string; statReachLabel: string; statReachSub: string;
+    replyNow: string; worthWatching: string; filterLabel: string; filterPlaceholder: string;
+    leadsCount: string; draftDm: string; replyTo: string; sendReply: string; regenerate: string;
+    toneLabel: string; composerTone: string; composerLen: string; errorTooShort: string;
+    errorPromo: string; queuedMsg: string; aiDraftTitle: string;
+  };
+  idealCustomers: {
+    h2_1: string; h2_em: string; h2_2: string; sub: string; closingLine: string;
+    closingLineAuto: string; tabSaas: string; tabConsumer: string; tabEcom: string;
+    tabAgency: string; tabLocal: string; relevanceLabel: string;
+  };
+  whyReddit: {
+    chip: string; h2_1: string; h2_em: string; h2_2: string; sub: string;
+    point1Title: string; point1Body1: string; point1Body2: string; point1Body3: string;
+    point1Body4: string; point1Body5: string; point1Source: string;
+    point2Title: string; point2Body1: string; point2Body2: string; point2Body3: string;
+    point2Body4: string; point2Body5: string; point2Source: string;
+    point3Title: string; point3Body1: string; point3Body2: string; point3Body3: string;
+    point3Body4: string; point3Body5: string; point3Source: string;
+    chartTitle: string; chartFoot: string; closing1: string; closing2: string;
+  };
+  howItWorks: {
+    eyebrow: string; h2_1: string; h2_em: string; h2_2: string;
+    step1n: string; step1t: string; step1d: string;
+    step2n: string; step2t: string; step2d: string;
+    step3n: string; step3t: string; step3d: string;
+  };
+  twoWays: {
+    eyebrow: string; h2_1: string; h2_em: string; h2_2: string; sub: string;
+    inboundTag: string; inboundTitle: string; inboundDesc: string;
+    inboundFeat1: string; inboundFeat2: string; inboundFeat3: string; inboundCta: string;
+    outboundTag: string; outboundTitle: string; outboundDesc: string;
+    outboundFeat1: string; outboundFeat2: string; outboundFeat3: string; outboundCta: string;
+  };
+  features: {
+    eyebrow: string; h2: string; sub: string;
+    feat1Icon: string; feat1Title: string; feat1Desc: string;
+    feat2Icon: string; feat2Title: string; feat2Desc: string;
+    feat3Icon: string; feat3Title: string; feat3Desc: string;
+    feat4Icon: string; feat4Title: string; feat4Desc: string;
+  };
+  comparison: {
+    eyebrow: string; h2_1: string; h2_em: string; h2_2: string; sub: string;
+    manualTitle: string; manualItem1: string; manualItem2: string; manualItem3: string;
+    manualItem4: string; manualItem5: string; manualItem6: string; manualItem7: string;
+    manualItem8: string; manualSummary: string; prowlTitle: string;
+    prowl1Title: string; prowl1Desc: string; prowl2Title: string; prowl2Desc: string;
+    prowl3Title: string; prowl3Desc: string; prowlSummary: string;
+  };
+  honestTruth: {
+    eyebrow: string; h2_1: string; h2_em: string; h2_2: string; sub: string;
+    p1: string; p2: string; riskTitle: string;
+    risk1: string; risk2: string; risk3: string; risk4: string;
+    soWhat: string; splitTitle1: string; splitTitle2: string; splitDesc: string;
+    workflow1: string; workflow2: string; workflow3: string; workflow4: string;
+  };
+  seoAi: {
+    chip: string; h2_1: string; h2_em: string; h2_2: string; sub: string;
+    li1: string; li2: string; li3: string; cta: string;
+    searchChip: string; boostChip: string; googleChip: string; aiChip: string;
+  };
+  pricing: {
+    eyebrow: string; h2_1: string; h2_em: string; h2_2: string; sub: string;
+    monthly: string; yearly: string; saveLabel: string; recommended: string;
+    perMonth: string; inboundLabel: string; outboundLabel: string; ctaBtn: string;
+    tier1Name: string; tier1Desc: string; tier1In1: string; tier1In2: string;
+    tier1In3: string; tier1In4: string; tier1In5: string; tier1Out1: string;
+    tier2Name: string; tier2Desc: string; tier2In1: string; tier2In2: string;
+    tier2In3: string; tier2In4: string; tier2In5: string; tier2Out1: string;
+    tier3Name: string; tier3Desc: string; tier3In1: string; tier3In2: string;
+    tier3In3: string; tier3In4: string; tier3In5: string; tier3Out1: string; tier3Out2: string;
+  };
+  faq: { eyebrow: string; h2: string; q1: string; a1: string; q2: string; a2: string; q3: string; a3: string; q4: string; a4: string };
+  finalCta: { eyebrow: string; h2: string; sub: string; ctaPrimary: string; ctaLogin: string };
+  footer: { tagline: string; productTitle: string; company: string; companyTitle: string; legalTitle: string; copyright: string };
+};
+
+export type Translations = TranslationMap;
+
+const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
+  en: {
+    nav: {
+      features: "Features",
+      pricing: "Pricing",
+      howItWorks: "How it works",
+      about: "About",
+      login: "Log in",
+      startFree: "Start free",
+      langLabel: "Language",
+    },
+    hero: {
+      eyebrow: "Reddit lead generation",
+      h1_1: "Find buyers on Reddit ",
+      h1_em: "before",
+      h1_2: " they pick a vendor.",
+      lede: "RedProwl watches high-intent conversations, scores fit, drafts human replies, and keeps your team inside Reddit's rules.",
+      ctaPrimary: "Start free trial",
+      ctaSecondary: "See how it works",
+      stat1: "subreddits monitored",
+      stat2: "more qualified threads",
+      stat3: "No card required",
+    },
+    logobar: {
+      label: "Built for teams growing from Reddit",
+    },
+    dashboard: {
+      tabThreads: "Threads",
+      tabLeads: "Leads",
+      tabReplies: "Replies",
+      trackingLabel: "Tracking",
+      liveChip: "live",
+      chartTitle: "High-intent threads / day",
+      chartDelta: "+24%",
+      chartMeta: "last 14 days",
+      statMatchScore: "Match score",
+      statMatchSub: "for selected thread",
+      statReachLabel: "Est. reach",
+      statReachSub: "readers, 48h",
+      replyNow: "reply now",
+      worthWatching: "worth watching",
+      filterLabel: "Filter",
+      filterPlaceholder: "karma > 500 - active this week - matches ICP",
+      leadsCount: "leads",
+      draftDm: "Draft DM",
+      replyTo: "Reply to",
+      sendReply: "Send reply",
+      regenerate: "regenerate",
+      toneLabel: "tone: casual",
+      composerTone: "tone: helpful",
+      composerLen: "length: 58 words",
+      errorTooShort: "Reply is too short. Add specifics.",
+      errorPromo: "Sounds promotional. Subreddits will flag this.",
+      queuedMsg: "queued for review in r/startups",
+      aiDraftTitle: "AI reply draft",
+    },
+    idealCustomers: {
+      h2_1: "Thousands of ",
+      h2_em: "potential customers",
+      h2_2: " are asking for help on Reddit every day.",
+      sub: "One helpful reply can do more than you think.",
+      closingLine: " finds them for you. ",
+      closingLineAuto: "Automatically.",
+      tabSaas: "SaaS",
+      tabConsumer: "Consumer Apps",
+      tabEcom: "E-Commerce",
+      tabAgency: "Agency",
+      tabLocal: "Local Biz",
+      relevanceLabel: "Relevance",
+    },
+    whyReddit: {
+      chip: "Why Reddit",
+      h2_1: "Reddit is shaping ",
+      h2_em: "how buyers decide.",
+      h2_2: "",
+      sub: "From AI citations to Google rankings, Reddit threads are influencing purchase decisions everywhere.",
+      point1Title: "Reddit shapes AI answers",
+      point1Body1: "Across ",
+      point1Body2: "230K+ prompts",
+      point1Body3: " and ",
+      point1Body4: "100M+ AI citations",
+      point1Body5: ", Reddit consistently shows up as one of the most-cited domains in AI answers. What's said on Reddit can materially influence what AI recommends.",
+      point1Source: "Source: Semrush",
+      point2Title: "Google is ranking Reddit threads for buying searches",
+      point2Body1: "Reddit's US visibility jumped by ",
+      point2Body2: "+1,274 points in 2024",
+      point2Body3: ", reaching ",
+      point2Body4: "#3 most visible site",
+      point2Body5: " in the US (up from #92 at the start of 2023). If the ranking threads recommend you, you win the click.",
+      point2Source: "Source: SISTRIX",
+      point3Title: "Reddit is the buyer backchannel",
+      point3Body1: "",
+      point3Body2: "74%",
+      point3Body3: " say Reddit helps them make faster purchase decisions, and ",
+      point3Body4: "74%",
+      point3Body5: " report satisfaction with a purchase based on information they found on Reddit. This is where buyers validate options in public — before they convert.",
+      point3Source: "Source: Reddit for Business",
+      chartTitle: "Top Cited Domains in AI Answers",
+      chartFoot: "Based on Semrush study of 230K prompts · Oct 2025",
+      closing1: "If Reddit is influencing AI answers, showing up in Google, and shaping buyer decisions,",
+      closing2: "winning comes down to consistent monitoring, execution, and measurement.",
+    },
+    howItWorks: {
+      eyebrow: "How it works",
+      h2_1: "Get more ",
+      h2_em: "customers",
+      h2_2: " in 3 simple steps.",
+      step1n: "01",
+      step1t: "Add your website",
+      step1d: "We analyze your website and identify highly relevant keywords and topics.",
+      step2n: "02",
+      step2t: "Add your top 3 competitors",
+      step2d: "Your top 3 competitors will help us drill even deeper and identify hidden opportunities to sneak into your competitors' audience.",
+      step3n: "03",
+      step3t: "Get highly relevant posts",
+      step3d: "Get a list of the most relevant Reddit posts where you can comment your business. The posts are actually being read by your target audience and not just random guesses.",
+    },
+    twoWays: {
+      eyebrow: "From threads to DMs",
+      h2_1: "",
+      h2_em: "Two ways",
+      h2_2: " to win Reddit.",
+      sub: "Public replies build authority and rank on Google plus AI search. Private DMs convert that authority into booked calls.",
+      inboundTag: "Inbound",
+      inboundTitle: "Public Reddit posts",
+      inboundDesc: "Engage in Reddit threads and mention your product to build brand authority and drive organic traffic.",
+      inboundFeat1: "AI finds relevant discussions to join",
+      inboundFeat2: "Get high-quality AI-assisted replies",
+      inboundFeat3: "Creates SEO and AI search visibility",
+      inboundCta: "Learn More About RedProwl Inbound",
+      outboundTag: "Outbound",
+      outboundTitle: "Private Reddit DMs",
+      outboundDesc: "Automatically send targeted messages to dozens of Reddit users at once and close deals.",
+      outboundFeat1: "Bulk-send DMs without detection",
+      outboundFeat2: "Track responses via integrated CRM",
+      outboundFeat3: "Find leads via targeting specific threads or subreddits",
+      outboundCta: "Learn More About RedProwl Outbound",
+    },
+    features: {
+      eyebrow: "What it does",
+      h2: "Four things, done embarrassingly well.",
+      sub: "No kitchen sink. Find the thread, write the reply, keep the account alive, measure what returned.",
+      feat1Icon: "S",
+      feat1Title: "Signal, not scraping.",
+      feat1Desc: "Every new thread across Reddit scored for intent, fit, and timing.",
+      feat2Icon: "R",
+      feat2Title: "Replies that do not read like a bot wrote them.",
+      feat2Desc: "Trained on your voice and top-voted comments in each sub.",
+      feat3Icon: "I",
+      feat3Title: "Shared inbox for your team.",
+      feat3Desc: "Assign, review, approve. Nobody double-replies. Nobody misses a lead.",
+      feat4Icon: "G",
+      feat4Title: "Built-in guardrails so you do not get banned.",
+      feat4Desc: "We read subreddit rules, enforce cadence, and flag language moderators remove.",
+    },
+    comparison: {
+      eyebrow: "Why RedProwl",
+      h2_1: "Finding customers feels too hard?",
+      h2_em: "RedProwl is the better way.",
+      h2_2: "",
+      sub: "Stop wasting hours searching customers on Reddit manually and start finding high-intent conversations that actually convert. RedProwl is your Reddit Marketing OS.",
+      manualTitle: "Finding customers manually",
+      manualItem1: "Do keyword research manually (1-2 hours)",
+      manualItem2: "Skim hundreds of Google search results (2-3 hours)",
+      manualItem3: "Find high-ranking Reddit posts manually (1-2 hours)",
+      manualItem4: "Pay for expensive SEO tools ($120+/month minimum)",
+      manualItem5: "Read through hundreds of irrelevant posts (2-3 hours)",
+      manualItem6: "Write authentic replies manually (1-2 hours)",
+      manualItem7: "Miss time-sensitive opportunities (daily)",
+      manualItem8: "Can't track posts you already replied to (ongoing confusion)",
+      manualSummary: "2-3 hours daily plus expensive tooling",
+      prowlTitle: "With RedProwl",
+      prowl1Title: "Create your project in 2 minutes",
+      prowl1Desc: "Simply add your website & competitors. Redreach AI automatically finds the most relevant keywords for your business and niche.",
+      prowl2Title: "Get high-ranking Reddit opportunities",
+      prowl2Desc: "AI tracks search engine indexed Reddit posts and brand mentions inside Reddit comments to surface highly-ranking Reddit posts to engage with. You'll be alerted for new time-sensitive opportunities.",
+      prowl3Title: "Invest just 20 minutes a day",
+      prowl3Desc: "Review curated opportunities and engage authentically. Highly effective marketing with minimal time investment.",
+      prowlSummary: "Effective growth marketing in 20 min/day",
+    },
+    honestTruth: {
+      eyebrow: "The honest truth about Reddit automation",
+      h2_1: "Why can't I just ",
+      h2_em: "fully automate",
+      h2_2: " it?",
+      sub: "We get asked this a lot. Here is what nobody else will tell you.",
+      p1: "We understand you. You want to fully automate and save time. Autopilot sounds great in theory.",
+      p2: "Here is what actually happens: Reddit's anti-spam systems keep getting better at finding automated posting patterns.",
+      riskTitle: "Why fully automated posting breaks",
+      risk1: "Reddit detects bots via IPs, fingerprints, and behavior",
+      risk2: "Comments get shadow-removed before you notice",
+      risk3: "Accounts you do not own get banned and take your marketing with them",
+      risk4: "Retroactive purges can wipe months of paid comments overnight",
+      soWhat: "So what actually works?",
+      splitTitle1: "Automate the 90%.",
+      splitTitle2: "You do the 10% that matters.",
+      splitDesc: "RedProwl handles everything up to the last mile: finding conversations, scoring intent, and drafting replies. You handle the final step from your real account.",
+      workflow1: "RedProwl AI finds the right conversations for your product",
+      workflow2: "Relevance filtering shows you only high-intent threads",
+      workflow3: "RedProwl AI suggests authentic, context-aware replies",
+      workflow4: "You post from your account. Comments stick.",
+    },
+    seoAi: {
+      chip: "AI SEO & Parasite SEO",
+      h2_1: "Rank on Google & Influence AI Search ",
+      h2_em: "with Reddit",
+      h2_2: ".",
+      sub: "Stop fighting for backlinks. Piggyback on Reddit's Domain Authority to rank #1 on Google and become the cited source for ChatGPT and Perplexity.",
+      li1: "Find Reddit threads already ranking on Google's first page",
+      li2: "Influence AI models where Reddit is cited as source material",
+      li3: "Get high-intent traffic without ads or a single blog post",
+      cta: "Get customers from Reddit",
+      searchChip: "Google Search",
+      boostChip: "DA 91/100 boost",
+      googleChip: "Google Search",
+      aiChip: "AI Search / ChatGPT",
+    },
+    pricing: {
+      eyebrow: "Pricing",
+      h2_1: "Pricing that ",
+      h2_em: "pays for itself",
+      h2_2: ".",
+      sub: "RedProwl surfaces hidden Reddit opportunities and drives organic growth for a fraction of paid ads.",
+      monthly: "Monthly",
+      yearly: "Yearly",
+      saveLabel: "Save 20% with yearly billing",
+      recommended: "Recommended",
+      perMonth: "/month",
+      inboundLabel: "Inbound",
+      outboundLabel: "Outbound",
+      ctaBtn: "Get customers from Reddit",
+      tier1Name: "Startup",
+      tier1Desc: "Start generating leads and revenue from Reddit.",
+      tier1In1: "3 tracked competitors",
+      tier1In2: "20 tracked keywords",
+      tier1In3: "100 AI-guided replies",
+      tier1In4: "Weekly lead opportunities",
+      tier1In5: "Analytics dashboard",
+      tier1Out1: "30 daily auto DMs",
+      tier2Name: "Growth",
+      tier2Desc: "Convert more Reddit leads with daily insights and expanded tracking.",
+      tier2In1: "6 tracked competitors",
+      tier2In2: "40 tracked keywords",
+      tier2In3: "300 AI-guided replies",
+      tier2In4: "Daily lead opportunities",
+      tier2In5: "Monthly SEO opportunities",
+      tier2Out1: "100 daily auto DMs",
+      tier3Name: "Professional",
+      tier3Desc: "Maximize revenue potential across multiple brands.",
+      tier3In1: "8 tracked competitors",
+      tier3In2: "60 tracked keywords",
+      tier3In3: "500 AI-guided replies",
+      tier3In4: "Daily competitor tracking",
+      tier3In5: "Analytics dashboard",
+      tier3Out1: "500 daily auto DMs",
+      tier3Out2: "CRM for private DM outreach",
+    },
+    faq: {
+      eyebrow: "FAQ",
+      h2: "Questions we get a lot.",
+      q1: "Is this going to get my account banned?",
+      a1: "The opposite is the goal. Guardrails enforce subreddit rules, cadence, and self-promo ratios.",
+      q2: "How is this different from F5Bot or Brand24?",
+      a2: "Those tools alert you when a keyword appears. RedProwl scores intent, drafts replies, and gives your team a shared workflow.",
+      q3: "Do you use my data to train models?",
+      a3: "No. Replies, threads, and ICPs stay in your workspace unless you explicitly opt in.",
+      q4: "Can I use this for cold DMs?",
+      a4: "Yes, but public replies consistently convert better and keep your account healthier.",
+    },
+    finalCta: {
+      eyebrow: "Ready?",
+      h2: "Your next 10 customers are already posting about you.",
+      sub: "Start the 7-day trial. No card. Cancel in two clicks.",
+      ctaPrimary: "Start free trial",
+      ctaLogin: "Log in",
+    },
+    footer: {
+      tagline: "Reddit lead-gen for founders who would rather ship than lurk.",
+      productTitle: "Product",
+      company: "Customers",
+      companyTitle: "Company",
+      legalTitle: "Legal",
+      copyright: "© 2026 RedProwl, Inc. Not affiliated with Reddit, Inc.",
+    },
+  },
+  es: {
+    nav: {
+      features: "Características",
+      pricing: "Precios",
+      howItWorks: "Cómo funciona",
+      about: "Nosotros",
+      login: "Iniciar sesión",
+      startFree: "Prueba gratis",
+      langLabel: "Idioma",
+    },
+    hero: {
+      eyebrow: "Generación de leads en Reddit",
+      h1_1: "Encuentra compradores en Reddit ",
+      h1_em: "antes",
+      h1_2: " de que elijan a otro.",
+      lede: "RedProwl monitorea conversaciones de alta intención, evalúa el encaje, redacta respuestas humanas y mantiene a tu equipo dentro de las normas de Reddit.",
+      ctaPrimary: "Prueba gratis",
+      ctaSecondary: "Ver cómo funciona",
+      stat1: "subreddits monitoreados",
+      stat2: "más hilos calificados",
+      stat3: "Sin tarjeta requerida",
+    },
+    logobar: {
+      label: "Para equipos que crecen desde Reddit",
+    },
+    dashboard: {
+      tabThreads: "Hilos",
+      tabLeads: "Leads",
+      tabReplies: "Respuestas",
+      trackingLabel: "Seguimiento",
+      liveChip: "en vivo",
+      chartTitle: "Hilos de alta intención / día",
+      chartDelta: "+24%",
+      chartMeta: "últimos 14 días",
+      statMatchScore: "Puntuación",
+      statMatchSub: "del hilo seleccionado",
+      statReachLabel: "Alcance est.",
+      statReachSub: "lectores, 48h",
+      replyNow: "responder ya",
+      worthWatching: "vale la pena",
+      filterLabel: "Filtrar",
+      filterPlaceholder: "karma > 500 - activo esta semana - encaja con ICP",
+      leadsCount: "leads",
+      draftDm: "Redactar DM",
+      replyTo: "Responder a",
+      sendReply: "Enviar respuesta",
+      regenerate: "regenerar",
+      toneLabel: "tono: casual",
+      composerTone: "tono: útil",
+      composerLen: "longitud: 58 palabras",
+      errorTooShort: "La respuesta es muy corta. Agrega detalles.",
+      errorPromo: "Suena promocional. Los subreddits lo marcarán.",
+      queuedMsg: "en cola para revisión en r/startups",
+      aiDraftTitle: "Borrador IA",
+    },
+    idealCustomers: {
+      h2_1: "Miles de ",
+      h2_em: "clientes potenciales",
+      h2_2: " piden ayuda en Reddit cada día.",
+      sub: "Una respuesta útil puede hacer más de lo que imaginas.",
+      closingLine: " los encuentra por ti. ",
+      closingLineAuto: "Automáticamente.",
+      tabSaas: "SaaS",
+      tabConsumer: "Apps de Consumo",
+      tabEcom: "E-Commerce",
+      tabAgency: "Agencia",
+      tabLocal: "Negocio Local",
+      relevanceLabel: "Relevancia",
+    },
+    whyReddit: {
+      chip: "Por qué Reddit",
+      h2_1: "Reddit está moldeando ",
+      h2_em: "cómo deciden los compradores.",
+      h2_2: "",
+      sub: "Desde citas en IA hasta posiciones en Google, los hilos de Reddit influyen en las decisiones de compra en todos lados.",
+      point1Title: "Reddit da forma a las respuestas de la IA",
+      point1Body1: "En más de ",
+      point1Body2: "230K consultas",
+      point1Body3: " y ",
+      point1Body4: "100M+ citas de IA",
+      point1Body5: ", Reddit aparece constantemente como uno de los dominios más citados en respuestas de IA. Lo que se dice en Reddit puede influir materialmente en lo que la IA recomienda.",
+      point1Source: "Fuente: Semrush",
+      point2Title: "Google está posicionando hilos de Reddit para búsquedas de compra",
+      point2Body1: "La visibilidad de Reddit en EE.UU. aumentó ",
+      point2Body2: "+1.274 puntos en 2024",
+      point2Body3: ", alcanzando el ",
+      point2Body4: "#3 sitio más visible",
+      point2Body5: " en EE.UU. (desde el #92 a principios de 2023). Si los hilos con mejor posición te recomiendan, ganas el clic.",
+      point2Source: "Fuente: SISTRIX",
+      point3Title: "Reddit es el canal de validación de los compradores",
+      point3Body1: "El ",
+      point3Body2: "74%",
+      point3Body3: " afirma que Reddit les ayuda a tomar decisiones de compra más rápidas, y el ",
+      point3Body4: "74%",
+      point3Body5: " reporta satisfacción con una compra basada en información encontrada en Reddit. Aquí es donde los compradores validan opciones en público — antes de convertir.",
+      point3Source: "Fuente: Reddit for Business",
+      chartTitle: "Dominios más citados en respuestas de IA",
+      chartFoot: "Basado en estudio Semrush de 230K consultas · Oct 2025",
+      closing1: "Si Reddit influye en las respuestas de la IA, aparece en Google y moldea las decisiones de compra,",
+      closing2: "ganar depende de un monitoreo, ejecución y medición constantes.",
+    },
+    howItWorks: {
+      eyebrow: "Cómo funciona",
+      h2_1: "Consigue más ",
+      h2_em: "clientes",
+      h2_2: " en 3 pasos simples.",
+      step1n: "01",
+      step1t: "Agrega tu sitio web",
+      step1d: "Analizamos tu sitio y encontramos las palabras clave y temas más relevantes para tu negocio.",
+      step2n: "02",
+      step2t: "Agrega tus 3 principales competidores",
+      step2d: "Tus 3 principales competidores nos ayudan a profundizar aún más e identificar oportunidades ocultas para entrar en la audiencia de la competencia.",
+      step3n: "03",
+      step3t: "Recibe posts altamente relevantes",
+      step3d: "Obtén una lista de los posts de Reddit más relevantes donde puedes presentar tu negocio. Son leídos por tu audiencia objetivo, no son suposiciones al azar.",
+    },
+    twoWays: {
+      eyebrow: "De hilos a DMs",
+      h2_1: "",
+      h2_em: "Dos formas",
+      h2_2: " de ganar en Reddit.",
+      sub: "Las respuestas públicas construyen autoridad y posicionan en Google y búsqueda IA. Los DMs privados convierten esa autoridad en llamadas agendadas.",
+      inboundTag: "Inbound",
+      inboundTitle: "Posts públicos en Reddit",
+      inboundDesc: "Participa en hilos de Reddit y menciona tu producto para construir autoridad de marca y atraer tráfico orgánico.",
+      inboundFeat1: "La IA encuentra discusiones relevantes para unirte",
+      inboundFeat2: "Obtén respuestas de alta calidad asistidas por IA",
+      inboundFeat3: "Genera visibilidad en SEO y búsqueda IA",
+      inboundCta: "Conoce más sobre RedProwl Inbound",
+      outboundTag: "Outbound",
+      outboundTitle: "DMs privados en Reddit",
+      outboundDesc: "Envía mensajes dirigidos a decenas de usuarios de Reddit a la vez y cierra acuerdos.",
+      outboundFeat1: "Envía DMs masivos sin ser detectado",
+      outboundFeat2: "Rastrea respuestas con CRM integrado",
+      outboundFeat3: "Encuentra leads apuntando a hilos o subreddits específicos",
+      outboundCta: "Conoce más sobre RedProwl Outbound",
+    },
+    features: {
+      eyebrow: "Qué hace",
+      h2: "Cuatro cosas, hechas excepcionalmente bien.",
+      sub: "Sin excesos. Encuentra el hilo, escribe la respuesta, mantén la cuenta activa, mide lo que funcionó.",
+      feat1Icon: "S",
+      feat1Title: "Señal, no scraping.",
+      feat1Desc: "Cada nuevo hilo en Reddit puntuado por intención, encaje y momento oportuno.",
+      feat2Icon: "R",
+      feat2Title: "Respuestas que no parecen escritas por un bot.",
+      feat2Desc: "Entrenado con tu voz y los comentarios más votados en cada subreddit.",
+      feat3Icon: "I",
+      feat3Title: "Bandeja compartida para tu equipo.",
+      feat3Desc: "Asigna, revisa, aprueba. Nadie responde dos veces. Nadie pierde un lead.",
+      feat4Icon: "G",
+      feat4Title: "Protecciones integradas para no ser baneado.",
+      feat4Desc: "Leemos las reglas de cada subreddit, controlamos la frecuencia y marcamos el lenguaje que los moderadores eliminan.",
+    },
+    comparison: {
+      eyebrow: "Por qué RedProwl",
+      h2_1: "¿Encontrar clientes se siente demasiado difícil?",
+      h2_em: "RedProwl es la mejor alternativa.",
+      h2_2: "",
+      sub: "Deja de perder horas buscando clientes en Reddit manualmente y empieza a encontrar conversaciones de alta intención que realmente convierten. RedProwl es tu sistema operativo de marketing en Reddit.",
+      manualTitle: "Buscar clientes manualmente",
+      manualItem1: "Investigación de palabras clave manual (1-2 horas)",
+      manualItem2: "Revisar cientos de resultados de Google (2-3 horas)",
+      manualItem3: "Encontrar posts de Reddit con buen ranking manualmente (1-2 horas)",
+      manualItem4: "Pagar por herramientas SEO caras ($120+/mes como mínimo)",
+      manualItem5: "Leer cientos de posts irrelevantes (2-3 horas)",
+      manualItem6: "Escribir respuestas auténticas manualmente (1-2 horas)",
+      manualItem7: "Perder oportunidades urgentes (a diario)",
+      manualItem8: "No puedes rastrear posts a los que ya respondiste (confusión continua)",
+      manualSummary: "2-3 horas al día más herramientas caras",
+      prowlTitle: "Con RedProwl",
+      prowl1Title: "Crea tu proyecto en 2 minutos",
+      prowl1Desc: "Solo agrega tu sitio web y competidores. La IA de Redreach encuentra automáticamente las palabras clave más relevantes para tu negocio y nicho.",
+      prowl2Title: "Obtén oportunidades de Reddit con alto ranking",
+      prowl2Desc: "La IA rastrea posts de Reddit indexados en buscadores y menciones de marca dentro de comentarios para mostrar los posts con mejor posicionamiento. Recibirás alertas de nuevas oportunidades urgentes.",
+      prowl3Title: "Invierte solo 20 minutos al día",
+      prowl3Desc: "Revisa oportunidades curadas y participa de forma auténtica. Marketing muy efectivo con una inversión mínima de tiempo.",
+      prowlSummary: "Marketing de crecimiento efectivo en 20 min/día",
+    },
+    honestTruth: {
+      eyebrow: "La verdad sobre la automatización en Reddit",
+      h2_1: "¿Por qué no puedo simplemente ",
+      h2_em: "automatizarlo todo",
+      h2_2: "?",
+      sub: "Nos preguntan esto mucho. Aquí está lo que nadie más te dirá.",
+      p1: "Te entendemos. Quieres automatizar todo y ahorrar tiempo. El piloto automático suena genial en teoría.",
+      p2: "Esto es lo que realmente pasa: los sistemas anti-spam de Reddit son cada vez mejores para detectar patrones de publicación automatizada.",
+      riskTitle: "Por qué la publicación totalmente automatizada falla",
+      risk1: "Reddit detecta bots mediante IPs, huellas digitales y comportamiento",
+      risk2: "Los comentarios se eliminan silenciosamente antes de que te des cuenta",
+      risk3: "Las cuentas que no son tuyas se banean y se llevan tu marketing con ellas",
+      risk4: "Las purgas retroactivas pueden borrar meses de comentarios pagados de la noche a la mañana",
+      soWhat: "¿Qué funciona realmente?",
+      splitTitle1: "Automatiza el 90%.",
+      splitTitle2: "Tú haces el 10% que importa.",
+      splitDesc: "RedProwl gestiona todo hasta el último paso: encontrar conversaciones, evaluar intención y redactar respuestas. Tú manejas el paso final desde tu cuenta real.",
+      workflow1: "La IA de RedProwl encuentra las conversaciones correctas para tu producto",
+      workflow2: "El filtro de relevancia te muestra solo hilos de alta intención",
+      workflow3: "La IA de RedProwl sugiere respuestas auténticas y contextualmente precisas",
+      workflow4: "Tú publicas desde tu cuenta. Los comentarios se quedan.",
+    },
+    seoAi: {
+      chip: "IA SEO y SEO Parasitario",
+      h2_1: "Posiciónate en Google e influye en la búsqueda IA ",
+      h2_em: "con Reddit",
+      h2_2: ".",
+      sub: "Deja de luchar por backlinks. Aprovecha la Autoridad de Dominio de Reddit para rankear #1 en Google y convertirte en la fuente citada por ChatGPT y Perplexity.",
+      li1: "Encuentra hilos de Reddit que ya posicionan en la primera página de Google",
+      li2: "Influye en los modelos de IA donde Reddit es la fuente citada",
+      li3: "Obtén tráfico de alta intención sin anuncios ni un solo artículo de blog",
+      cta: "Consigue clientes desde Reddit",
+      searchChip: "Google Search",
+      boostChip: "DA 91/100 boost",
+      googleChip: "Google Search",
+      aiChip: "Búsqueda IA / ChatGPT",
+    },
+    pricing: {
+      eyebrow: "Precios",
+      h2_1: "Precios que ",
+      h2_em: "se pagan solos",
+      h2_2: ".",
+      sub: "RedProwl descubre oportunidades ocultas en Reddit e impulsa el crecimiento orgánico a una fracción del costo de la publicidad paga.",
+      monthly: "Mensual",
+      yearly: "Anual",
+      saveLabel: "Ahorra 20% con facturación anual",
+      recommended: "Recomendado",
+      perMonth: "/mes",
+      inboundLabel: "Inbound",
+      outboundLabel: "Outbound",
+      ctaBtn: "Consigue clientes desde Reddit",
+      tier1Name: "Startup",
+      tier1Desc: "Empieza a generar leads e ingresos desde Reddit.",
+      tier1In1: "3 competidores monitoreados",
+      tier1In2: "20 palabras clave monitoreadas",
+      tier1In3: "100 respuestas guiadas por IA",
+      tier1In4: "Oportunidades de leads semanales",
+      tier1In5: "Panel de analíticas",
+      tier1Out1: "30 DMs automáticos diarios",
+      tier2Name: "Growth",
+      tier2Desc: "Convierte más leads de Reddit con información diaria y seguimiento ampliado.",
+      tier2In1: "6 competidores monitoreados",
+      tier2In2: "40 palabras clave monitoreadas",
+      tier2In3: "300 respuestas guiadas por IA",
+      tier2In4: "Oportunidades de leads diarias",
+      tier2In5: "Oportunidades SEO mensuales",
+      tier2Out1: "100 DMs automáticos diarios",
+      tier3Name: "Professional",
+      tier3Desc: "Maximiza el potencial de ingresos en múltiples marcas.",
+      tier3In1: "8 competidores monitoreados",
+      tier3In2: "60 palabras clave monitoreadas",
+      tier3In3: "500 respuestas guiadas por IA",
+      tier3In4: "Seguimiento diario de competidores",
+      tier3In5: "Panel de analíticas",
+      tier3Out1: "500 DMs automáticos diarios",
+      tier3Out2: "CRM para alcance privado por DM",
+    },
+    faq: {
+      eyebrow: "FAQ",
+      h2: "Preguntas frecuentes.",
+      q1: "¿Esto me va a hacer banear la cuenta?",
+      a1: "Todo lo contrario. Las protecciones integradas aplican las reglas del subreddit, la cadencia y los límites de autopromoción.",
+      q2: "¿En qué se diferencia de F5Bot o Brand24?",
+      a2: "Esas herramientas te avisan cuando aparece una palabra clave. RedProwl evalúa la intención, redacta respuestas y le da a tu equipo un flujo de trabajo compartido.",
+      q3: "¿Usáis mis datos para entrenar modelos?",
+      a3: "No. Las respuestas, hilos e ICPs permanecen en tu espacio de trabajo salvo que des tu consentimiento explícito.",
+      q4: "¿Puedo usarlo para DMs en frío?",
+      a4: "Sí, aunque las respuestas públicas convierten mejor de forma consistente y mantienen tu cuenta más saludable.",
+    },
+    finalCta: {
+      eyebrow: "¿Listo?",
+      h2: "Tus próximos 10 clientes ya están publicando sobre ti.",
+      sub: "Empieza la prueba de 7 días. Sin tarjeta. Cancela en dos clics.",
+      ctaPrimary: "Prueba gratis",
+      ctaLogin: "Iniciar sesión",
+    },
+    footer: {
+      tagline: "Generación de leads en Reddit para fundadores que prefieren construir antes que buscar.",
+      productTitle: "Producto",
+      company: "Clientes",
+      companyTitle: "Empresa",
+      legalTitle: "Legal",
+      copyright: "© 2026 RedProwl, Inc. No afiliado con Reddit, Inc.",
+    },
+  },
+};
+
+export const TRANSLATIONS: Record<Locale, TranslationMap> = TRANSLATIONS_DATA;

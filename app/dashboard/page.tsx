@@ -3,7 +3,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AutoRefresh } from "@/app/components/auto-refresh";
 import { ReplyEditor } from "@/app/components/reply-editor";
-import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { getLeadById, listProjectLeads } from "@/db/queries/leads";
 import { listLeadReplies } from "@/db/queries/lead-replies";
@@ -302,8 +301,6 @@ function ResultDetail({
         <p className="reddit-body" style={{ fontSize: 13 }}>
           {result.body?.trim() || "No body available. Open the post on Reddit to see the full context."}
         </p>
-
-        <RedditComments permalink={result.permalink} />
 
         <div className="post-stats-bar">
           {result.reddit_score !== null && <span>▲ {result.reddit_score} upvotes</span>}

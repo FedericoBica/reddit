@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { BrandLink } from "@/app/components/logo";
+import { TRANSLATIONS, type Locale, type Translations } from "./landing-i18n";
 
 const THREADS = [
   {
@@ -127,7 +128,7 @@ function Spark({
   );
 }
 
-function HeroDashboard() {
+function HeroDashboard({ td }: { td: Translations["dashboard"] }) {
   const [tab, setTab] = useState<"threads" | "leads" | "replies">("threads");
   const [selected, setSelected] = useState(1);
   const [query, setQuery] = useState(
@@ -156,12 +157,12 @@ function HeroDashboard() {
 
   const replyError = useMemo(() => {
     if (!replyTouched) return "";
-    if (reply.trim().length < 40) return "Reply is too short. Add specifics.";
+    if (reply.trim().length < 40) return td.errorTooShort;
     if (/\b(buy|sign ?up|check out my|link in bio)\b/i.test(reply)) {
-      return "Sounds promotional. Subreddits will flag this.";
+      return td.errorPromo;
     }
     return "";
-  }, [reply, replyTouched]);
+  }, [reply, replyTouched, td]);
 
   function sendReply() {
     setReplyTouched(true);
@@ -188,9 +189,9 @@ function HeroDashboard() {
 
         <div className="dash-tabs">
           {[
-            ["threads", "Threads", THREADS.length],
-            ["leads", "Leads", LEADS.length],
-            ["replies", "Replies", REPLIES.length],
+            ["threads", td.tabThreads, THREADS.length],
+            ["leads", td.tabLeads, LEADS.length],
+            ["replies", td.tabReplies, REPLIES.length],
           ].map(([id, label, count]) => (
             <button
               key={id}
@@ -207,11 +208,11 @@ function HeroDashboard() {
           {tab === "threads" && (
             <>
               <div className="query-row">
-                <span className="lbl">Tracking</span>
+                <span className="lbl">{td.trackingLabel}</span>
                 <input value={query} onChange={(e) => setQuery(e.target.value)} />
                 <span className="chip">
                   <span className="dot" />
-                  live
+                  {td.liveChip}
                 </span>
               </div>
 
@@ -219,29 +220,29 @@ function HeroDashboard() {
                 <div className="chart">
                   <div className="chart-head">
                     <div>
-                      <div className="ttl">High-intent threads / day</div>
+                      <div className="ttl">{td.chartTitle}</div>
                       <div className="val">
                         {Math.round(chartPoints[chartPoints.length - 1])}
-                        <span className="delta"> +24%</span>
+                        <span className="delta"> {td.chartDelta}</span>
                       </div>
                     </div>
-                    <div className="mini-meta">last 14 days</div>
+                    <div className="mini-meta">{td.chartMeta}</div>
                   </div>
                   <Spark points={chartPoints} />
                 </div>
                 <div className="stat-col">
                   <div className="stat">
-                    <div className="lbl">Match score</div>
+                    <div className="lbl">{td.statMatchScore}</div>
                     <div className="n">
                       {thread.score}
                       <span>/100</span>
                     </div>
-                    <div className="subtext">for selected thread</div>
+                    <div className="subtext">{td.statMatchSub}</div>
                   </div>
                   <div className="stat">
-                    <div className="lbl">Est. reach</div>
+                    <div className="lbl">{td.statReachLabel}</div>
                     <div className="n">{(thread.upv * 11).toLocaleString()}</div>
-                    <div className="subtext">readers, 48h</div>
+                    <div className="subtext">{td.statReachSub}</div>
                   </div>
                 </div>
               </div>
@@ -267,7 +268,7 @@ function HeroDashboard() {
                     </div>
                     <div className="thread-score">
                       <div className={`score-pill ${item.band}`}>{item.score}</div>
-                      <div className="mini-meta">{item.band === "hot" ? "reply now" : "worth watching"}</div>
+                      <div className="mini-meta">{item.band === "hot" ? td.replyNow : td.worthWatching}</div>
                     </div>
                   </button>
                 ))}
@@ -275,8 +276,8 @@ function HeroDashboard() {
 
               <div className="composer">
                 <div className="composer-head">
-                  <div className="ttl">AI reply draft - {thread.sub}</div>
-                  <div className="meta">tone: helpful - length: 58 words</div>
+                  <div className="ttl">{td.aiDraftTitle} - {thread.sub}</div>
+                  <div className="meta">{td.composerTone} - {td.composerLen}</div>
                 </div>
                 <textarea
                   value={reply}
@@ -288,13 +289,13 @@ function HeroDashboard() {
                 />
                 <div className="composer-foot">
                   <div className="lefty">
-                    <span className="chip">regenerate</span>
-                    <span className="chip">tone: casual</span>
+                    <span className="chip">{td.regenerate}</span>
+                    <span className="chip">{td.toneLabel}</span>
                     {replyError ? <span className="err-msg">{replyError}</span> : null}
-                    <span className={`ok-msg ${sent ? "show" : ""}`}>queued for review in r/startups</span>
+                    <span className={`ok-msg ${sent ? "show" : ""}`}>{td.queuedMsg}</span>
                   </div>
                   <button className="btn primary sm" onClick={sendReply}>
-                    Send reply
+                    {td.sendReply}
                   </button>
                 </div>
               </div>
@@ -304,11 +305,11 @@ function HeroDashboard() {
           {tab === "leads" && (
             <>
               <div className="query-row">
-                <span className="lbl">Filter</span>
-                <input defaultValue="karma > 500 - active this week - matches ICP" />
+                <span className="lbl">{td.filterLabel}</span>
+                <input defaultValue={td.filterPlaceholder} />
                 <span className="chip">
                   <span className="dot" />
-                  {LEADS.length} leads
+                  {LEADS.length} {td.leadsCount}
                 </span>
               </div>
               <div className="leads-table">
@@ -321,7 +322,7 @@ function HeroDashboard() {
                     </div>
                     <span className="chip">{lead.tag}</span>
                     <div className="score-pill hot">{lead.fit}</div>
-                    <button className="btn sm">Draft DM</button>
+                    <button className="btn sm">{td.draftDm}</button>
                   </div>
                 ))}
               </div>
@@ -334,7 +335,7 @@ function HeroDashboard() {
                 <div className="reply-card" key={`${item.to}-${item.status}`}>
                   <div className="hd">
                     <span>
-                      Reply to <b>{item.to}</b> in <b>{item.sub}</b>
+                      {td.replyTo} <b>{item.to}</b> in <b>{item.sub}</b>
                     </span>
                     <span className={`reply-status ${item.status}`}>{item.status}</span>
                   </div>
@@ -452,7 +453,7 @@ function HighlightTitle({
   );
 }
 
-function IdealCustomers() {
+function IdealCustomers({ t }: { t: Translations }) {
   const [tab, setTab] = useState<CustomerTab>("saas");
   const data: Record<
     CustomerTab,
@@ -484,21 +485,23 @@ function IdealCustomers() {
       { sub: "r/SFBay", before: "Looking for a good ", highlight: "dog groomer", after: " in the Mission", score: 78 },
     ],
   };
+
+  const tc = t.idealCustomers;
   const tabs: { id: CustomerTab; label: string }[] = [
-    { id: "saas", label: "SaaS" },
-    { id: "consumer", label: "Consumer Apps" },
-    { id: "ecom", label: "E-Commerce" },
-    { id: "agency", label: "Agency" },
-    { id: "local", label: "Local Biz" },
+    { id: "saas", label: tc.tabSaas },
+    { id: "consumer", label: tc.tabConsumer },
+    { id: "ecom", label: tc.tabEcom },
+    { id: "agency", label: tc.tabAgency },
+    { id: "local", label: tc.tabLocal },
   ];
 
   return (
     <section className="section-pad">
       <div className="wrap centered">
         <h2 className="h-section">
-          Thousands of <em>potential customers</em> are asking for help on Reddit every day.
+          {tc.h2_1}<em>{tc.h2_em}</em>{tc.h2_2}
         </h2>
-        <p className="sub">One helpful reply can do more than you think.</p>
+        <p className="sub">{tc.sub}</p>
 
         <div className="customer-panel">
           <div className="customer-tabs">
@@ -520,7 +523,7 @@ function IdealCustomers() {
                   <HighlightTitle before={thread.before} highlight={thread.highlight} after={thread.after} />
                 </div>
                 <div className="customer-score">
-                  <span>Relevance</span>
+                  <span>{tc.relevanceLabel}</span>
                   <b>{thread.score}/100</b>
                 </div>
               </div>
@@ -529,29 +532,30 @@ function IdealCustomers() {
         </div>
 
         <p className="closing-line">
-          <b>RedProwl</b> finds them for you. <em>Automatically.</em>
+          <b>RedProwl</b>{tc.closingLine}<em>{tc.closingLineAuto}</em>
         </p>
       </div>
     </section>
   );
 }
 
-function TwoWays() {
+function TwoWays({ t }: { t: Translations }) {
+  const tw = t.twoWays;
   const cards = [
     {
-      tag: "Inbound",
-      title: "Public Reddit posts",
-      desc: "Engage in Reddit threads and mention your product to build brand authority and drive organic traffic.",
-      feats: ["AI finds relevant discussions to join", "Get high-quality AI-assisted replies", "Creates SEO and AI search visibility"],
-      cta: "Learn More About RedProwl Inbound",
+      tag: tw.inboundTag,
+      title: tw.inboundTitle,
+      desc: tw.inboundDesc,
+      feats: [tw.inboundFeat1, tw.inboundFeat2, tw.inboundFeat3],
+      cta: tw.inboundCta,
       tone: "inbound",
     },
     {
-      tag: "Outbound",
-      title: "Private Reddit DMs",
-      desc: "Automatically send targeted messages to dozens of Reddit users at once and close deals.",
-      feats: ["Bulk-send DMs without detection", "Track responses via integrated CRM", "Find leads via targeting specific threads or subreddits"],
-      cta: "Learn More About RedProwl Outbound",
+      tag: tw.outboundTag,
+      title: tw.outboundTitle,
+      desc: tw.outboundDesc,
+      feats: [tw.outboundFeat1, tw.outboundFeat2, tw.outboundFeat3],
+      cta: tw.outboundCta,
       tone: "outbound",
     },
   ];
@@ -559,11 +563,9 @@ function TwoWays() {
   return (
     <section className="section-pad banded">
       <div className="wrap centered">
-        <span className="eyebrow">From threads to DMs</span>
-        <h2 className="h-section"><em>Two ways</em> to win Reddit.</h2>
-        <p className="sub">
-          Public replies build authority and rank on Google plus AI search. Private DMs convert that authority into booked calls.
-        </p>
+        <span className="eyebrow">{tw.eyebrow}</span>
+        <h2 className="h-section"><em>{tw.h2_em}</em>{tw.h2_2}</h2>
+        <p className="sub">{tw.sub}</p>
 
         <div className="two-way-grid">
           {cards.map((card) => (
@@ -591,36 +593,31 @@ function TwoWays() {
   );
 }
 
-function Comparison() {
+function Comparison({ t }: { t: Translations }) {
+  const tc = t.comparison;
   const manual = [
-    "Do keyword research manually (1-2 hours)",
-    "Skim hundreds of Google search results (2-3 hours)",
-    "Find high-ranking Reddit posts manually (1-2 hours)",
-    "Pay for expensive SEO tools ($120+/month minimum)",
-    "Read through hundreds of irrelevant posts (2-3 hours)",
-    "Write authentic replies manually (1-2 hours)",
-    "Miss time-sensitive opportunities (daily)",
-    "Can't track posts you already replied to (ongoing confusion)",
+    tc.manualItem1, tc.manualItem2, tc.manualItem3, tc.manualItem4,
+    tc.manualItem5, tc.manualItem6, tc.manualItem7, tc.manualItem8,
   ];
-  const prowl = [
-    ["Create your project in 2 minutes", "Simply add your website & competitors. Redreach AI automatically finds the most relevant keywords for your business and niche."],
-    ["Get high-ranking Reddit opportunities", "AI tracks search engine indexed Reddit posts and brand mentions inside Reddit comments to surface highly-ranking Reddit posts to engage with. You'll be alerted for new time-sensitive opportunities."],
-    ["Invest just 20 minutes a day", "Review curated opportunities and engage authentically. Highly effective marketing with minimal time investment."],
+  const prowl: [string, string][] = [
+    [tc.prowl1Title, tc.prowl1Desc],
+    [tc.prowl2Title, tc.prowl2Desc],
+    [tc.prowl3Title, tc.prowl3Desc],
   ];
 
   return (
     <section className="section-pad">
       <div className="wrap centered">
-        <span className="eyebrow">Why RedProwl</span>
+        <span className="eyebrow">{tc.eyebrow}</span>
         <h2 className="h-section">
-          Finding customers feels too hard?<br />
-          <em>RedProwl is the better way.</em>
+          {tc.h2_1}<br />
+          <em>{tc.h2_em}</em>
         </h2>
-        <p className="sub">Stop wasting hours searching customers on Reddit manually and start finding high-intent conversations that actually convert. RedProwl is your Reddit Marketing OS.</p>
+        <p className="sub">{tc.sub}</p>
 
         <div className="comparison-grid">
           <div className="comparison-card manual">
-            <h3>Finding customers manually</h3>
+            <h3>{tc.manualTitle}</h3>
             <ul>
               {manual.map((item) => (
                 <li key={item}><span>×</span>{item}</li>
@@ -637,11 +634,11 @@ function Comparison() {
                 fontWeight: 700,
               }}
             >
-              2-3 hours daily plus expensive tooling
+              {tc.manualSummary}
             </div>
           </div>
           <div className="comparison-card prowl">
-            <h3>With <span>RedProwl</span></h3>
+            <h3>{tc.prowlTitle} <span>RedProwl</span></h3>
             <ul>
               {prowl.map(([title, desc]) => (
                 <li key={title}>
@@ -661,7 +658,7 @@ function Comparison() {
                 fontWeight: 700,
               }}
             >
-              Effective growth marketing in 20 min/day
+              {tc.prowlSummary}
             </div>
           </div>
         </div>
@@ -670,43 +667,41 @@ function Comparison() {
   );
 }
 
-function WhyReddit() {
+function WhyReddit({ t }: { t: Translations }) {
+  const tw = t.whyReddit;
   const points = [
     {
       num: "01",
-      title: "Reddit shapes AI answers",
+      title: tw.point1Title,
       body: (
         <>
-          Across <b>230K+ prompts</b> and <b>100M+ AI citations</b>, Reddit consistently
-          shows up as one of the most-cited domains in AI answers. What&apos;s said on Reddit
-          can materially influence what AI recommends.
+          {tw.point1Body1}<b>{tw.point1Body2}</b>{tw.point1Body3}
+          <b>{tw.point1Body4}</b>{tw.point1Body5}
         </>
       ),
-      source: "Source: Semrush",
+      source: tw.point1Source,
     },
     {
       num: "02",
-      title: "Google is ranking Reddit threads for buying searches",
+      title: tw.point2Title,
       body: (
         <>
-          Reddit&apos;s US visibility jumped by <b>+1,274 points in 2024</b>, reaching{" "}
-          <b>#3 most visible site</b> in the US (up from #92 at the start of 2023).
-          If the ranking threads recommend you, you win the click.
+          {tw.point2Body1}<b>{tw.point2Body2}</b>{tw.point2Body3}
+          <b>{tw.point2Body4}</b>{tw.point2Body5}
         </>
       ),
-      source: "Source: SISTRIX",
+      source: tw.point2Source,
     },
     {
       num: "03",
-      title: "Reddit is the buyer backchannel",
+      title: tw.point3Title,
       body: (
         <>
-          <b>74%</b> say Reddit helps them make faster purchase decisions, and <b>74%</b>{" "}
-          report satisfaction with a purchase based on information they found on Reddit.
-          This is where buyers validate options in public — before they convert.
+          {tw.point3Body1}<b>{tw.point3Body2}</b>{tw.point3Body3}
+          <b>{tw.point3Body4}</b>{tw.point3Body5}
         </>
       ),
-      source: "Source: Reddit for Business",
+      source: tw.point3Source,
     },
   ];
 
@@ -726,14 +721,12 @@ function WhyReddit() {
       <div className="wrap">
         <div className="why-header">
           <span className="chip why-chip">
-            <span className="dot" /> Why Reddit
+            <span className="dot" /> {tw.chip}
           </span>
           <h2 className="h-section">
-            Reddit is shaping <em>how buyers decide.</em>
+            {tw.h2_1}<em>{tw.h2_em}</em>
           </h2>
-          <p className="sub">
-            From AI citations to Google rankings, Reddit threads are influencing purchase decisions everywhere.
-          </p>
+          <p className="sub">{tw.sub}</p>
         </div>
 
         <div className="why-reddit-grid">
@@ -754,7 +747,7 @@ function WhyReddit() {
 
           <aside className="why-chart">
             <div>
-              <h4 className="why-chart-title">Top Cited Domains in AI Answers</h4>
+              <h4 className="why-chart-title">{tw.chartTitle}</h4>
               <div className="mono" style={{ fontSize: 11, color: "var(--ink-3)", letterSpacing: "0.04em" }}>
                 ChatGPT, Google AI Mode, Perplexity · Oct 2025
               </div>
@@ -771,49 +764,40 @@ function WhyReddit() {
               ))}
             </div>
             <div className="why-chart-foot">
-              Based on Semrush study of 230K prompts · Oct 2025
+              {tw.chartFoot}
             </div>
           </aside>
         </div>
 
         <p className="why-closing">
-          If Reddit is influencing AI answers, showing up in Google, and shaping buyer decisions,{" "}
-          <b>winning comes down to consistent monitoring, execution, and measurement.</b>
+          {tw.closing1}{" "}
+          <b>{tw.closing2}</b>
         </p>
       </div>
     </section>
   );
 }
 
-function HonestTruth() {
-  const risks = [
-    "Reddit detects bots via IPs, fingerprints, and behavior",
-    "Comments get shadow-removed before you notice",
-    "Accounts you do not own get banned and take your marketing with them",
-    "Retroactive purges can wipe months of paid comments overnight",
-  ];
-  const workflow = [
-    "RedProwl AI finds the right conversations for your product",
-    "Relevance filtering shows you only high-intent threads",
-    "RedProwl AI suggests authentic, context-aware replies",
-    "You post from your account. Comments stick.",
-  ];
+function HonestTruth({ t }: { t: Translations }) {
+  const th = t.honestTruth;
+  const risks = [th.risk1, th.risk2, th.risk3, th.risk4];
+  const workflow = [th.workflow1, th.workflow2, th.workflow3, th.workflow4];
 
   return (
     <section className="section-pad banded">
       <div className="wrap truth-wrap">
         <div className="centered">
-          <span className="eyebrow">The honest truth about Reddit automation</span>
-          <h2 className="h-section">Why can&apos;t I just <em>fully automate</em> it?</h2>
-          <p className="sub">We get asked this a lot. Here is what nobody else will tell you.</p>
+          <span className="eyebrow">{th.eyebrow}</span>
+          <h2 className="h-section">{th.h2_1}<em>{th.h2_em}</em>{th.h2_2}</h2>
+          <p className="sub">{th.sub}</p>
         </div>
 
         <div className="truth-card">
-          <p><b>We understand you.</b> You want to fully automate and save time. Autopilot sounds great in theory.</p>
-          <p><b>Here is what actually happens:</b> Reddit&apos;s anti-spam systems keep getting better at finding automated posting patterns.</p>
+          <p><b>{th.p1}</b></p>
+          <p><b>{th.p2}</b></p>
 
           <div className="risk-box">
-            <div>Why fully automated posting breaks</div>
+            <div>{th.riskTitle}</div>
             <div>
               {risks.map((risk) => (
                 <span key={risk}>× {risk}</span>
@@ -822,11 +806,9 @@ function HonestTruth() {
           </div>
 
           <div className="truth-split">
-            <div className="mono">So what actually works?</div>
-            <h3>Automate the 90%. <em>You do the 10% that matters.</em></h3>
-            <p>
-              RedProwl handles everything up to the last mile: finding conversations, scoring intent, and drafting replies. You handle the final step from your real account.
-            </p>
+            <div className="mono">{th.soWhat}</div>
+            <h3>{th.splitTitle1} <em>{th.splitTitle2}</em></h3>
+            <p>{th.splitDesc}</p>
             <ol>
               {workflow.map((item, index) => (
                 <li key={item} className={index === workflow.length - 1 ? "final" : ""}>
@@ -841,14 +823,15 @@ function HonestTruth() {
   );
 }
 
-function SeoAiSearch() {
+function SeoAiSearch({ t }: { t: Translations }) {
+  const ts = t.seoAi;
   return (
     <section className="section-pad">
       <div className="wrap seo-grid">
         <div className="search-preview">
           <div className="search-preview-top">
-            <span className="chip">Google Search</span>
-            <span className="chip success">DA 91/100 boost</span>
+            <span className="chip">{ts.searchChip}</span>
+            <span className="chip success">{ts.boostChip}</span>
           </div>
           <div className="search-result">
             <div className="mono">best email marketing software for startups</div>
@@ -858,64 +841,61 @@ function SeoAiSearch() {
             <blockquote><b>Your Comment:</b> We switched to YourProduct last month and it has been great.</blockquote>
           </div>
           <div className="search-result ai">
-            <div className="mono">AI Search / ChatGPT</div>
+            <div className="mono">{ts.aiChip}</div>
             <p>Based on recent Reddit discussions, many users recommend <b>YourProduct</b> as a cost-effective alternative.</p>
             <small>SOURCES: reddit.com</small>
           </div>
         </div>
         <div>
-          <span className="chip">🎯 AI SEO & Parasite SEO</span>
-          <h2 className="h-section">Rank on Google & Influence AI Search <em>with Reddit</em>.</h2>
-          <p className="sub">
-            Stop fighting for backlinks. Piggyback on Reddit&apos;s Domain Authority to rank #1 on Google and become the cited source for ChatGPT and Perplexity.
-          </p>
+          <span className="chip">🎯 {ts.chip}</span>
+          <h2 className="h-section">{ts.h2_1}<em>{ts.h2_em}</em>{ts.h2_2}</h2>
+          <p className="sub">{ts.sub}</p>
           <ul className="seo-list">
-            <li><span>✓</span>Find Reddit threads already ranking on Google&apos;s first page</li>
-            <li><span>✓</span>Influence AI models where Reddit is cited as source material</li>
-            <li><span>✓</span>Get high-intent traffic without ads or a single blog post</li>
+            <li><span>✓</span>{ts.li1}</li>
+            <li><span>✓</span>{ts.li2}</li>
+            <li><span>✓</span>{ts.li3}</li>
           </ul>
-          <Link className="btn primary lg" href="/signup">Get customers from Reddit</Link>
+          <Link className="btn primary lg" href="/signup">{ts.cta}</Link>
         </div>
       </div>
     </section>
   );
 }
 
-function Features() {
+function Features({ t }: { t: Translations }) {
+  const tf = t.features;
   return (
     <section id="features" className="section-pad">
       <div className="wrap">
         <div className="section-heading">
-          <span className="eyebrow">What it does</span>
-          <h2 className="h-section">Four things, done embarrassingly well.</h2>
-          <p className="sub">
-            No kitchen sink. Find the thread, write the reply, keep the account alive, measure what returned.
-          </p>
+          <span className="eyebrow">{tf.eyebrow}</span>
+          <h2 className="h-section">{tf.h2}</h2>
+          <p className="sub">{tf.sub}</p>
         </div>
 
         <div className="features-grid">
           <div className="feat big">
-            <div className="icon">S</div>
-            <h3>Signal, not scraping.</h3>
-            <p>Every new thread across Reddit scored for intent, fit, and timing.</p>
+            <div className="icon">{tf.feat1Icon}</div>
+            <h3>{tf.feat1Title}</h3>
+            <p>{tf.feat1Desc}</p>
             <div className="vis"><FeatSignal /></div>
           </div>
           <div className="feat sm">
-            <div className="icon">R</div>
-            <h3>Replies that do not read like a bot wrote them.</h3>
-            <p>Trained on your voice and top-voted comments in each sub.</p>
+            <div className="icon">{tf.feat2Icon}</div>
+            <h3>{tf.feat2Title}</h3>
+            <p>{tf.feat2Desc}</p>
             <div className="vis"><FeatCompose /></div>
           </div>
           <div className="feat sm">
-            <div className="icon">I</div>
-            <h3>Shared inbox for your team.</h3>
-            <p>Assign, review, approve. Nobody double-replies. Nobody misses a lead.</p>
+            <div className="icon">{tf.feat3Icon}</div>
+            <h3>{tf.feat3Title}</h3>
+            <p>{tf.feat3Desc}</p>
             <div className="vis"><FeatInbox /></div>
           </div>
           <div className="feat big">
-            <div className="icon">G</div>
-            <h3>Built-in guardrails so you do not get banned.</h3>
-            <p>We read subreddit rules, enforce cadence, and flag language moderators remove.</p>
+            <div className="icon">{tf.feat4Icon}</div>
+            <h3>{tf.feat4Title}</h3>
+            <p>{tf.feat4Desc}</p>
             <div className="vis"><FeatGuard /></div>
           </div>
         </div>
@@ -924,32 +904,21 @@ function Features() {
   );
 }
 
-function HowItWorks() {
+function HowItWorks({ t }: { t: Translations }) {
+  const th = t.howItWorks;
   const steps = [
-    {
-      n: "01",
-      t: "Add your website",
-      d: "We analyze your website and identify highly relevant keywords and topics.",
-    },
-    {
-      n: "02",
-      t: "Add your top 3 competitors",
-      d: "Your top 3 competitors will help us drill even deeper and identify hidden opportunities to sneak into your competitors' audience.",
-    },
-    {
-      n: "03",
-      t: "Get highly relevant posts",
-      d: "Get a list of the most relevant Reddit posts where you can comment your business. The posts are actually being read by your target audience and not just random guesses.",
-    },
+    { n: th.step1n, t: th.step1t, d: th.step1d },
+    { n: th.step2n, t: th.step2t, d: th.step2d },
+    { n: th.step3n, t: th.step3t, d: th.step3d },
   ];
 
   return (
     <section id="how" className="section-pad banded">
       <div className="wrap">
         <div className="section-heading">
-          <span className="eyebrow">How it works</span>
+          <span className="eyebrow">{th.eyebrow}</span>
           <h2 className="h-section">
-            Get more <em>customers</em> in 3 simple steps.
+            {th.h2_1}<em>{th.h2_em}</em>{th.h2_2}
           </h2>
         </div>
         <div className="steps">
@@ -966,73 +935,72 @@ function HowItWorks() {
   );
 }
 
-function Pricing() {
+function Pricing({ t }: { t: Translations }) {
   const [yearly, setYearly] = useState(false);
+  const tp = t.pricing;
   const tiers = [
     {
-      name: "Startup",
+      name: tp.tier1Name,
       monthly: 19,
       yearly: 15,
-      desc: "Start generating leads and revenue from Reddit.",
-      inbound: ["3 tracked competitors", "20 tracked keywords", "100 AI-guided replies", "Weekly lead opportunities", "Analytics dashboard"],
-      outbound: ["30 daily auto DMs"],
+      desc: tp.tier1Desc,
+      inbound: [tp.tier1In1, tp.tier1In2, tp.tier1In3, tp.tier1In4, tp.tier1In5],
+      outbound: [tp.tier1Out1],
     },
     {
-      name: "Growth",
+      name: tp.tier2Name,
       monthly: 39,
       yearly: 31,
-      desc: "Convert more Reddit leads with daily insights and expanded tracking.",
+      desc: tp.tier2Desc,
       featured: true,
-      inbound: ["6 tracked competitors", "40 tracked keywords", "300 AI-guided replies", "Daily lead opportunities", "Monthly SEO opportunities"],
-      outbound: ["100 daily auto DMs"],
+      inbound: [tp.tier2In1, tp.tier2In2, tp.tier2In3, tp.tier2In4, tp.tier2In5],
+      outbound: [tp.tier2Out1],
     },
     {
-      name: "Professional",
+      name: tp.tier3Name,
       monthly: 79,
       yearly: 63,
-      desc: "Maximize revenue potential across multiple brands.",
-      inbound: ["8 tracked competitors", "60 tracked keywords", "500 AI-guided replies", "Daily competitor tracking", "Analytics dashboard"],
-      outbound: ["500 daily auto DMs", "CRM for private DM outreach"],
+      desc: tp.tier3Desc,
+      inbound: [tp.tier3In1, tp.tier3In2, tp.tier3In3, tp.tier3In4, tp.tier3In5],
+      outbound: [tp.tier3Out1, tp.tier3Out2],
     },
   ];
 
   return (
     <section id="pricing" className="section-pad">
       <div className="wrap pricing-wrap">
-        <span className="eyebrow">Pricing</span>
-        <h2 className="h-section">Pricing that <em>pays for itself</em>.</h2>
-        <p className="sub">
-          RedProwl surfaces hidden Reddit opportunities and drives organic growth for a fraction of paid ads.
-        </p>
+        <span className="eyebrow">{tp.eyebrow}</span>
+        <h2 className="h-section">{tp.h2_1}<em>{tp.h2_em}</em>{tp.h2_2}</h2>
+        <p className="sub">{tp.sub}</p>
 
         <div className="billing-toggle">
           <div className="seg">
-            <button className={!yearly ? "active" : ""} onClick={() => setYearly(false)}>Monthly</button>
-            <button className={yearly ? "active" : ""} onClick={() => setYearly(true)}>Yearly</button>
+            <button className={!yearly ? "active" : ""} onClick={() => setYearly(false)}>{tp.monthly}</button>
+            <button className={yearly ? "active" : ""} onClick={() => setYearly(true)}>{tp.yearly}</button>
           </div>
-          <span className="mono">Save 20% with yearly billing</span>
+          <span className="mono">{tp.saveLabel}</span>
         </div>
 
         <div className="pricing">
           {tiers.map((tier) => (
             <div key={tier.name} className={`price ${tier.featured ? "featured" : ""}`}>
-              {tier.featured ? <span className="recommend">Recommended</span> : null}
+              {tier.featured ? <span className="recommend">{tp.recommended}</span> : null}
               <span className="price-name">{tier.name}</span>
-              <div className="price-num">${yearly ? tier.yearly : tier.monthly}<small> /month</small></div>
+              <div className="price-num">${yearly ? tier.yearly : tier.monthly}<small> {tp.perMonth}</small></div>
               <div className="price-desc">{tier.desc}</div>
-              <div className="price-section">Inbound</div>
+              <div className="price-section">{tp.inboundLabel}</div>
               <ul className="price-list">
                 {tier.inbound.map((feature) => (
                   <li key={feature}><span className="price-check">✓</span><span>{feature}</span></li>
                 ))}
               </ul>
-              <div className="price-section">Outbound</div>
+              <div className="price-section">{tp.outboundLabel}</div>
               <ul className="price-list">
                 {tier.outbound.map((feature) => (
                   <li key={feature}><span className="price-check">✓</span><span>{feature}</span></li>
                 ))}
               </ul>
-              <Link className="btn" href="/signup">Get customers from Reddit</Link>
+              <Link className="btn" href="/signup">{tp.ctaBtn}</Link>
             </div>
           ))}
         </div>
@@ -1041,21 +1009,22 @@ function Pricing() {
   );
 }
 
-function FAQ() {
+function FAQ({ t }: { t: Translations }) {
   const [open, setOpen] = useState(0);
+  const tf = t.faq;
   const items = [
-    ["Is this going to get my account banned?", "The opposite is the goal. Guardrails enforce subreddit rules, cadence, and self-promo ratios."],
-    ["How is this different from F5Bot or Brand24?", "Those tools alert you when a keyword appears. RedProwl scores intent, drafts replies, and gives your team a shared workflow."],
-    ["Do you use my data to train models?", "No. Replies, threads, and ICPs stay in your workspace unless you explicitly opt in."],
-    ["Can I use this for cold DMs?", "Yes, but public replies consistently convert better and keep your account healthier."],
+    [tf.q1, tf.a1],
+    [tf.q2, tf.a2],
+    [tf.q3, tf.a3],
+    [tf.q4, tf.a4],
   ];
 
   return (
     <section id="faq" className="section-pad-sm">
       <div className="wrap faq-wrap">
         <div>
-          <span className="eyebrow">FAQ</span>
-          <h2 className="h-section">Questions we get a lot.</h2>
+          <span className="eyebrow">{tf.eyebrow}</span>
+          <h2 className="h-section">{tf.h2}</h2>
         </div>
         <div className="faq-list">
           {items.map(([question, answer], i) => (
@@ -1073,18 +1042,19 @@ function FAQ() {
   );
 }
 
-function FinalCTA() {
+function FinalCTA({ t }: { t: Translations }) {
+  const tf = t.finalCta;
   return (
     <section className="section-pad-sm">
       <div className="wrap">
         <div className="cta-block">
           <div>
-            <span className="eyebrow">Ready?</span>
-            <h2 className="h-section">Your next 10 customers are already posting about you.</h2>
-            <p className="sub">Start the 7-day trial. No card. Cancel in two clicks.</p>
+            <span className="eyebrow">{tf.eyebrow}</span>
+            <h2 className="h-section">{tf.h2}</h2>
+            <p className="sub">{tf.sub}</p>
             <div className="cta-row">
-              <Link className="btn primary lg" href="/signup">Start free trial</Link>
-              <Link className="btn lg ghost-on-dark" href="/login">Log in</Link>
+              <Link className="btn primary lg" href="/signup">{tf.ctaPrimary}</Link>
+              <Link className="btn lg ghost-on-dark" href="/login">{tf.ctaLogin}</Link>
             </div>
           </div>
         </div>
@@ -1093,35 +1063,36 @@ function FinalCTA() {
   );
 }
 
-function Footer() {
+function Footer({ t, locale }: { t: Translations; locale: Locale }) {
+  const tf = t.footer;
   return (
     <footer className="landing-footer">
       <div className="wrap">
         <div className="foot-grid">
           <div>
-            <BrandLink href="/" logoSize={34} wordmarkSize={24} />
-            <p>Reddit lead-gen for founders who would rather ship than lurk.</p>
+            <BrandLink href={`/${locale}`} logoSize={34} wordmarkSize={24} />
+            <p>{tf.tagline}</p>
           </div>
           <div className="foot-col">
-            <h5>Product</h5>
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
+            <h5>{tf.productTitle}</h5>
+            <a href="#features">{t.nav.features}</a>
+            <a href="#pricing">{t.nav.pricing}</a>
             <a href="#faq">FAQ</a>
           </div>
           <div className="foot-col">
-            <h5>Company</h5>
-            <Link href="/about">About</Link>
-            <a href="#">Customers</a>
+            <h5>{tf.companyTitle}</h5>
+            <Link href="/about">{t.nav.about}</Link>
+            <a href="#">{tf.company}</a>
             <a href="#">Contact</a>
           </div>
           <div className="foot-col">
-            <h5>Legal</h5>
+            <h5>{tf.legalTitle}</h5>
             <a href="#">Terms</a>
             <a href="#">Privacy</a>
           </div>
         </div>
         <div className="foot-bottom">
-          <span>© 2026 RedProwl, Inc. Not affiliated with Reddit, Inc.</span>
+          <span>{tf.copyright}</span>
           <span className="mono">all systems operational</span>
         </div>
       </div>
@@ -1129,19 +1100,43 @@ function Footer() {
   );
 }
 
-export default function LandingPage() {
+function LangSwitcher({ locale }: { locale: Locale }) {
+  return (
+    <div className="lang-switcher" aria-label="Language switcher">
+      <Link
+        href="/en"
+        className={`lang-btn${locale === "en" ? " active" : ""}`}
+        aria-current={locale === "en" ? "true" : undefined}
+      >
+        EN
+      </Link>
+      <Link
+        href="/es"
+        className={`lang-btn${locale === "es" ? " active" : ""}`}
+        aria-current={locale === "es" ? "true" : undefined}
+      >
+        ES
+      </Link>
+    </div>
+  );
+}
+
+export default function LandingPage({ locale }: { locale: Locale }) {
+  const t = TRANSLATIONS[locale];
+
   return (
     <main className="landing-page">
       <nav className="nav">
         <div className="wrap nav-inner">
-          <BrandLink href="/" logoSize={46} wordmarkSize={28} />
+          <BrandLink href={`/${locale}`} logoSize={46} wordmarkSize={28} />
           <div className="nav-links">
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
-            <a href="#how">How it works</a>
-            <Link href="/about">About</Link>
-            <Link href="/login">Log in</Link>
-            <Link className="btn primary sm" href="/signup">Start free</Link>
+            <a href="#features">{t.nav.features}</a>
+            <a href="#pricing">{t.nav.pricing}</a>
+            <a href="#how">{t.nav.howItWorks}</a>
+            <Link href="/about">{t.nav.about}</Link>
+            <Link href="/login">{t.nav.login}</Link>
+            <LangSwitcher locale={locale} />
+            <Link className="btn primary sm" href="/signup">{t.nav.startFree}</Link>
           </div>
         </div>
       </nav>
@@ -1149,30 +1144,28 @@ export default function LandingPage() {
       <section className="hero">
         <div className="wrap hero-grid">
           <div className="hero-copy">
-            <span className="eyebrow">Reddit lead generation</span>
+            <span className="eyebrow">{t.hero.eyebrow}</span>
             <h1 className="h-display">
-              Find buyers on Reddit <em>before</em> they pick a vendor.
+              {t.hero.h1_1}<em>{t.hero.h1_em}</em>{t.hero.h1_2}
             </h1>
-            <p className="lede">
-              RedProwl watches high-intent conversations, scores fit, drafts human replies, and keeps your team inside Reddit&apos;s rules.
-            </p>
+            <p className="lede">{t.hero.lede}</p>
             <div className="cta-row">
-              <Link className="btn primary lg" href="/signup">Start free trial</Link>
-              <a className="btn lg" href="#features">See how it works</a>
+              <Link className="btn primary lg" href="/signup">{t.hero.ctaPrimary}</Link>
+              <a className="btn lg" href="#features">{t.hero.ctaSecondary}</a>
             </div>
             <div className="hero-meta">
-              <span><b>12k+</b> subreddits monitored</span>
-              <span><b>24%</b> more qualified threads</span>
-              <span><b>No card</b> required</span>
+              <span><b>12k+</b> {t.hero.stat1}</span>
+              <span><b>24%</b> {t.hero.stat2}</span>
+              <span><b>{t.hero.stat3}</b></span>
             </div>
           </div>
-          <HeroDashboard />
+          <HeroDashboard td={t.dashboard} />
         </div>
       </section>
 
       <section className="logobar">
         <div className="wrap logobar-inner">
-          <div className="logobar-label">Built for teams growing from Reddit</div>
+          <div className="logobar-label">{t.logobar.label}</div>
           <div className="logobar-logos">
             <span>Acme SaaS</span>
             <span>Northstar</span>
@@ -1182,18 +1175,18 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <IdealCustomers />
-      <WhyReddit />
-      <HowItWorks />
-      <TwoWays />
-      <Features />
-      <Comparison />
-      <HonestTruth />
-      <SeoAiSearch />
-      <Pricing />
-      <FAQ />
-      <FinalCTA />
-      <Footer />
+      <IdealCustomers t={t} />
+      <WhyReddit t={t} />
+      <HowItWorks t={t} />
+      <TwoWays t={t} />
+      <Features t={t} />
+      <Comparison t={t} />
+      <HonestTruth t={t} />
+      <SeoAiSearch t={t} />
+      <Pricing t={t} />
+      <FAQ t={t} />
+      <FinalCTA t={t} />
+      <Footer t={t} locale={locale} />
     </main>
   );
 }

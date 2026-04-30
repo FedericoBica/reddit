@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { AutoRefresh } from "@/app/components/auto-refresh";
 import { KeywordsDropdown } from "@/app/components/keywords-dropdown";
 import { ReplyEditor } from "@/app/components/reply-editor";
-import { RedditComments } from "@/app/components/reddit-comments";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { ReadMarker } from "@/app/components/read-marker";
 import { MentionReplyGenerator } from "@/app/mentions/mention-reply-generator";
@@ -555,7 +554,6 @@ function LeadDetail({
         <p className="reddit-body" style={{ fontSize: 13 }}>
           {lead.body?.trim() || "No body available. Open the post on Reddit to see the full context."}
         </p>
-        <RedditComments permalink={lead.permalink} />
         <div className="post-stats-bar">
           {(lead.score ?? 0) > 0 && <span>▲ {lead.score} upvotes</span>}
           {lead.num_comments != null && <span>💬 {lead.num_comments} comments</span>}
@@ -637,7 +635,6 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
         <p className="reddit-body" style={{ fontSize: 13 }}>
           {mention.body?.trim() || "No body available. Open the post on Reddit to see the full context."}
         </p>
-        <RedditComments permalink={mention.permalink} />
         <div className="post-stats-bar">
           {mention.reddit_score > 0 && <span>▲ {mention.reddit_score} upvotes</span>}
           <span>💬 {mention.num_comments} comments</span>
