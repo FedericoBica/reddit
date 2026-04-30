@@ -406,7 +406,25 @@
 
 @media (max-width: 720px) {
   .landing-page .logo-sticker {
-    display: none;
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .landing-page .logo-sticker svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  .landing-page .logo-x {
+    top: -48px;
+    right: 2%;
+  }
+
+  .landing-page .logo-reddit {
+    top: 50%;
+    left: 2%;
+    margin-top: -22px;
   }
 
   .landing-page .hero-line {
