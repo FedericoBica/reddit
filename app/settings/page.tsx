@@ -18,6 +18,7 @@ import {
   updateKeywordFromForm,
   removeKeywordFromForm,
   toggleKeywordFromForm,
+  addSearchboxKeywordFromForm,
   addXKeywordFromForm,
   updateXKeywordFromForm,
   toggleXKeywordFromForm,
@@ -61,8 +62,10 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   ]);
   const connectToken = params?.connectToken ?? null;
   const competitorKeywords = keywords.filter((k) => k.type === "competitor");
-  const searchKeywords = keywords.filter((k) => k.type !== "competitor");
-  const activeKeywords = searchKeywords.filter((k) => k.is_active);
+  const searchboxKeywords = keywords.filter((k) => k.type === "searchbox");
+  const redditKeywords = keywords.filter((k) => k.type !== "competitor" && k.type !== "searchbox");
+  const activeKeywords = redditKeywords.filter((k) => k.is_active);
+  const activeSearchboxKeywords = searchboxKeywords.filter((k) => k.is_active);
   const activeSubreddits = subreddits.filter((s) => s.is_active);
   const activeCompetitors = competitorKeywords.filter((k) => k.is_active);
   const activeXKeywords = xKeywords.filter((k) => k.is_active);
@@ -91,7 +94,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             padding: "0 20px 60px",
           }}
         >
-          <SettingsTabs projectId={currentProject.id} selectedTab={selectedTab} xEnabled={billingPlan.xEnabled} />
+          <SettingsTabs projectId={currentProject.id} selectedTab={selectedTab} />
 
           {selectedTab === "general" && (
             <SettingsSection
@@ -154,71 +157,86 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           )}
 
           {selectedTab === "keywords" && (
-            <SettingsSection
-              title="Keywords"
-              description="AI suggested and custom terms used to discover keyword opportunities. Toggle, edit, delete or add terms."
-              badge={`${activeKeywords.length} active`}
-            >
-              <KeywordGroup title="Suggested by AI" keywords={searchKeywords.filter((k) => k.type === "ai_suggested")} projectId={currentProject.id} />
-              <KeywordGroup title="Custom" keywords={searchKeywords.filter((k) => k.type === "custom")} projectId={currentProject.id} editable />
-              <form action={addKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                <input type="hidden" name="projectId" value={currentProject.id} />
-                <input className="settings-input" name="term" placeholder="Add custom keyword" required style={{ flex: 1 }} />
-                <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
-              </form>
-            </SettingsSection>
-          )}
-
-          {selectedTab === "x" && (
-            billingPlan.xEnabled ? (
+            <div style={{ display: "grid", gap: 16 }}>
               <SettingsSection
-                title="X"
-                description="Separate query set for X filtered stream rules. Use X syntax here: hashtags, exact phrases, from:, lang:, min_faves: and similar operators."
-                badge={`${activeXKeywords.length} active`}
+                title="Reddit Keywords"
+                description="AI suggested and custom terms used to discover keyword opportunities on Reddit. Toggle, edit, delete or add terms."
+                badge={`${activeKeywords.length} active`}
               >
-                <div style={{ display: "grid", gap: 0 }}>
-                  {xKeywords.length === 0 ? (
-                    <EmptyHint>No X queries yet. Add your first filtered stream rule below.</EmptyHint>
-                  ) : (
-                    xKeywords.map((keyword) => (
-                      <XKeywordRow key={keyword.id} keyword={keyword} projectId={currentProject.id} />
-                    ))
-                  )}
-                </div>
-                <form action={addXKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                <KeywordGroup title="Suggested by AI" keywords={redditKeywords.filter((k) => k.type === "ai_suggested")} projectId={currentProject.id} />
+                <KeywordGroup title="Custom" keywords={redditKeywords.filter((k) => k.type === "custom")} projectId={currentProject.id} editable />
+                <form action={addKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
                   <input type="hidden" name="projectId" value={currentProject.id} />
-                  <input className="settings-input" name="query" placeholder='Example: (crm OR "project management") lang:en -is:retweet' required style={{ flex: 1 }} />
+                  <input className="settings-input" name="term" placeholder="Add custom keyword" required style={{ flex: 1 }} />
                   <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
                 </form>
-                <XQuerySyntaxGuide />
               </SettingsSection>
-            ) : (
+
               <SettingsSection
-                title="X"
-                description="X monitoring is available on Growth and Professional plans."
+                title="Searchbox Keywords"
+                description="Short Google search queries used to find high-ranking Reddit threads via Google. Optimized for search volume, not conversational matching."
+                badge={`${activeSearchboxKeywords.length} active`}
               >
-                <div style={{ padding: "24px 0", textAlign: "center" }}>
-                  <p style={{ fontSize: 14, color: "#7C7C83", marginBottom: 16 }}>
-                    Upgrade to Growth to monitor X (Twitter) for buyer-intent posts and mentions.
-                  </p>
-                  <a
-                    href="/settings?tab=billing"
-                    style={{
-                      display: "inline-block",
-                      padding: "8px 20px",
-                      background: "#FF4500",
-                      color: "#FFF",
-                      borderRadius: 8,
-                      fontSize: 13,
-                      fontWeight: 600,
-                      textDecoration: "none",
-                    }}
-                  >
-                    Upgrade plan →
-                  </a>
-                </div>
+                <KeywordGroup title="Suggested by AI" keywords={searchboxKeywords.filter((k) => k.type === "searchbox")} projectId={currentProject.id} editable />
+                <form action={addSearchboxKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                  <input type="hidden" name="projectId" value={currentProject.id} />
+                  <input className="settings-input" name="term" placeholder='Example: best CRM for small business' required style={{ flex: 1 }} />
+                  <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
+                </form>
               </SettingsSection>
-            )
+
+              {billingPlan.xEnabled ? (
+                <SettingsSection
+                  title="X Keywords"
+                  description="Filtered stream rules for X (Twitter). Use X query syntax: exact phrases, OR groups, lang:, min_faves: and similar operators."
+                  badge={`${activeXKeywords.length} active`}
+                >
+                  <div style={{ display: "grid", gap: 0 }}>
+                    {xKeywords.length === 0 ? (
+                      <EmptyHint>No X queries yet. Add your first filtered stream rule below.</EmptyHint>
+                    ) : (
+                      xKeywords.map((keyword) => (
+                        <XKeywordRow key={keyword.id} keyword={keyword} projectId={currentProject.id} />
+                      ))
+                    )}
+                  </div>
+                  <form action={addXKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
+                    <input type="hidden" name="projectId" value={currentProject.id} />
+                    <input className="settings-input" name="query" placeholder='Example: (crm OR "project management") lang:en -is:retweet' required style={{ flex: 1 }} />
+                    <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
+                  </form>
+                  <XQuerySyntaxGuide />
+                </SettingsSection>
+              ) : (
+                <SettingsSection
+                  title="X Keywords"
+                  description="X monitoring is available on Growth and Professional plans."
+                >
+                  <div style={{ padding: "16px 0", display: "flex", alignItems: "center", gap: 14 }}>
+                    <p style={{ fontSize: 13, color: "#7C7C83", flex: 1 }}>
+                      Upgrade to Growth to monitor X (Twitter) for buyer-intent posts and mentions.
+                    </p>
+                    <a
+                      href={`/settings?projectId=${currentProject.id}&tab=billing`}
+                      style={{
+                        display: "inline-block",
+                        padding: "8px 16px",
+                        background: "#FF4500",
+                        color: "#FFF",
+                        borderRadius: 8,
+                        fontSize: 12,
+                        fontWeight: 700,
+                        textDecoration: "none",
+                        whiteSpace: "nowrap",
+                        flexShrink: 0,
+                      }}
+                    >
+                      Upgrade →
+                    </a>
+                  </div>
+                </SettingsSection>
+              )}
+            </div>
           )}
 
           {selectedTab === "prompts" && (
@@ -317,7 +335,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 <BillingMetric label="AI replies" value={formatLimit(aiReplyUsage.used, billingPlan.maxAiRepliesPerMonth)} />
               </div>
               <div style={{ display: "grid", gap: 8 }}>
-                <PlanLimit label="Reddit keywords" value={formatLimit(searchKeywords.length, billingPlan.maxKeywords)} />
+                <PlanLimit label="Reddit keywords" value={formatLimit(redditKeywords.length, billingPlan.maxKeywords)} />
                 {billingPlan.xEnabled && (
                   <PlanLimit label="X keywords" value={formatLimit(activeXKeywords.length, billingPlan.maxXKeywords)} />
                 )}
@@ -344,13 +362,12 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
 
 /* ─── Section wrapper ─── */
 
-type SettingsTab = "general" | "competitors" | "keywords" | "x" | "prompts" | "notifications" | "billing" | "extension";
+type SettingsTab = "general" | "competitors" | "keywords" | "prompts" | "notifications" | "billing" | "extension";
 
 const SETTINGS_TABS: Array<{ id: SettingsTab; label: string }> = [
   { id: "general", label: "General" },
   { id: "competitors", label: "Competitors" },
   { id: "keywords", label: "Keywords" },
-  { id: "x", label: "X" },
   { id: "prompts", label: "Prompts" },
   { id: "notifications", label: "Notifications" },
   { id: "billing", label: "Billing" },
@@ -360,13 +377,10 @@ const SETTINGS_TABS: Array<{ id: SettingsTab; label: string }> = [
 function SettingsTabs({
   projectId,
   selectedTab,
-  xEnabled,
 }: {
   projectId: string;
   selectedTab: SettingsTab;
-  xEnabled: boolean;
 }) {
-  const visibleTabs = xEnabled ? SETTINGS_TABS : SETTINGS_TABS.filter((t) => t.id !== "x");
   return (
     <nav
       aria-label="Settings sections"
@@ -379,7 +393,7 @@ function SettingsTabs({
         marginBottom: 18,
       }}
     >
-      {visibleTabs.map((tab) => (
+      {SETTINGS_TABS.map((tab) => (
         <Link
           key={tab.id}
           href={`/settings?projectId=${projectId}&tab=${tab.id}`}

@@ -1788,7 +1788,7 @@ export type Database = {
       dm_message_direction: "out" | "in"
       dm_queue_status: "pending" | "sending" | "sent" | "failed" | "skipped"
       intent_category: "informational" | "comparative" | "transactional"
-      keyword_type: "custom" | "ai_suggested" | "competitor"
+      keyword_type: "custom" | "ai_suggested" | "competitor" | "searchbox"
       lead_sentiment: "positive" | "negative" | "neutral"
       lead_status:
         | "new"
@@ -1958,7 +1958,7 @@ export const Constants = {
       dm_message_direction: ["out", "in"],
       dm_queue_status: ["pending", "sending", "sent", "failed", "skipped"],
       intent_category: ["informational", "comparative", "transactional"],
-      keyword_type: ["custom", "ai_suggested", "competitor"],
+      keyword_type: ["custom", "ai_suggested", "competitor", "searchbox"],
       lead_sentiment: ["positive", "negative", "neutral"],
       lead_status: ["new", "reviewing", "replied", "won", "lost", "irrelevant"],
       onboarding_status: ["not_started", "in_progress", "completed"],

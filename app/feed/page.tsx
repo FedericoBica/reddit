@@ -189,7 +189,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
           )}
         </header>
 
-        <div className="searchbox-body">
+        <div className="searchbox-body" data-has-selected={String(!!(selectedFromList || selectedXPost))}>
           <section
             className="opportunity-column"
             aria-label="Leads feed"
@@ -301,15 +301,23 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             )}
           </section>
 
-          <DetailPane
-            lead={selectedLead}
-            mention={selectedMention}
-            xPost={selectedXPost}
-            replies={replies}
-            projectId={currentProject.id}
-            replyLength={(currentProject.reply_length ?? "medium") as import("@/db/schemas/domain").ReplyLength}
-            filterBase={filterBase}
-          />
+          <div className="detail-col">
+            <Link href={`/feed?${filterBase}`} className="detail-mobile-back">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Back to list
+            </Link>
+            <DetailPane
+              lead={selectedLead}
+              mention={selectedMention}
+              xPost={selectedXPost}
+              replies={replies}
+              projectId={currentProject.id}
+              replyLength={(currentProject.reply_length ?? "medium") as import("@/db/schemas/domain").ReplyLength}
+              filterBase={filterBase}
+            />
+          </div>
         </div>
       </section>
     </DashboardShell>

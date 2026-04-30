@@ -63,6 +63,18 @@ export async function addKeywordFromForm(formData: FormData) {
   revalidatePath("/settings");
 }
 
+export async function addSearchboxKeywordFromForm(formData: FormData) {
+  await requireUser("/dashboard");
+
+  const projectId = String(formData.get("projectId") ?? "");
+  const term = String(formData.get("term") ?? "").trim();
+
+  if (!term) return;
+
+  await addKeyword(projectId, term, "searchbox");
+  revalidatePath("/settings");
+}
+
 export async function addCompetitorFromForm(formData: FormData) {
   await requireUser("/dashboard");
 

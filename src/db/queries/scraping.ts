@@ -58,6 +58,7 @@ export async function getProjectForScraping(projectId: string): Promise<ScrapeTa
       .select("id, project_id, term, intent_category, type")
       .eq("project_id", projectId)
       .eq("is_active", true)
+      .neq("type", "searchbox")
       .order("created_at", { ascending: true }),
   ]);
 
@@ -113,6 +114,7 @@ export async function listProjectsDueForScraping(limit: number): Promise<ScrapeT
       .select("id, project_id, term, intent_category, type")
       .in("project_id", projectIds)
       .eq("is_active", true)
+      .neq("type", "searchbox")
       .order("created_at", { ascending: true }),
   ]);
 

@@ -36,6 +36,7 @@ export async function getProjectForSearchbox(projectId: string): Promise<Searchb
     .select("id, project_id, term, intent_category")
     .eq("project_id", projectId)
     .eq("is_active", true)
+    .eq("type", "searchbox")
     .order("created_at", { ascending: true });
 
   if (keywordsError || !keywords?.length) return null;
@@ -54,6 +55,7 @@ export async function listProjectsDueForSearchbox(): Promise<SearchboxScrapeTarg
     .from("keywords")
     .select("id, project_id, term, intent_category")
     .eq("is_active", true)
+    .eq("type", "searchbox")
     .order("created_at", { ascending: true });
 
   if (keywordsError) throw new Error(`Failed to list searchbox keywords: ${keywordsError.message}`);
