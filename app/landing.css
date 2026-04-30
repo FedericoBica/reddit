@@ -429,6 +429,7 @@
 
   .landing-page .hero-line {
     white-space: normal;
+    position: static;
   }
 
   .landing-page .hero-headline {
