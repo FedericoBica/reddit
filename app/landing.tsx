@@ -435,65 +435,69 @@ function FeatGuard() {
 
 type CustomerTab = "saas" | "consumer" | "ecom" | "agency" | "local";
 
-function HighlightTitle({
-  before,
-  highlight,
-  after = "",
-}: {
-  before: string;
-  highlight: string;
-  after?: string;
-}) {
+const IDEAL_DATA: Record<CustomerTab, { p: "r" | "x"; sub: string; t: string; s: number }[]> = {
+  saas: [
+    { p: "r", sub: "r/startups", t: "Best <mark>project management tool</mark> for a remote team of 12?", s: 96 },
+    { p: "x", sub: "@growthmind", t: "Anyone know a good <mark>Intercom alternative</mark> that's cheaper?", s: 93 },
+    { p: "r", sub: "r/SaaS", t: "Anyone replaced Intercom with something <mark>cheaper</mark>?", s: 91 },
+    { p: "x", sub: "@b2bcoach", t: "Looking for <mark>error tracking</mark> recs that don't cost a fortune", s: 84 },
+  ],
+  consumer: [
+    { p: "r", sub: "r/apps", t: "Looking for a <mark>habit tracker</mark> that isn't subscription-only", s: 93 },
+    { p: "x", sub: "@adhd_dev", t: "Best <mark>pomodoro timer</mark> for ADHD brains?", s: 88 },
+    { p: "r", sub: "r/productivity", t: "Best <mark>focus app</mark> that actually works?", s: 86 },
+    { p: "x", sub: "@notes_nerd", t: "Alternative to Notion for a <mark>personal wiki</mark>?", s: 79 },
+  ],
+  ecom: [
+    { p: "r", sub: "r/SkincareAddiction", t: "Looking for a good <mark>vitamin C serum</mark> under $30", s: 96 },
+    { p: "x", sub: "@ecofinds", t: "Best <mark>sustainable water bottle</mark> recs?", s: 92 },
+    { p: "r", sub: "r/BuyItForLife", t: "Best <mark>everyday backpack</mark> that lasts?", s: 89 },
+    { p: "x", sub: "@cleanfit", t: "Protein powder <mark>without the artificial junk</mark>?", s: 88 },
+  ],
+  agency: [
+    { p: "x", sub: "@growthmind", t: "Growth consultant for <mark>content-based businesses</mark>?", s: 96 },
+    { p: "x", sub: "@b2bcoach", t: "Need help improving <mark>B2B sales process</mark>", s: 90 },
+    { p: "r", sub: "r/Entrepreneur", t: "Any consultants here for early-stage <mark>SaaS pricing</mark>?", s: 89 },
+    { p: "r", sub: "r/startups", t: "Looking for a <mark>startup mentor</mark> or consultant", s: 88 },
+  ],
+  local: [
+    { p: "r", sub: "r/AskNYC", t: "Trustworthy <mark>accountant</mark> for a small LLC in Brooklyn?", s: 87 },
+    { p: "x", sub: "@atxlocals", t: "Reliable <mark>HVAC company</mark> in Austin that won't rip me off?", s: 84 },
+    { p: "r", sub: "r/SFBay", t: "Looking for a good <mark>dog groomer</mark> in the Mission", s: 80 },
+    { p: "x", sub: "@bayareadm", t: "Recs for a <mark>handyman</mark> in the East Bay?", s: 76 },
+  ],
+};
+
+const IDEAL_TABS_CONFIG: { id: CustomerTab; icon: string }[] = [
+  { id: "saas", icon: "◈" },
+  { id: "agency", icon: "⟢" },
+  { id: "consumer", icon: "◉" },
+  { id: "ecom", icon: "▦" },
+  { id: "local", icon: "⌂" },
+];
+
+function MarkText({ text }: { text: string }) {
+  const parts = text.split(/(<mark>.*?<\/mark>)/);
   return (
     <>
-      {before}
-      <mark>{highlight}</mark>
-      {after}
+      {parts.map((part, i) => {
+        const inner = part.match(/^<mark>(.*)<\/mark>$/)?.[1];
+        return inner ? <mark key={i}>{inner}</mark> : part;
+      })}
     </>
   );
 }
 
 function IdealCustomers({ t }: { t: Translations }) {
   const [tab, setTab] = useState<CustomerTab>("saas");
-  const data: Record<
-    CustomerTab,
-    { sub: string; before: string; highlight: string; after?: string; score: number }[]
-  > = {
-    saas: [
-      { sub: "r/startups", before: "Best ", highlight: "project management tool", after: " for a remote team of 12?", score: 96 },
-      { sub: "r/SaaS", before: "Anyone replaced Intercom with something ", highlight: "cheaper", after: " that still works?", score: 91 },
-      { sub: "r/webdev", before: "Recommendations for ", highlight: "error tracking", after: " that does not cost a kidney", score: 84 },
-    ],
-    consumer: [
-      { sub: "r/apps", before: "Looking for a ", highlight: "habit tracker", after: " that is not subscription-only", score: 93 },
-      { sub: "r/productivity", before: "Best ", highlight: "pomodoro timer", after: " for ADHD brains?", score: 88 },
-      { sub: "r/selfhosted", before: "Alternative to Notion for ", highlight: "personal wiki", after: "?", score: 79 },
-    ],
-    ecom: [
-      { sub: "r/SkincareAddiction", before: "Looking for a good ", highlight: "vitamin C serum", after: " under $30", score: 96 },
-      { sub: "r/BuyItForLife", before: "What is the best ", highlight: "sustainable water bottle", after: "?", score: 92 },
-      { sub: "r/Fitness", before: "Protein powder ", highlight: "without all the artificial junk", after: "?", score: 88 },
-    ],
-    agency: [
-      { sub: "r/marketing", before: "Freelance ", highlight: "SEO consultant", after: " recommendations for e-com?", score: 94 },
-      { sub: "r/Entrepreneur", before: "Looking to hire a ", highlight: "growth agency", after: ". Who do you trust?", score: 89 },
-      { sub: "r/smallbusiness", before: "Best agencies for ", highlight: "Meta ads", after: " under $5k/mo budget?", score: 81 },
-    ],
-    local: [
-      { sub: "r/AskNYC", before: "Trustworthy ", highlight: "accountant", after: " for a small LLC in Brooklyn?", score: 87 },
-      { sub: "r/Austin", before: "Reliable ", highlight: "HVAC company", after: " that will not rip me off?", score: 84 },
-      { sub: "r/SFBay", before: "Looking for a good ", highlight: "dog groomer", after: " in the Mission", score: 78 },
-    ],
-  };
-
   const tc = t.idealCustomers;
-  const tabs: { id: CustomerTab; label: string }[] = [
-    { id: "saas", label: tc.tabSaas },
-    { id: "consumer", label: tc.tabConsumer },
-    { id: "ecom", label: tc.tabEcom },
-    { id: "agency", label: tc.tabAgency },
-    { id: "local", label: tc.tabLocal },
-  ];
+  const tabLabels: Record<CustomerTab, string> = {
+    saas: tc.tabSaas,
+    agency: tc.tabAgency,
+    consumer: tc.tabConsumer,
+    ecom: tc.tabEcom,
+    local: tc.tabLocal,
+  };
 
   return (
     <section className="section-pad">
@@ -503,28 +507,39 @@ function IdealCustomers({ t }: { t: Translations }) {
         </h2>
         <p className="sub">{tc.sub}</p>
 
-        <div className="customer-panel">
-          <div className="customer-tabs">
-            {tabs.map((item) => (
+        <div className="ideal-card">
+          <div className="tab-row">
+            {IDEAL_TABS_CONFIG.map(({ id, icon }) => (
               <button
-                key={item.id}
-                className={tab === item.id ? "active" : ""}
-                onClick={() => setTab(item.id)}
+                key={id}
+                type="button"
+                className={`tab-btn${tab === id ? " active" : ""}`}
+                onClick={() => setTab(id)}
               >
-                {item.label}
+                <span style={{ fontSize: 14 }}>{icon}</span>
+                {tabLabels[id]}
               </button>
             ))}
           </div>
-          <div className="customer-grid">
-            {data[tab].map((thread) => (
-              <div key={`${thread.sub}-${thread.score}`} className="customer-card">
-                <div className="customer-sub"><span />{thread.sub}</div>
-                <div className="customer-title">
-                  <HighlightTitle before={thread.before} highlight={thread.highlight} after={thread.after} />
+          <div className="ideal-grid">
+            {IDEAL_DATA[tab].map((item, i) => (
+              <div key={i} className="ideal-item">
+                <div className="sub-tag">
+                  <span className={`plat ${item.p === "r" ? "plat-r" : "plat-x"}`}>
+                    {item.p === "r" ? (
+                      <svg viewBox="0 0 24 24" width="14" height="14"><path fill="#fff" d="M12 0a12 12 0 1012 12A12 12 0 0012 0zm5.01 13.18a3.43 3.43 0 01.04.5c0 2.55-2.96 4.62-6.62 4.62s-6.62-2.07-6.62-4.62a3.43 3.43 0 01.04-.5 1.5 1.5 0 11 2 -1.39 4.79 4.79 0 014.59-2.46l.78-3.66a.27.27 0 01.32-.21l2.55.54a1 1 0 11-.1.45l-2.28-.48-.7 3.29a4.79 4.79 0 014.5 2.53 1.5 1.5 0 11 1.5 1zm-9.05-.5a1 1 0 101 1 1 1 0 00-1-1zm6.08 0a1 1 0 101 1 1 1 0 00-1-1zm-.18 2.4a.4.4 0 00-.57 0 2.5 2.5 0 01-3.56 0 .4.4 0 10-.57.57 3.31 3.31 0 004.7 0 .4.4 0 000-.57z"/></svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="11" height="11"><path fill="#fff" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    )}
+                  </span>
+                  {item.sub}
                 </div>
-                <div className="customer-score">
+                <div className="tt">
+                  <MarkText text={item.t} />
+                </div>
+                <div className="rel">
                   <span>{tc.relevanceLabel}</span>
-                  <b>{thread.score}/100</b>
+                  <b>{item.s}/100</b>
                 </div>
               </div>
             ))}
@@ -773,6 +788,90 @@ function WhyReddit({ t }: { t: Translations }) {
           {tw.closing1}{" "}
           <b>{tw.closing2}</b>
         </p>
+      </div>
+    </section>
+  );
+}
+
+function WhyX({ t }: { t: Translations }) {
+  const tw = t.whyX;
+
+  const cards: { tone: string; tag: string; h: string; b: string; icon: React.ReactNode }[] = [
+    {
+      tone: "amber",
+      tag: tw.card1tag,
+      h: tw.card1h,
+      b: tw.card1b,
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>,
+    },
+    {
+      tone: "rose",
+      tag: tw.card2tag,
+      h: tw.card2h,
+      b: tw.card2b,
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>,
+    },
+    {
+      tone: "green",
+      tag: tw.card3tag,
+      h: tw.card3h,
+      b: tw.card3b,
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
+    },
+    {
+      tone: "blue",
+      tag: tw.card4tag,
+      h: tw.card4h,
+      b: tw.card4b,
+      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>,
+    },
+  ];
+
+  return (
+    <section className="section-pad banded" id="why-x">
+      <div className="wrap">
+        <div style={{ textAlign: "center", maxWidth: 820, margin: "0 auto 56px" }}>
+          <span className="eyebrow" style={{ margin: "0 auto" }}>
+            <span className="dot" /> {tw.eyebrow}
+          </span>
+          <h2 className="h-section" style={{ margin: "18px 0 18px" }}>
+            {tw.h2_1}<em>{tw.h2_em}</em>
+          </h2>
+          <p className="sub" style={{ margin: "0 auto", maxWidth: "62ch" }}>
+            <b style={{ color: "var(--ink)" }}>{tw.subStat1}</b>{tw.subText1}
+            <b style={{ color: "var(--ink)" }}>{tw.subStat2}</b>{tw.subText2}
+          </p>
+          <div className="mono" style={{ marginTop: 22, display: "inline-flex", alignItems: "center", gap: 10, fontSize: 12, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--ink-3)" }}>
+            <span style={{ width: 24, height: 1, background: "var(--line)", display: "block" }} />
+            {tw.thatMeans}
+            <span style={{ width: 24, height: 1, background: "var(--line)", display: "block" }} />
+          </div>
+        </div>
+
+        <div className="why-mon-grid">
+          {cards.map((card) => (
+            <article key={card.tag} className="why-mon-card">
+              <div className="why-mon-ico" data-tone={card.tone}>{card.icon}</div>
+              <div className="why-mon-tag mono">{card.tag}</div>
+              <h3 className="why-mon-h">{card.h}</h3>
+              <p className="why-mon-b">{card.b}</p>
+            </article>
+          ))}
+        </div>
+
+        <div className="why-mon-foot">
+          <div className="why-mon-foot-l">
+            <div className="mono" style={{ fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: "var(--ink-3)", marginBottom: 6 }}>
+              {tw.fixLabel}
+            </div>
+            <div style={{ fontFamily: "'Instrument Serif', serif", fontSize: 26, lineHeight: 1.2, letterSpacing: "-0.01em", color: "var(--ink)" }}>
+              {tw.fixH}<em style={{ color: "var(--accent-ink)" }}>{tw.fixHem}</em>
+            </div>
+          </div>
+          <Link href="/signup" className="btn" style={{ background: "var(--ink)", color: "var(--paper)", borderColor: "var(--ink)", whiteSpace: "nowrap" }}>
+            {tw.cta}
+          </Link>
+        </div>
       </div>
     </section>
   );
@@ -1100,23 +1199,48 @@ function Footer({ t, locale }: { t: Translations; locale: Locale }) {
   );
 }
 
+const LANG_OPTIONS: { locale: Locale; flag: string; label: string }[] = [
+  { locale: "en", flag: "🇺🇸", label: "English" },
+  { locale: "es", flag: "🇪🇸", label: "Español" },
+];
+
 function LangSwitcher({ locale }: { locale: Locale }) {
+  const [open, setOpen] = useState(false);
+  const current = LANG_OPTIONS.find((o) => o.locale === locale)!;
+  const others = LANG_OPTIONS.filter((o) => o.locale !== locale);
+
   return (
-    <div className="lang-switcher" aria-label="Language switcher">
-      <Link
-        href="/en"
-        className={`lang-btn${locale === "en" ? " active" : ""}`}
-        aria-current={locale === "en" ? "true" : undefined}
+    <div className="lang-switcher" style={{ position: "relative" }}>
+      <button
+        className="lang-trigger"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        type="button"
       >
-        EN
-      </Link>
-      <Link
-        href="/es"
-        className={`lang-btn${locale === "es" ? " active" : ""}`}
-        aria-current={locale === "es" ? "true" : undefined}
-      >
-        ES
-      </Link>
+        <span className="lang-flag">{current.flag}</span>
+        <svg className={`lang-chevron${open ? " open" : ""}`} width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true">
+          <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+        </svg>
+      </button>
+      {open && (
+        <>
+          <div className="lang-backdrop" onClick={() => setOpen(false)} />
+          <div className="lang-dropdown" role="listbox">
+            {others.map((opt) => (
+              <Link
+                key={opt.locale}
+                href={`/${opt.locale}`}
+                className="lang-option"
+                role="option"
+                onClick={() => setOpen(false)}
+              >
+                <span className="lang-flag">{opt.flag}</span>
+              </Link>
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -1135,31 +1259,41 @@ export default function LandingPage({ locale }: { locale: Locale }) {
             <a href="#how">{t.nav.howItWorks}</a>
             <Link href="/about">{t.nav.about}</Link>
             <Link href="/login">{t.nav.login}</Link>
-            <LangSwitcher locale={locale} />
             <Link className="btn primary sm" href="/signup">{t.nav.startFree}</Link>
+            <LangSwitcher locale={locale} />
           </div>
         </div>
       </nav>
 
-      <section className="hero">
-        <div className="wrap hero-grid">
-          <div className="hero-copy">
-            <span className="eyebrow">{t.hero.eyebrow}</span>
-            <h1 className="h-display">
-              {t.hero.h1_1}<em>{t.hero.h1_em}</em>{t.hero.h1_2}
-            </h1>
-            <p className="lede">{t.hero.lede}</p>
-            <div className="cta-row">
-              <Link className="btn primary lg" href="/signup">{t.hero.ctaPrimary}</Link>
-              <a className="btn lg" href="#features">{t.hero.ctaSecondary}</a>
-            </div>
-            <div className="hero-meta">
-              <span><b>12k+</b> {t.hero.stat1}</span>
-              <span><b>24%</b> {t.hero.stat2}</span>
-              <span><b>{t.hero.stat3}</b></span>
-            </div>
+      <section className="hero hero-center">
+        <div className="wrap" style={{ textAlign: "center", maxWidth: 980, margin: "0 auto" }}>
+          <span className="chip" style={{ marginBottom: 24 }}>
+            <span className="dot" /> {t.hero.chip}
+          </span>
+          <h1 className="h-display hero-headline">
+            <span className="hero-line">
+              <span className="logo-sticker logo-x" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="32" height="32"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+              </span>
+              {t.hero.h1_line1}
+            </span>
+            <span className="hero-line">
+              <span className="logo-sticker logo-reddit" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="34" height="34"><path fill="currentColor" d="M12 0a12 12 0 1012 12A12 12 0 0012 0zm5.01 13.18a3.43 3.43 0 01.04.5c0 2.55-2.96 4.62-6.62 4.62s-6.62-2.07-6.62-4.62a3.43 3.43 0 01.04-.5 1.5 1.5 0 11 2 -1.39 4.79 4.79 0 014.59-2.46l.78-3.66a.27.27 0 01.32-.21l2.55.54a1 1 0 11-.1.45l-2.28-.48-.7 3.29a4.79 4.79 0 014.5 2.53 1.5 1.5 0 11 1.5 1zm-9.05-.5a1 1 0 101 1 1 1 0 00-1-1zm6.08 0a1 1 0 101 1 1 1 0 00-1-1zm-.18 2.4a.4.4 0 00-.57 0 2.5 2.5 0 01-3.56 0 .4.4 0 10-.57.57 3.31 3.31 0 004.7 0 .4.4 0 000-.57z"/></svg>
+              </span>
+              <span className="mark">{t.hero.h1_line2}</span>
+            </span>
+          </h1>
+          <p className="lede" style={{ margin: "24px auto 32px", maxWidth: 640 }}>{t.hero.lede}</p>
+          <div className="cta-row" style={{ justifyContent: "center" }}>
+            <Link className="btn primary lg" href="/signup">{t.hero.ctaPrimary}</Link>
+            <a className="btn lg" href="#features">{t.hero.ctaSecondary}</a>
           </div>
-          <HeroDashboard td={t.dashboard} />
+          <div className="hero-meta" style={{ justifyContent: "center" }}>
+            <span>{t.hero.stat1}</span>
+            <span>{t.hero.stat2}</span>
+            <span>{t.hero.stat3}</span>
+          </div>
         </div>
       </section>
 
@@ -1177,6 +1311,7 @@ export default function LandingPage({ locale }: { locale: Locale }) {
 
       <IdealCustomers t={t} />
       <WhyReddit t={t} />
+      <WhyX t={t} />
       <HowItWorks t={t} />
       <TwoWays t={t} />
       <Features t={t} />

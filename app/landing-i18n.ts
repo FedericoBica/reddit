@@ -7,7 +7,7 @@ type TranslationMap = {
     login: string; startFree: string; langLabel: string;
   };
   hero: {
-    eyebrow: string; h1_1: string; h1_em: string; h1_2: string; lede: string;
+    chip: string; h1_line1: string; h1_line2: string; lede: string;
     ctaPrimary: string; ctaSecondary: string; stat1: string; stat2: string; stat3: string;
   };
   logobar: { label: string };
@@ -34,6 +34,16 @@ type TranslationMap = {
     point3Title: string; point3Body1: string; point3Body2: string; point3Body3: string;
     point3Body4: string; point3Body5: string; point3Source: string;
     chartTitle: string; chartFoot: string; closing1: string; closing2: string;
+  };
+  whyX: {
+    eyebrow: string; h2_1: string; h2_em: string;
+    subStat1: string; subText1: string; subStat2: string; subText2: string;
+    thatMeans: string;
+    card1tag: string; card1h: string; card1b: string;
+    card2tag: string; card2h: string; card2b: string;
+    card3tag: string; card3h: string; card3b: string;
+    card4tag: string; card4h: string; card4b: string;
+    fixLabel: string; fixH: string; fixHem: string; cta: string;
   };
   howItWorks: {
     eyebrow: string; h2_1: string; h2_em: string; h2_2: string;
@@ -105,16 +115,15 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       langLabel: "Language",
     },
     hero: {
-      eyebrow: "Reddit lead generation",
-      h1_1: "Find buyers on Reddit ",
-      h1_em: "before",
-      h1_2: " they pick a vendor.",
-      lede: "RedProwl watches high-intent conversations, scores fit, drafts human replies, and keeps your team inside Reddit's rules.",
-      ctaPrimary: "Start free trial",
-      ctaSecondary: "See how it works",
-      stat1: "subreddits monitored",
-      stat2: "more qualified threads",
-      stat3: "No card required",
+      chip: "now scanning Reddit + X · live",
+      h1_line1: "Find People Looking for",
+      h1_line2: "What You Offer",
+      lede: "There are people on Reddit and X asking for tools and services every day. RedProwl finds and delivers them to you on autopilot.",
+      ctaPrimary: "Start free 7-day trial →",
+      ctaSecondary: "Watch 90-sec demo",
+      stat1: "No credit card. 7-day trial.",
+      stat2: "2 min to first draft.",
+      stat3: "⭐ 4.8 · 217 reviews",
     },
     logobar: {
       label: "Built for teams growing from Reddit",
@@ -151,22 +160,22 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
     },
     idealCustomers: {
       h2_1: "Thousands of ",
-      h2_em: "potential customers",
-      h2_2: " are asking for help on Reddit every day.",
-      sub: "One helpful reply can do more than you think.",
+      h2_em: "ideal customers",
+      h2_2: " are asking for help on Reddit & X every day.",
+      sub: "Every question is a buying signal. Every thread, every post, every DM — an opportunity.",
       closingLine: " finds them for you. ",
       closingLineAuto: "Automatically.",
-      tabSaas: "SaaS",
-      tabConsumer: "Consumer Apps",
+      tabSaas: "SaaS Founders",
+      tabConsumer: "App Builders",
       tabEcom: "E-Commerce",
-      tabAgency: "Agency",
-      tabLocal: "Local Biz",
+      tabAgency: "Consultants",
+      tabLocal: "Freelancers",
       relevanceLabel: "Relevance",
     },
     whyReddit: {
       chip: "Why Reddit",
-      h2_1: "Reddit is shaping ",
-      h2_em: "how buyers decide.",
+      h2_1: "Reddit can be ",
+      h2_em: "a goldenmine for your business.",
       h2_2: "",
       sub: "From AI citations to Google rankings, Reddit threads are influencing purchase decisions everywhere.",
       point1Title: "Reddit shapes AI answers",
@@ -194,6 +203,32 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       chartFoot: "Based on Semrush study of 230K prompts · Oct 2025",
       closing1: "If Reddit is influencing AI answers, showing up in Google, and shaping buyer decisions,",
       closing2: "winning comes down to consistent monitoring, execution, and measurement.",
+    },
+    whyX: {
+      eyebrow: "Why monitor X",
+      h2_1: "Why monitor X for ",
+      h2_em: "brand mentions?",
+      subStat1: "67%",
+      subText1: " of all public brand mentions on social media happen on X. But ",
+      subStat2: "91% of posts about your brand don't tag your X company handle",
+      subText2: ".",
+      thatMeans: "That means",
+      card1tag: "Signal · 01",
+      card1h: "You're missing buying signals in plain sight.",
+      card1b: "People on X are actively complaining, comparing tools, and asking for recommendations — and you never see it because they don't tag you. By the time you find out, the deal is gone.",
+      card2tag: "Reputation · 02",
+      card2h: "Your brand is being discussed without you.",
+      card2b: "Critical conversations about your product happen publicly, without an @mention. Issues escalate, misinformation spreads, and by the time you notice, you're already on the back foot.",
+      card3tag: "Feedback · 03",
+      card3h: "Your best customer feedback dies in public threads.",
+      card3b: "Users share feature requests, bugs, and sharp insights on X, but it never reaches your product team. You're shipping based on assumptions while real feedback scrolls by unnoticed.",
+      card4tag: "Velocity · 04",
+      card4h: "Your competitors are faster — and it shows.",
+      card4b: "While you're blind, competitors jump into conversations first, help users, and look responsive. They win mindshare simply because they were there when it mattered.",
+      fixLabel: "The fix",
+      fixH: "Catch every X mention. ",
+      fixHem: "Reply before they ask twice.",
+      cta: "Start monitoring X →",
     },
     howItWorks: {
       eyebrow: "How it works",
@@ -389,16 +424,15 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       langLabel: "Idioma",
     },
     hero: {
-      eyebrow: "Generación de leads en Reddit",
-      h1_1: "Encuentra compradores en Reddit ",
-      h1_em: "antes",
-      h1_2: " de que elijan a otro.",
-      lede: "RedProwl monitorea conversaciones de alta intención, evalúa el encaje, redacta respuestas humanas y mantiene a tu equipo dentro de las normas de Reddit.",
-      ctaPrimary: "Prueba gratis",
-      ctaSecondary: "Ver cómo funciona",
-      stat1: "subreddits monitoreados",
-      stat2: "más hilos calificados",
-      stat3: "Sin tarjeta requerida",
+      chip: "escaneando Reddit + X · en vivo",
+      h1_line1: "Encuentra personas buscando",
+      h1_line2: "Lo que tú ofreces",
+      lede: "Hay personas en Reddit y X buscando herramientas y servicios cada día. RedProwl los encuentra y te los entrega en piloto automático.",
+      ctaPrimary: "Prueba gratis 7 días →",
+      ctaSecondary: "Ver demo de 90 seg.",
+      stat1: "Sin tarjeta. Prueba 7 días.",
+      stat2: "2 min hasta el primer borrador.",
+      stat3: "⭐ 4.8 · 217 opiniones",
     },
     logobar: {
       label: "Para equipos que crecen desde Reddit",
@@ -435,16 +469,16 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
     },
     idealCustomers: {
       h2_1: "Miles de ",
-      h2_em: "clientes potenciales",
-      h2_2: " piden ayuda en Reddit cada día.",
-      sub: "Una respuesta útil puede hacer más de lo que imaginas.",
+      h2_em: "clientes ideales",
+      h2_2: " piden ayuda en Reddit y X cada día.",
+      sub: "Cada pregunta es una señal de compra. Cada hilo, cada post, cada DM — una oportunidad.",
       closingLine: " los encuentra por ti. ",
       closingLineAuto: "Automáticamente.",
-      tabSaas: "SaaS",
-      tabConsumer: "Apps de Consumo",
+      tabSaas: "Founders SaaS",
+      tabConsumer: "Creadores de Apps",
       tabEcom: "E-Commerce",
-      tabAgency: "Agencia",
-      tabLocal: "Negocio Local",
+      tabAgency: "Consultores",
+      tabLocal: "Freelancers",
       relevanceLabel: "Relevancia",
     },
     whyReddit: {
@@ -478,6 +512,32 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       chartFoot: "Basado en estudio Semrush de 230K consultas · Oct 2025",
       closing1: "Si Reddit influye en las respuestas de la IA, aparece en Google y moldea las decisiones de compra,",
       closing2: "ganar depende de un monitoreo, ejecución y medición constantes.",
+    },
+    whyX: {
+      eyebrow: "Por qué monitorear X",
+      h2_1: "Por qué monitorear X para ",
+      h2_em: "menciones de marca?",
+      subStat1: "67%",
+      subText1: " de todas las menciones públicas de marca en redes sociales ocurren en X. Pero ",
+      subStat2: "el 91% de los posts sobre tu marca no etiquetan tu perfil de empresa en X",
+      subText2: ".",
+      thatMeans: "Esto significa",
+      card1tag: "Señal · 01",
+      card1h: "Te estás perdiendo señales de compra a plena vista.",
+      card1b: "La gente en X se queja activamente, compara herramientas y pide recomendaciones — y tú nunca lo ves porque no te etiquetan. Para cuando te enteras, el deal ya se fue.",
+      card2tag: "Reputación · 02",
+      card2h: "Tu marca se discute sin que estés presente.",
+      card2b: "Conversaciones críticas sobre tu producto ocurren en público, sin @mención. Los problemas escalan, la desinformación se propaga, y cuando te das cuenta, ya estás en desventaja.",
+      card3tag: "Feedback · 03",
+      card3h: "Tu mejor feedback de clientes muere en hilos públicos.",
+      card3b: "Los usuarios comparten solicitudes de funciones, bugs e insights valiosos en X, pero nunca llegan a tu equipo de producto. Estás tomando decisiones basadas en suposiciones mientras el feedback real pasa desapercibido.",
+      card4tag: "Velocidad · 04",
+      card4h: "Tus competidores son más rápidos — y se nota.",
+      card4b: "Mientras estás ciego, los competidores saltan primero a las conversaciones, ayudan a los usuarios y parecen más atentos. Ganan la mente de los compradores simplemente por estar ahí cuando importaba.",
+      fixLabel: "La solución",
+      fixH: "Captura cada mención en X. ",
+      fixHem: "Responde antes de que pregunten dos veces.",
+      cta: "Empezar a monitorear X →",
     },
     howItWorks: {
       eyebrow: "Cómo funciona",
