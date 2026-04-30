@@ -303,6 +303,12 @@
   margin-bottom: 56px;
 }
 
+.landing-page #how .section-heading {
+  text-align: center;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .landing-page .section-heading .h-section {
   margin-top: 16px;
   margin-bottom: 16px;
@@ -400,24 +406,15 @@
 
 @media (max-width: 720px) {
   .landing-page .logo-sticker {
-    width: 46px;
-    height: 46px;
-    border-radius: 11px;
+    display: none;
   }
 
-  .landing-page .logo-sticker svg {
-    width: 24px;
-    height: 24px;
+  .landing-page .hero-line {
+    white-space: normal;
   }
 
-  .landing-page .logo-x {
-    top: -48px;
-    right: 2%;
-  }
-
-  .landing-page .logo-reddit {
-    left: 2%;
-    margin-top: -23px;
+  .landing-page .hero-headline {
+    margin-top: 8px;
   }
 }
 
@@ -1148,6 +1145,43 @@
   font-size: 15px;
   line-height: 1.5;
 }
+
+.landing-page .step-vis {
+  height: 124px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  overflow: hidden;
+  margin: 18px 0;
+  padding: 14px 16px;
+  display: flex;
+  align-items: stretch;
+}
+
+/* step-vis: browser mockup */
+.landing-page .sv-browser { width: 100%; display: flex; flex-direction: column; gap: 8px; }
+.landing-page .sv-browser-bar { display: flex; align-items: center; gap: 5px; background: var(--paper); border: 1px solid var(--line); border-radius: 7px; padding: 5px 10px; }
+.landing-page .sv-browser-bar > span { width: 7px; height: 7px; border-radius: 50%; background: var(--line-2); flex-shrink: 0; }
+.landing-page .sv-url { font-size: 11px; color: var(--ink-3); font-family: ui-monospace, Menlo, monospace; flex: 1; background: var(--bg-2); padding: 2px 7px; border-radius: 4px; border: 1px solid var(--line); }
+.landing-page .sv-browser-body { display: flex; flex-direction: column; gap: 6px; flex: 1; justify-content: center; }
+.landing-page .sv-line { height: 8px; background: var(--line); border-radius: 4px; }
+
+/* step-vis: competitor list */
+.landing-page .sv-complist { width: 100%; display: flex; flex-direction: column; gap: 6px; }
+.landing-page .sv-comp-row { display: flex; align-items: center; gap: 9px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 6px 11px; }
+.landing-page .sv-comp-ini { width: 22px; height: 22px; border-radius: 50%; background: oklch(0.93 0.012 75); color: var(--ink-2); font-size: 11px; font-weight: 700; display: grid; place-items: center; flex-shrink: 0; }
+.landing-page .sv-comp-name { font-size: 12px; color: var(--ink-2); flex: 1; }
+.landing-page .sv-checkmark { font-size: 12px; color: oklch(0.5 0.13 155); font-weight: 700; }
+
+/* step-vis: post list */
+.landing-page .sv-posts { width: 100%; display: flex; flex-direction: column; gap: 9px; justify-content: center; }
+.landing-page .sv-post-row { display: grid; grid-template-columns: 80px 1fr 26px; align-items: center; gap: 8px; }
+.landing-page .sv-sub { font-size: 11px; color: var(--ink-3); font-family: ui-monospace, Menlo, monospace; }
+.landing-page .sv-post-bar { height: 10px; border-radius: 999px; background: oklch(0.93 0.012 75); overflow: hidden; }
+.landing-page .sv-post-fill { height: 100%; border-radius: 999px; }
+.landing-page .sv-post-fill.hot { background: var(--accent); }
+.landing-page .sv-post-fill.warm { background: oklch(0.84 0.02 70); }
+.landing-page .sv-post-score { font-size: 11px; font-weight: 600; color: var(--ink-2); text-align: right; }
 
 .landing-page .pricing-wrap {
   text-align: center;
@@ -2310,6 +2344,7 @@
 
   .landing-page .why-chart {
     position: static;
+    order: -1;
   }
 }
 
@@ -2327,13 +2362,18 @@
 .landing-page .why-mon-b { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); text-wrap: pretty; }
 .landing-page .why-mon-foot { margin-top: 48px; max-width: 1120px; margin-left: auto; margin-right: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 28px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); flex-wrap: wrap; }
 @media (max-width: 760px) {
-  .landing-page .why-mon-grid { grid-template-columns: 1fr; }
+  .landing-page .why-mon-grid { gap: 12px; }
+  .landing-page .why-mon-card { padding: 18px 14px; gap: 8px; }
+  .landing-page .why-mon-ico { width: 36px; height: 36px; }
+  .landing-page .why-mon-tag { font-size: 10px; }
+  .landing-page .why-mon-h { font-size: 17px; }
+  .landing-page .why-mon-b { font-size: 12px; line-height: 1.45; }
   .landing-page .why-mon-foot { flex-direction: column; align-items: flex-start; }
 }
 
 @media (max-width: 520px) {
   .landing-page .h-display {
-    font-size: 44px;
+    font-size: clamp(36px, 10vw, 44px);
   }
 
   .landing-page .dash-tabs {

@@ -1003,12 +1003,69 @@ function Features({ t }: { t: Translations }) {
   );
 }
 
+function StepVis1() {
+  return (
+    <div className="step-vis">
+      <div className="sv-browser">
+        <div className="sv-browser-bar">
+          <span /><span /><span />
+          <div className="sv-url">yoursite.com</div>
+        </div>
+        <div className="sv-browser-body">
+          {[75, 55, 88, 42].map((w, i) => (
+            <div key={i} className="sv-line" style={{ width: `${w}%` }} />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StepVis2() {
+  return (
+    <div className="step-vis">
+      <div className="sv-complist">
+        {(["A", "B", "C"] as const).map((ini) => (
+          <div key={ini} className="sv-comp-row">
+            <div className="sv-comp-ini">{ini}</div>
+            <span className="sv-comp-name">Competitor {ini}</span>
+            <span className="sv-checkmark">✓</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StepVis3() {
+  const rows: [string, number, string][] = [
+    ["r/startups", 94, "hot"],
+    ["r/SaaS", 88, "hot"],
+    ["r/marketing", 71, "warm"],
+  ];
+  return (
+    <div className="step-vis">
+      <div className="sv-posts">
+        {rows.map(([sub, score, band]) => (
+          <div key={sub} className="sv-post-row">
+            <span className="sv-sub mono">{sub}</span>
+            <div className="sv-post-bar">
+              <div className={`sv-post-fill ${band}`} style={{ width: `${score}%` }} />
+            </div>
+            <span className="sv-post-score">{score}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function HowItWorks({ t }: { t: Translations }) {
   const th = t.howItWorks;
   const steps = [
-    { n: th.step1n, t: th.step1t, d: th.step1d },
-    { n: th.step2n, t: th.step2t, d: th.step2d },
-    { n: th.step3n, t: th.step3t, d: th.step3d },
+    { n: th.step1n, t: th.step1t, d: th.step1d, vis: <StepVis1 /> },
+    { n: th.step2n, t: th.step2t, d: th.step2d, vis: <StepVis2 /> },
+    { n: th.step3n, t: th.step3t, d: th.step3d, vis: <StepVis3 /> },
   ];
 
   return (
@@ -1024,6 +1081,7 @@ function HowItWorks({ t }: { t: Translations }) {
           {steps.map((step) => (
             <div key={step.n} className="step">
               <div className="num">{step.n}</div>
+              {step.vis}
               <h4>{step.t}</h4>
               <p>{step.d}</p>
             </div>
@@ -1314,7 +1372,7 @@ export default function LandingPage({ locale }: { locale: Locale }) {
       <WhyX t={t} />
       <HowItWorks t={t} />
       <TwoWays t={t} />
-      <Features t={t} />
+      {/* <Features t={t} /> */}
       <Comparison t={t} />
       <HonestTruth t={t} />
       <SeoAiSearch t={t} />
