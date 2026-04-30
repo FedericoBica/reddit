@@ -1371,7 +1371,7 @@ export default function LandingPage({ locale }: { locale: Locale }) {
       <WhyReddit t={t} />
       <WhyX t={t} />
       <HowItWorks t={t} />
-      <TwoWays t={t} />
+      {/* <TwoWays t={t} /> */}
       {/* <Features t={t} /> */}
       <Comparison t={t} />
       <HonestTruth t={t} />

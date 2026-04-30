@@ -2113,6 +2113,10 @@
     grid-template-columns: 1fr;
   }
 
+  .landing-page .search-preview {
+    display: none;
+  }
+
   .landing-page .price.featured {
     transform: none;
   }

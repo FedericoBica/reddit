@@ -2558,6 +2558,49 @@ textarea:focus-visible {
   color: #FFFFFF;
 }
 
+/* ── Mention card redesign ─────────────────────────────────── */
+.mc-card { gap: 0; padding: 0; }
+.mc-header { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 14px 7px 16px; }
+.mc-meta { display: flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 600; color: #9B9BA2; flex: 1; min-width: 0; flex-wrap: wrap; }
+.mc-subreddit { color: #1A1A1B; font-weight: 700; font-size: 10px; }
+.mc-sep { color: #DAE0E6; }
+.mc-title { font-size: 13px; font-weight: 700; line-height: 1.35; color: #1A1A1B; margin: 0; padding: 0 14px 5px 16px; }
+.mc-url { font-size: 10px; color: #B0B0B5; padding: 0 14px 8px 16px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-divider { border: none; border-top: 1px solid #F0F0F3; }
+.mc-comment-block { padding: 9px 14px 0 16px; display: grid; gap: 6px; }
+.mc-author-row { display: flex; align-items: center; gap: 7px; }
+.mc-avatar-circle { width: 22px; height: 22px; border-radius: 50%; background: #F0F0F3; display: grid; place-items: center; color: #9B9BA2; flex-shrink: 0; }
+.mc-author { font-size: 11px; font-weight: 700; color: #1A1A1B; flex: 1; }
+.mc-author-date { font-size: 10px; color: #9B9BA2; font-weight: 600; white-space: nowrap; }
+.mc-body { font-size: 12px; color: #3D3D3D; line-height: 1.55; margin: 0; }
+.mc-tags { display: flex; gap: 5px; flex-wrap: wrap; }
+.mc-comment-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 2px; }
+.mc-sent-label { font-size: 10px; font-weight: 700; }
+.mc-view { font-size: 10px; font-weight: 700; color: #9B9BA2; white-space: nowrap; }
+.mc-summary { font-size: 11px; color: #6B7280; line-height: 1.5; margin: 0; padding: 7px 14px 10px 16px; background: #FAFAFA; border-top: 1px solid #F0F0F3; }
+
+/* ── Mention controls redesign ─────────────────────────────── */
+.mention-controls { display: grid; gap: 8px; margin-top: 10px; }
+.mc-ctrl-row1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.mc-ctrl-sentiment { flex: 1; min-width: 0; }
+.mc-ctrl-sent-label { font-size: 11px; color: #1A1A1B; font-weight: 600; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mc-ctrl-sent-bar { height: 4px; border-radius: 999px; background: #E5E7EB; overflow: hidden; }
+.mc-ctrl-sent-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
+.mc-ctrl-target { display: flex; align-items: center; gap: 7px; flex-shrink: 0; padding-top: 2px; }
+.mc-ctrl-my-company { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #6B7280; white-space: nowrap; }
+.mc-ctrl-company-icon { width: 16px; height: 16px; border-radius: 4px; background: #FF4500; flex-shrink: 0; display: grid; place-items: center; }
+.mc-ctrl-details { position: relative; }
+.mc-ctrl-details[open] .mc-ctrl-summary { border-color: #1A1A1B; }
+.mc-ctrl-summary { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px 5px 10px; border-radius: 7px; border: 1px solid #E5E7EB; background: #FFFFFF; font-size: 12px; font-weight: 700; color: #1A1A1B; cursor: pointer; list-style: none; user-select: none; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.mc-ctrl-summary::-webkit-details-marker { display: none; }
+.mc-ctrl-dropdown { position: absolute; top: calc(100% + 6px); right: 0; z-index: 50; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); min-width: 160px; padding: 5px; }
+.mc-ctrl-option { display: flex; align-items: center; gap: 9px; padding: 8px 10px; font-size: 12px; font-weight: 600; color: #1A1A1B; text-decoration: none; border-radius: 6px; }
+.mc-ctrl-option:hover { background: #F6F7F8; }
+.mc-ctrl-option-active { background: #FFF3EC; color: #FF4500; font-weight: 700; }
+.mc-ctrl-option-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.mc-ctrl-row2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid #F0F0F3; padding-top: 8px; margin-top: 0; }
+.mc-ctrl-count { font-size: 11px; font-weight: 700; color: #1A1A1B; }
+
 .sidebar-link {
   display: flex;
   align-items: center;

@@ -196,39 +196,27 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
           >
             {/* Column header: count + optional mention filters */}
             <div className="feed-col-header">
-              <div className="feed-col-meta">
-                <span>
-                  {feedType === "x" ? xPosts.length : feedType === "opportunities" ? feedLeads.length : allMentionsRaw.length}
-                  {" "}posts found
-                </span>
-              </div>
-
-              {/* Mention triage controls */}
-              {feedType === "mentions" && (
-                <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
-                  <TargetDropdown
-                    projectId={currentProject.id}
-                    companyName={currentProject.name}
-                    competitors={competitors}
-                    selectedTarget={selectedTarget}
-                    sentiment={selectedSentiment}
-                    sort={selectedSort}
-                    selectedItemId={selectedFromList?.kind === "mention" ? selectedFromList.data.id : undefined}
-                  />
-                  <SentimentBar
-                    projectId={currentProject.id}
-                    target={selectedTarget}
-                    selectedSentiment={selectedSentiment}
-                    selectedSort={selectedSort}
-                    stats={sentimentStats}
-                  />
-                  <SortControl
-                    projectId={currentProject.id}
-                    target={selectedTarget}
-                    sentiment={selectedSentiment}
-                    selectedSort={selectedSort}
-                  />
+              {feedType !== "mentions" && (
+                <div className="feed-col-meta">
+                  <span>
+                    {feedType === "x" ? xPosts.length : feedLeads.length}
+                    {" "}posts found
+                  </span>
                 </div>
+              )}
+
+              {feedType === "mentions" && (
+                <MentionControls
+                  projectId={currentProject.id}
+                  companyName={currentProject.name}
+                  competitors={competitors}
+                  selectedTarget={selectedTarget}
+                  selectedSentiment={selectedSentiment}
+                  selectedSort={selectedSort}
+                  stats={sentimentStats}
+                  totalCount={visibleMentions.length}
+                  selectedItemId={selectedFromList?.kind === "mention" ? selectedFromList.data.id : undefined}
+                />
               )}
             </div>
 
@@ -395,50 +383,67 @@ function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href
 
 // ── Mention card ──────────────────────────────────────────────
 
+const COMPETITOR_COLORS = ["#4F46E5", "#059669", "#D97706", "#0EA5E9", "#7C3AED"];
+
 function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; active: boolean; href: string }) {
   const isUnread = mention.opened_at === null;
+  const cfg = SENTIMENT_CONFIG[mention.sentiment];
+  const redditUrl = mention.permalink ? toRedditUrl(mention.permalink) : null;
+  const displayUrl = redditUrl
+    ? redditUrl.length > 62 ? `${redditUrl.slice(0, 59)}...` : redditUrl
+    : null;
 
   return (
     <Link
       href={href}
-      className={`opportunity-card${active ? " opportunity-card-active" : ""}`}
+      className={`opportunity-card mc-card${active ? " opportunity-card-active" : ""}`}
       style={isUnread && !active ? { borderLeftColor: "#4F46E5" } : undefined}
     >
-      {/* Post context row */}
-      <div className="opportunity-meta">
-        <TypeDot kind="mention" />
-        <span>r/{mention.subreddit}</span>
-        {mention.posted_at && <span>{formatRelative(mention.posted_at)}</span>}
-        <TargetBadge type={mention.target_type} label={mention.target_label} />
+      {/* Header: subreddit · date · comments | sentiment */}
+      <div className="mc-header">
+        <div className="mc-meta">
+          <span className="mc-subreddit">r/{mention.subreddit}</span>
+          {mention.posted_at && <><span className="mc-sep">·</span><span>{formatRelative(mention.posted_at)}</span></>}
+          {mention.num_comments != null && <><span className="mc-sep">·</span><span>◇ {mention.num_comments} Comments</span></>}
+        </div>
         <SentimentPill sentiment={mention.sentiment} />
       </div>
 
-      {/* Parent post title */}
-      <h2 className="opportunity-heading">{mention.title}</h2>
+      {/* Thread title */}
+      <h2 className="mc-title">{mention.title}</h2>
+
+      {/* Reddit URL */}
+      {displayUrl && <p className="mc-url">{displayUrl}</p>}
+
+      <div className="mc-divider" />
 
       {/* Comment block */}
       {mention.is_comment && mention.body && (
-        <div style={{
-          background: "#F6F7F8",
-          borderRadius: 6,
-          padding: "8px 10px",
-          borderLeft: "3px solid #DAE0E6",
-        }}>
-          {mention.author && (
-            <p style={{ fontSize: 10, fontWeight: 700, color: "#7C7C83", marginBottom: 4 }}>
-              u/{mention.author}
-            </p>
-          )}
-          <p style={{ fontSize: 12, color: "#1A1A1B", lineHeight: 1.45 }}>
-            {mention.body.length > 200 ? `${mention.body.slice(0, 200)}…` : mention.body}
+        <div className="mc-comment-block">
+          <div className="mc-author-row">
+            <div className="mc-avatar-circle">
+              <svg width="10" height="10" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <span className="mc-author">{mention.author ?? "unknown"}</span>
+            <span className="mc-author-date">{mention.posted_at ? formatDate(mention.posted_at) : ""}</span>
+          </div>
+          <p className="mc-body">
+            {mention.body.length > 260 ? `${mention.body.slice(0, 260)}…` : mention.body}
           </p>
+          <div className="mc-tags">
+            <TargetBadge type={mention.target_type} label={mention.target_label} />
+          </div>
+          <div className="mc-comment-footer">
+            <span className="mc-sent-label" style={{ color: cfg.color }}>● {cfg.label}</span>
+            {redditUrl && <span className="mc-view">View on Reddit ↗</span>}
+          </div>
         </div>
       )}
 
-      {/* Summary / reason */}
-      {mention.summary && (
-        <p className="opportunity-reason">{mention.summary}</p>
-      )}
+      {/* AI summary */}
+      {mention.summary && <p className="mc-summary">{mention.summary}</p>}
     </Link>
   );
 }
@@ -751,6 +756,119 @@ function XPostDetail({ post }: { post: XPostDTO }) {
         )}
       </article>
     </section>
+  );
+}
+
+// ── Mention controls (unified bar) ───────────────────────────
+
+function MentionControls({
+  projectId,
+  companyName,
+  competitors,
+  selectedTarget,
+  selectedSentiment,
+  selectedSort,
+  stats,
+  totalCount,
+  selectedItemId,
+}: {
+  projectId: string;
+  companyName: string;
+  competitors: KeywordDTO[];
+  selectedTarget: string;
+  selectedSentiment: BrandMentionSentiment | "all";
+  selectedSort: string;
+  stats: Record<string, number>;
+  totalCount: number;
+  selectedItemId?: string;
+}) {
+  const total = Math.max(stats.all ?? 0, 1);
+  const positivePct = Math.round(((stats.positive ?? 0) / total) * 100);
+  const sentimentLabel =
+    positivePct >= 60 ? "Mostly Positive" : positivePct <= 35 ? "Mostly Negative" : "Mixed";
+  const sentimentColor =
+    positivePct >= 60 ? "#10B981" : positivePct <= 35 ? "#DC2626" : "#F59E0B";
+  const sentimentEmoji = positivePct >= 60 ? "😊" : positivePct <= 35 ? "😔" : "😐";
+
+  const targets = [
+    { id: companyName, label: companyName, isCompany: true },
+    ...competitors.map((c) => ({ id: c.term, label: c.term, isCompany: false })),
+  ];
+  const selectedLabel =
+    targets.find((t) => t.id === selectedTarget)?.label ?? companyName;
+
+  return (
+    <div className="mention-controls">
+      {/* Row 1: Sentiment display | Target dropdown */}
+      <div className="mc-ctrl-row1">
+        <div className="mc-ctrl-sentiment">
+          <div className="mc-ctrl-sent-label">
+            Sentiment:{" "}
+            <span style={{ color: sentimentColor, fontWeight: 700 }}>{sentimentLabel}</span>
+            {" "}{sentimentEmoji}
+            {" "}<span style={{ color: "#9B9BA2", fontWeight: 600 }}>{positivePct}%</span>
+          </div>
+          <div className="mc-ctrl-sent-bar">
+            <div className="mc-ctrl-sent-fill" style={{ width: `${positivePct}%`, background: sentimentColor }} />
+          </div>
+        </div>
+
+        <div className="mc-ctrl-target">
+          <span className="mc-ctrl-my-company">
+            <span className="mc-ctrl-company-icon">
+              <svg width="10" height="10" viewBox="0 0 20 20" fill="white" aria-hidden="true">
+                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z" clipRule="evenodd" />
+              </svg>
+            </span>
+            My Company
+          </span>
+          <details className="mc-ctrl-details">
+            <summary className="mc-ctrl-summary">
+              {selectedLabel}
+              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="mc-ctrl-chevron" aria-hidden="true">
+                <path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </summary>
+            <div className="mc-ctrl-dropdown">
+              {targets.map((t, i) => {
+                const isActive = selectedTarget === t.id;
+                const href = buildMentionHref({
+                  projectId,
+                  target: t.id,
+                  sentiment: selectedSentiment === "all" ? undefined : selectedSentiment,
+                  sort: selectedSort === "relevant" ? undefined : selectedSort,
+                  itemId: selectedItemId,
+                });
+                return (
+                  <Link
+                    key={t.id}
+                    href={href}
+                    className={`mc-ctrl-option${isActive ? " mc-ctrl-option-active" : ""}`}
+                  >
+                    <span
+                      className="mc-ctrl-option-dot"
+                      style={{ background: t.isCompany ? "#FF4500" : COMPETITOR_COLORS[i % COMPETITOR_COLORS.length] }}
+                    />
+                    {t.label}
+                  </Link>
+                );
+              })}
+            </div>
+          </details>
+        </div>
+      </div>
+
+      {/* Row 2: Post count | Sort */}
+      <div className="mc-ctrl-row2">
+        <span className="mc-ctrl-count">{totalCount} posts found</span>
+        <SortControl
+          projectId={projectId}
+          target={selectedTarget}
+          sentiment={selectedSentiment}
+          selectedSort={selectedSort}
+        />
+      </div>
+    </div>
   );
 }
 
