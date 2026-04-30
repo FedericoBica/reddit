@@ -422,9 +422,9 @@
   }
 
   .landing-page .logo-reddit {
-    top: 50%;
+    top: -48px;
     left: 2%;
-    margin-top: -22px;
+    margin-top: 0;
   }
 
   .landing-page .hero-line {
