@@ -790,12 +790,29 @@ function MentionControls({
     positivePct >= 60 ? "#10B981" : positivePct <= 35 ? "#DC2626" : "#F59E0B";
   const sentimentEmoji = positivePct >= 60 ? "😊" : positivePct <= 35 ? "😔" : "😐";
 
-  const targets = [
-    { id: companyName, label: companyName, isCompany: true },
-    ...competitors.map((c) => ({ id: c.term, label: c.term, isCompany: false })),
+  const isCompanySelected = selectedTarget === companyName;
+  const companyHref = buildMentionHref({
+    projectId,
+    target: companyName,
+    sentiment: selectedSentiment === "all" ? undefined : selectedSentiment,
+    sort: selectedSort === "relevant" ? undefined : selectedSort,
+    itemId: selectedItemId,
+  });
+
+  const competitorTargets = [
+    { id: "all", label: "All mentions" },
+    ...competitors.map((c) => ({ id: c.term, label: c.term })),
   ];
-  const selectedLabel =
-    targets.find((t) => t.id === selectedTarget)?.label ?? companyName;
+  const dropdownSelectedLabel =
+    competitorTargets.find((t) => t.id === selectedTarget)?.label ?? "All mentions";
+
+  const sortToggleHref = buildMentionHref({
+    projectId,
+    target: selectedTarget === "all" ? undefined : selectedTarget,
+    sentiment: selectedSentiment === "all" ? undefined : selectedSentiment,
+    sort: selectedSort === "recent" ? undefined : "recent",
+    itemId: selectedItemId,
+  });
 
   return (
     <div className="mention-controls">
@@ -814,27 +831,30 @@ function MentionControls({
         </div>
 
         <div className="mc-ctrl-target">
-          <span className="mc-ctrl-my-company">
+          <Link
+            href={companyHref}
+            className={`mc-ctrl-my-company${isCompanySelected ? " mc-ctrl-my-company-active" : ""}`}
+          >
             <span className="mc-ctrl-company-icon">
               <svg width="10" height="10" viewBox="0 0 20 20" fill="white" aria-hidden="true">
                 <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z" clipRule="evenodd" />
               </svg>
             </span>
             My Company
-          </span>
+          </Link>
           <details className="mc-ctrl-details">
             <summary className="mc-ctrl-summary">
-              {selectedLabel}
+              {dropdownSelectedLabel}
               <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="mc-ctrl-chevron" aria-hidden="true">
                 <path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
             </summary>
             <div className="mc-ctrl-dropdown">
-              {targets.map((t, i) => {
+              {competitorTargets.map((t, i) => {
                 const isActive = selectedTarget === t.id;
                 const href = buildMentionHref({
                   projectId,
-                  target: t.id,
+                  target: t.id === "all" ? undefined : t.id,
                   sentiment: selectedSentiment === "all" ? undefined : selectedSentiment,
                   sort: selectedSort === "relevant" ? undefined : selectedSort,
                   itemId: selectedItemId,
@@ -845,10 +865,12 @@ function MentionControls({
                     href={href}
                     className={`mc-ctrl-option${isActive ? " mc-ctrl-option-active" : ""}`}
                   >
-                    <span
-                      className="mc-ctrl-option-dot"
-                      style={{ background: t.isCompany ? "#FF4500" : COMPETITOR_COLORS[i % COMPETITOR_COLORS.length] }}
-                    />
+                    {t.id !== "all" && (
+                      <span
+                        className="mc-ctrl-option-dot"
+                        style={{ background: COMPETITOR_COLORS[(i - 1) % COMPETITOR_COLORS.length] }}
+                      />
+                    )}
                     {t.label}
                   </Link>
                 );
@@ -858,15 +880,15 @@ function MentionControls({
         </div>
       </div>
 
-      {/* Row 2: Post count | Sort */}
-      <div className="mc-ctrl-row2">
-        <span className="mc-ctrl-count">{totalCount} posts found</span>
-        <SortControl
-          projectId={projectId}
-          target={selectedTarget}
-          sentiment={selectedSentiment}
-          selectedSort={selectedSort}
-        />
+      {/* Row 2: Post count · sorted by | Sort link (matches /dashboard style) */}
+      <div className="feed-col-meta">
+        <span>{totalCount} posts found · sorted by {selectedSort === "recent" ? "date" : "activity"}</span>
+        <Link
+          href={sortToggleHref}
+          style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none" }}
+        >
+          {selectedSort === "recent" ? "Sort by Activity" : "Sort by Recent"}
+        </Link>
       </div>
     </div>
   );

@@ -2005,7 +2005,7 @@ textarea:focus-visible {
 .searchbox-body {
   min-height: 0;
   display: grid;
-  grid-template-columns: 360px minmax(0, 1fr);
+  grid-template-columns: 400px minmax(0, 1fr);
 }
 
 .opportunity-column {
@@ -2587,7 +2587,8 @@ textarea:focus-visible {
 .mc-ctrl-sent-bar { height: 4px; border-radius: 999px; background: #E5E7EB; overflow: hidden; }
 .mc-ctrl-sent-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
 .mc-ctrl-target { display: flex; align-items: center; gap: 7px; flex-shrink: 0; padding-top: 2px; }
-.mc-ctrl-my-company { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #6B7280; white-space: nowrap; }
+.mc-ctrl-my-company { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #6B7280; white-space: nowrap; text-decoration: none; cursor: pointer; }
+.mc-ctrl-my-company-active { color: #FF4500; }
 .mc-ctrl-company-icon { width: 16px; height: 16px; border-radius: 4px; background: #FF4500; flex-shrink: 0; display: grid; place-items: center; }
 .mc-ctrl-details { position: relative; }
 .mc-ctrl-details[open] .mc-ctrl-summary { border-color: #1A1A1B; }
