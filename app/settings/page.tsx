@@ -10,6 +10,10 @@ import { listActiveExtensionTokens } from "@/db/queries/extension-tokens";
 import type { ExtensionTokenDTO, KeywordDTO, XKeywordDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { getCurrentAiReplyUsage, getCurrentBillingPlan } from "@/modules/billing/current";
+import {
+  beginBillingCheckoutFromForm,
+  openBillingPortalFromForm,
+} from "@/modules/billing/actions";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import {
   updateProjectFromForm,
@@ -24,6 +28,7 @@ import {
   toggleXKeywordFromForm,
   removeXKeywordFromForm,
 } from "@/modules/projects/settings-actions";
+import { PromptsTab } from "./prompts-tab";
 import { deleteProjectFromForm } from "@/modules/projects/delete-actions";
 import {
   generateConnectTokenFromForm,
@@ -240,66 +245,11 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           )}
 
           {selectedTab === "prompts" && (
-            <SettingsSection
-              title="Prompts"
-              description="Shape the tone and behavior of the AI reply generator for this project."
-            >
-              <form action={updateProjectFromForm}>
-                <input type="hidden" name="projectId" value={currentProject.id} />
-                <FieldRow label="Reply length" vertical>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    {(["short", "medium", "long"] as const).map((opt) => {
-                      const selected = (currentProject.reply_length ?? "medium") === opt;
-                      const labels: Record<string, string> = {
-                        short: "Short — 1-2 sentences",
-                        medium: "Medium — 3-5 sentences",
-                        long: "Long — full reply",
-                      };
-                      return (
-                        <label
-                          key={opt}
-                          style={{
-                            flex: 1,
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 8,
-                            padding: "8px 12px",
-                            borderRadius: 8,
-                            border: `1.5px solid ${selected ? "#FF4500" : "#E5E7EB"}`,
-                            background: selected ? "#FFF3EC" : "#fff",
-                            cursor: "pointer",
-                            fontSize: 12,
-                            fontWeight: selected ? 700 : 500,
-                            color: selected ? "#E03D00" : "#4B5563",
-                            transition: "all 0.1s",
-                          }}
-                        >
-                          <input
-                            type="radio"
-                            name="replyLength"
-                            value={opt}
-                            defaultChecked={selected}
-                            style={{ display: "none" }}
-                          />
-                          {labels[opt]}
-                        </label>
-                      );
-                    })}
-                  </div>
-                </FieldRow>
-                <FieldRow label="Reply generator tone" vertical>
-                  <textarea
-                    className="settings-input"
-                    name="tone"
-                    defaultValue={currentProject.tone ?? ""}
-                    placeholder="Example: concise, founder-led, helpful but not salesy. Avoid hype. Mention product only when it naturally solves the user's problem."
-                    rows={8}
-                    style={{ resize: "vertical" }}
-                  />
-                </FieldRow>
-                <FormFooter label="Save prompt settings" />
-              </form>
-            </SettingsSection>
+            <PromptsTab
+              projectId={currentProject.id}
+              defaultReplyLength={(currentProject.reply_length ?? "medium") as "short" | "medium" | "long"}
+              defaultTone={currentProject.tone ?? ""}
+            />
           )}
 
           {selectedTab === "notifications" && (
@@ -328,7 +278,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           {selectedTab === "billing" && (
             <SettingsSection
               title="Billing"
-              description="Current plan limits and included capabilities."
+              description="Current plan limits, upgrades and subscription management."
             >
               <div className="metric-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginBottom: 18 }}>
                 <BillingMetric label="Plan" value={billingPlan.label} />
@@ -343,6 +293,74 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
                 <PlanLimit label="Ghostwriter threads" value={formatLimit(0, billingPlan.maxGhostwriterThreads)} />
                 <PlanLimit label="Team members" value={formatLimit(1, billingPlan.maxTeamMembers)} />
                 <PlanLimit label="Reddit accounts" value={formatLimit(0, billingPlan.maxRedditAccounts)} />
+              </div>
+
+              <div
+                style={{
+                  marginTop: 20,
+                  paddingTop: 18,
+                  borderTop: "1px solid #F0F0EE",
+                  display: "grid",
+                  gap: 12,
+                }}
+              >
+                <p style={{ fontSize: 12, color: "#7C7C83", lineHeight: 1.5 }}>
+                  Upgrades now redirect to a Lemon Squeezy hosted checkout. Existing customers can manage renewals,
+                  payment methods and cancellations in the customer portal.
+                </p>
+
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {(["startup", "growth", "professional"] as const).map((planId) => {
+                    const isCurrent = billingPlan.plan === planId;
+                    const labels: Record<typeof planId, string> = {
+                      startup: "Switch to Startup",
+                      growth: "Upgrade to Growth",
+                      professional: "Upgrade to Professional",
+                    };
+
+                    return (
+                      <form action={beginBillingCheckoutFromForm} key={planId}>
+                        <input type="hidden" name="projectId" value={currentProject.id} />
+                        <input type="hidden" name="plan" value={planId} />
+                        <button
+                          type="submit"
+                          disabled={isCurrent}
+                          style={{
+                            border: isCurrent ? "1px solid #DADAD7" : "1px solid #FF4500",
+                            background: isCurrent ? "#F7F7F5" : "#FF4500",
+                            color: isCurrent ? "#8E8E93" : "#FFFFFF",
+                            borderRadius: 8,
+                            padding: "9px 14px",
+                            fontSize: 12,
+                            fontWeight: 800,
+                            cursor: isCurrent ? "not-allowed" : "pointer",
+                          }}
+                        >
+                          {isCurrent ? `${billingPlan.label} current` : labels[planId]}
+                        </button>
+                      </form>
+                    );
+                  })}
+
+                  <form action={openBillingPortalFromForm}>
+                    <input type="hidden" name="projectId" value={currentProject.id} />
+                    <button
+                      type="submit"
+                      style={{
+                        border: "1px solid #D6D6D3",
+                        background: "#FFFFFF",
+                        color: "#1C1C1E",
+                        borderRadius: 8,
+                        padding: "9px 14px",
+                        fontSize: 12,
+                        fontWeight: 800,
+                        cursor: "pointer",
+                      }}
+                    >
+                      Manage billing
+                    </button>
+                  </form>
+                </div>
               </div>
             </SettingsSection>
           )}

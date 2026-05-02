@@ -1,73 +1,169 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy",
+  title: "Privacy Policy – ReddProwl",
+};
+
+const S = {
+  page: { minHeight: "100vh", background: "#FAFAF8", color: "#1C1C1E" } as React.CSSProperties,
+  inner: { maxWidth: 820, margin: "0 auto", padding: "64px 24px 96px" } as React.CSSProperties,
+  eyebrow: { fontSize: 12, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase" as const, color: "#E07000" },
+  h1: { fontSize: "clamp(34px, 6vw, 56px)", lineHeight: 0.98, letterSpacing: "-0.04em", fontWeight: 900, marginTop: 18 },
+  date: { fontSize: 15, color: "#6B6B6E", marginTop: 14 },
+  sections: { display: "grid", gap: 28, marginTop: 40, fontSize: 16, lineHeight: 1.7 } as React.CSSProperties,
+  h2: { fontSize: 22, fontWeight: 800, marginBottom: 8 },
+  ul: { paddingLeft: 20, margin: "8px 0 0" } as React.CSSProperties,
 };
 
 export default function PrivacyPage() {
   return (
-    <main style={{ minHeight: "100vh", background: "#FAFAF8", color: "#1C1C1E" }}>
-      <div style={{ maxWidth: 820, margin: "0 auto", padding: "64px 24px 96px" }}>
-        <p style={{ fontSize: 12, fontWeight: 800, letterSpacing: "0.08em", textTransform: "uppercase", color: "#E07000" }}>
-          ReddProwl
-        </p>
-        <h1 style={{ fontSize: "clamp(34px, 6vw, 56px)", lineHeight: 0.98, letterSpacing: "-0.04em", fontWeight: 900, marginTop: 18 }}>
-          Privacy Policy
-        </h1>
-        <p style={{ fontSize: 15, color: "#6B6B6E", marginTop: 14 }}>
-          Last updated: April 24, 2026
-        </p>
+    <main style={S.page}>
+      <div style={S.inner}>
+        <p style={S.eyebrow}>ReddProwl</p>
+        <h1 style={S.h1}>Privacy Policy</h1>
+        <p style={S.date}>Last updated: May 2, 2026</p>
 
-        <section style={{ display: "grid", gap: 28, marginTop: 40, fontSize: 16, lineHeight: 1.7 }}>
+        <section style={S.sections}>
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>What we collect</h2>
+            <h2 style={S.h2}>What ReddProwl is</h2>
             <p>
-              ReddProwl stores the minimum information needed to connect the Chrome extension to your
-              account and operate outbound Reddit workflows. That can include extension session tokens,
-              selected project identifiers, campaign configuration, queued outreach events, and message
-              synchronization metadata.
+              ReddProwl is a SaaS platform that monitors Reddit for buyer-intent posts and brand
+              mentions, classifies them with AI, and helps you draft human-like replies. We process
+              publicly available Reddit content on your behalf — we do not post to Reddit
+              automatically.
             </p>
           </div>
 
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>How we use it</h2>
-            <p>
-              We use this data only to authenticate the extension, create and manage outbound campaigns,
-              sync queue execution state, and display campaign results in the product. We do not sell this
-              data to third parties.
+            <h2 style={S.h2}>Information we collect</h2>
+            <p>We collect only what is necessary to operate the service:</p>
+            <ul style={S.ul}>
+              <li>
+                <strong>Account data</strong> — your email address, used for authentication via
+                magic link.
+              </li>
+              <li>
+                <strong>Project configuration</strong> — company name, website, keywords,
+                subreddits, and competitors you configure inside the product.
+              </li>
+              <li>
+                <strong>Reddit content</strong> — publicly available Reddit posts and comments
+                matching your keywords, fetched via the Reddit API and stored to power your lead
+                and mention inboxes.
+              </li>
+              <li>
+                <strong>Generated content</strong> — AI-drafted reply suggestions created on your
+                behalf, stored per lead so you can edit and send them yourself.
+              </li>
+              <li>
+                <strong>Usage data</strong> — product activity (e.g. which leads you marked as
+                replied) to maintain state across sessions.
+              </li>
+              <li>
+                <strong>Chrome extension data</strong> — session tokens, campaign state, and message
+                sync metadata when you use the optional browser extension.
+              </li>
+            </ul>
+          </div>
+
+          <div>
+            <h2 style={S.h2}>How we use your information</h2>
+            <ul style={S.ul}>
+              <li>Authenticate your account and maintain your session.</li>
+              <li>Scrape and classify Reddit content according to your project settings.</li>
+              <li>Generate AI reply suggestions when you request them.</li>
+              <li>Send email notifications about new leads or mentions (if enabled).</li>
+              <li>Operate and improve the service.</li>
+            </ul>
+            <p style={{ marginTop: 12 }}>
+              We do not use your data for advertising. We do not sell your data to third parties.
             </p>
           </div>
 
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Browser permissions</h2>
+            <h2 style={S.h2}>Third-party services</h2>
             <p>
-              The extension requests Chrome permissions such as <code>storage</code>, <code>alarms</code>,
-              <code>activeTab</code>, and <code>scripting</code> to persist session state, schedule
-              background work, and interact with Reddit pages where the user explicitly runs the extension.
+              ReddProwl uses the following sub-processors to deliver the service:
+            </p>
+            <ul style={S.ul}>
+              <li>
+                <strong>Supabase</strong> — database, authentication, and file storage.
+              </li>
+              <li>
+                <strong>OpenAI</strong> — AI classification of Reddit posts and generation of reply
+                drafts. Reddit content and your project context are sent to OpenAI for this purpose.
+              </li>
+              <li>
+                <strong>Apify / Reddit API</strong> — fetching publicly available Reddit posts and
+                comments.
+              </li>
+              <li>
+                <strong>Inngest</strong> — background job orchestration (scheduling scrapes, sending
+                notifications).
+              </li>
+            </ul>
+            <p style={{ marginTop: 12 }}>
+              Each sub-processor is bound by its own data processing terms. We do not share your
+              personal account data with them beyond what is technically required.
             </p>
           </div>
 
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Data sharing</h2>
+            <h2 style={S.h2}>Cookies and local storage</h2>
             <p>
-              Data is processed by ReddProwl infrastructure and service providers required to operate the
-              product. We do not use extension data for advertising.
+              ReddProwl uses cookies and browser storage strictly for authentication (session
+              tokens) and product functionality (e.g. remembering your active project). We do not
+              use third-party tracking cookies or behavioral analytics cookies.
             </p>
           </div>
 
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Retention</h2>
+            <h2 style={S.h2}>Data retention</h2>
             <p>
-              We retain operational data only as long as necessary to run the product, investigate issues,
-              and maintain account history. You can revoke extension sessions from the application settings.
+              We retain your data for as long as your account is active. You may request deletion
+              of your account and associated data at any time by contacting us. Backups may persist
+              for up to 30 days after deletion.
             </p>
           </div>
 
           <div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, marginBottom: 8 }}>Contact</h2>
+            <h2 style={S.h2}>Your rights</h2>
             <p>
-              For privacy questions, contact the product administrator or support channel associated with
-              your ReddProwl deployment.
+              Regardless of where you are located, you can:
+            </p>
+            <ul style={S.ul}>
+              <li>Access the personal data we hold about you.</li>
+              <li>Request correction of inaccurate data.</li>
+              <li>Request deletion of your account and data.</li>
+              <li>Export your project configuration and leads data.</li>
+            </ul>
+            <p style={{ marginTop: 12 }}>To exercise any of these rights, contact us at the address below.</p>
+          </div>
+
+          <div>
+            <h2 style={S.h2}>Security</h2>
+            <p>
+              All data is encrypted in transit (TLS) and at rest. Access to production data is
+              restricted via Supabase Row-Level Security — each account can only read its own data.
+            </p>
+          </div>
+
+          <div>
+            <h2 style={S.h2}>Changes to this policy</h2>
+            <p>
+              We may update this policy when the service changes materially. If we do, we will
+              update the date at the top of this page. Continued use of the service after a change
+              constitutes acceptance of the updated policy.
+            </p>
+          </div>
+
+          <div>
+            <h2 style={S.h2}>Contact</h2>
+            <p>
+              For privacy questions or data requests, email{" "}
+              <a href="mailto:fedebicasua@gmail.com" style={{ color: "#E07000" }}>
+                fedebicasua@gmail.com
+              </a>.
             </p>
           </div>
         </section>

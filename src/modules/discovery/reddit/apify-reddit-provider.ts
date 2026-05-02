@@ -321,6 +321,16 @@ function warnIfItemsUnmapped(input: {
 }
 
 function mapApifyCommentItem(item: ApifyRedditItem): RedditComment | null {
+  // Skip items explicitly typed as posts/threads
+  const type = (item.dataType ?? item.type ?? "").toLowerCase();
+  if (type && (type.includes("post") || type.includes("thread"))) return null;
+
+  // Comments always reference a parent post via linkId (t3_xxx) or have a commentId.
+  // Posts lack both — they ARE the top-level content, not a reply to anything.
+  const hasCommentId = !!item.commentId;
+  const hasLinkId = !!item.linkId;
+  if (!hasCommentId && !hasLinkId) return null;
+
   const body = item.body ?? item.text ?? item.selftext;
   if (!body || body === "[deleted]" || body === "[removed]") return null;
 

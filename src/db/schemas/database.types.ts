@@ -1132,6 +1132,36 @@ export type Database = {
           },
         ]
       }
+      billing_webhook_events: {
+        Row: {
+          created_at: string
+          event_name: string
+          id: string
+          payload: Json
+          payload_hash: string
+          resource_id: string
+          resource_type: string
+        }
+        Insert: {
+          created_at?: string
+          event_name: string
+          id?: string
+          payload?: Json
+          payload_hash: string
+          resource_id: string
+          resource_type: string
+        }
+        Update: {
+          created_at?: string
+          event_name?: string
+          id?: string
+          payload?: Json
+          payload_hash?: string
+          resource_id?: string
+          resource_type?: string
+        }
+        Relationships: []
+      }
       searchbox_results: {
         Row: {
           author: string | null
@@ -1286,6 +1316,16 @@ export type Database = {
           full_name: string | null
           id: string
           is_admin: boolean
+          lemonsqueezy_customer_id: string | null
+          lemonsqueezy_order_id: string | null
+          lemonsqueezy_product_id: string | null
+          lemonsqueezy_subscription_ends_at: string | null
+          lemonsqueezy_subscription_id: string | null
+          lemonsqueezy_subscription_item_id: string | null
+          lemonsqueezy_subscription_renews_at: string | null
+          lemonsqueezy_subscription_status: string | null
+          lemonsqueezy_trial_ends_at: string | null
+          lemonsqueezy_variant_id: string | null
           onboarding_status: Database["public"]["Enums"]["onboarding_status"]
           updated_at: string
         }
@@ -1299,6 +1339,16 @@ export type Database = {
           full_name?: string | null
           id: string
           is_admin?: boolean
+          lemonsqueezy_customer_id?: string | null
+          lemonsqueezy_order_id?: string | null
+          lemonsqueezy_product_id?: string | null
+          lemonsqueezy_subscription_ends_at?: string | null
+          lemonsqueezy_subscription_id?: string | null
+          lemonsqueezy_subscription_item_id?: string | null
+          lemonsqueezy_subscription_renews_at?: string | null
+          lemonsqueezy_subscription_status?: string | null
+          lemonsqueezy_trial_ends_at?: string | null
+          lemonsqueezy_variant_id?: string | null
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           updated_at?: string
         }
@@ -1312,6 +1362,16 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_admin?: boolean
+          lemonsqueezy_customer_id?: string | null
+          lemonsqueezy_order_id?: string | null
+          lemonsqueezy_product_id?: string | null
+          lemonsqueezy_subscription_ends_at?: string | null
+          lemonsqueezy_subscription_id?: string | null
+          lemonsqueezy_subscription_item_id?: string | null
+          lemonsqueezy_subscription_renews_at?: string | null
+          lemonsqueezy_subscription_status?: string | null
+          lemonsqueezy_trial_ends_at?: string | null
+          lemonsqueezy_variant_id?: string | null
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           updated_at?: string
         }
@@ -1978,4 +2038,3 @@ export const Constants = {
     },
   },
 } as const
-
