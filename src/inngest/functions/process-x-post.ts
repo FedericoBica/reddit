@@ -3,6 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { upsertXPost } from "@/db/mutations/x";
 import type { Json } from "@/db/schemas/database.types";
 import { classifyXPostCandidate } from "@/modules/x/x-classifier";
+import { getBillingPlanForUser } from "@/modules/billing/current";
 
 type XPostEvent = {
   data: {
@@ -70,7 +71,7 @@ export const processXPost = inngest.createFunction(
       step.run("load project", async () =>
         supabase
           .from("projects")
-          .select("id, name, website_url, value_proposition, region, primary_language, status")
+          .select("id, name, website_url, value_proposition, region, primary_language, status, owner_id")
           .eq("id", payload.projectId)
           .eq("status", "active")
           .maybeSingle(),
@@ -91,6 +92,26 @@ export const processXPost = inngest.createFunction(
 
     if (!project || !keyword) {
       return { saved: false, skipped: true };
+    }
+
+    const dailyLimitHit = await step.run("check daily limit", async () => {
+      const plan = await getBillingPlanForUser(project.owner_id);
+      if (!plan.maxXPostsPerDay) return false;
+
+      const startOfDay = new Date();
+      startOfDay.setUTCHours(0, 0, 0, 0);
+
+      const { count } = await supabase
+        .from("x_posts")
+        .select("id", { count: "exact", head: true })
+        .eq("project_id", payload.projectId)
+        .gte("created_at", startOfDay.toISOString());
+
+      return (count ?? 0) >= plan.maxXPostsPerDay;
+    });
+
+    if (dailyLimitHit) {
+      return { saved: false, dailyLimitReached: true };
     }
 
     const classification = await step.run("classify x post", async () =>

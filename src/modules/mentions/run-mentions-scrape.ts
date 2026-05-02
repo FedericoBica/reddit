@@ -59,11 +59,26 @@ export async function runMentionsScrapeWithCompetitors(
   const targets = buildMentionTargets(project as ProjectMentionTarget);
 
   for (const competitor of competitors ?? []) {
-    if (competitor.term?.trim()) {
+    if (!competitor.term?.trim()) continue;
+    const domain = competitor.term.trim();
+
+    targets.push({
+      term: domain,
+      targetType: "competitor",
+      targetLabel: domain,
+    });
+
+    // Also search by company name derived from domain (e.g. "attio.com" → "attio")
+    const companyName = domain
+      .replace(/\.[a-z]{2,}$/i, "")
+      .replace(/[.-]/g, " ")
+      .trim();
+
+    if (companyName && companyName.toLowerCase() !== domain.toLowerCase()) {
       targets.push({
-        term: competitor.term.trim(),
+        term: companyName,
         targetType: "competitor",
-        targetLabel: competitor.term.trim(),
+        targetLabel: domain,
       });
     }
   }

@@ -25,8 +25,6 @@ import { analyzeCompanyWithAI, fetchWebsiteText } from "@/modules/onboarding/com
 import { setCurrentProject } from "@/modules/projects/current";
 import { generateProjectSuggestions, type CompetitorContext } from "@/modules/projects/suggestion-generator";
 import { generateXKeywords } from "@/modules/projects/x-keyword-generator";
-import { generateSearchboxKeywords } from "@/modules/projects/searchbox-keyword-generator";
-import { addKeyword } from "@/db/mutations/settings";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
 import { getProjectById } from "@/db/queries/projects";
 
@@ -285,14 +283,10 @@ export async function saveCompetitorsFromSignup(formData: FormData) {
         })),
       );
 
-      const [suggestions, xKeywords, searchboxKeywords] = await Promise.all([
+      const [suggestions, xKeywords] = await Promise.all([
         generateProjectSuggestions(project, competitorContexts),
         generateXKeywords(project, competitorContexts).catch((err) => {
           console.error("Failed to generate X keywords", err);
-          return null;
-        }),
-        generateSearchboxKeywords(project, competitorContexts).catch((err) => {
-          console.error("Failed to generate searchbox keywords", err);
           return null;
         }),
       ]);
@@ -306,12 +300,6 @@ export async function saveCompetitorsFromSignup(formData: FormData) {
       if (xKeywords?.queries.length) {
         await Promise.all(
           xKeywords.queries.map((q) => addXKeyword(projectId, q.query).catch(() => null)),
-        );
-      }
-
-      if (searchboxKeywords?.terms.length) {
-        await Promise.all(
-          searchboxKeywords.terms.map((t) => addKeyword(projectId, t, "searchbox").catch(() => null)),
         );
       }
 

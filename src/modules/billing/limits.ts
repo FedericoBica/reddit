@@ -7,6 +7,7 @@ export type ProjectLimit = {
   label: string;
   maxKeywords: number | null;
   maxXKeywords: number | null;
+  maxXPostsPerDay: number | null;
   maxCompetitors: number | null;
   scrapeIntervalHours: number;
   keywordSearchTimeWindow: KeywordSearchTimeWindow;
@@ -32,6 +33,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     label: "Startup",
     maxKeywords: 10,
     maxXKeywords: null,
+    maxXPostsPerDay: null,
     maxCompetitors: 3,
     scrapeIntervalHours: 168,
     keywordSearchTimeWindow: "week",
@@ -55,6 +57,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     label: "Growth",
     maxKeywords: 20,
     maxXKeywords: 10,
+    maxXPostsPerDay: 20,
     maxCompetitors: 6,
     scrapeIntervalHours: 24,
     keywordSearchTimeWindow: "day",
@@ -78,6 +81,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     label: "Professional",
     maxKeywords: 30,
     maxXKeywords: 20,
+    maxXPostsPerDay: 20,
     maxCompetitors: 8,
     scrapeIntervalHours: 24,
     keywordSearchTimeWindow: "day",
