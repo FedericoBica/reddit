@@ -485,7 +485,7 @@ async function bootstrapConnectedState(projectName: string) {
   ]);
 
   if (campaignsResult.status === "rejected") {
-    console.error("[ReddProwl panel] campaigns bootstrap failed", campaignsResult.reason);
+    console.error("[Prowlit panel] campaigns bootstrap failed", campaignsResult.reason);
     state.campaigns = [];
     renderHome();
     renderCampaignOptions();
@@ -493,7 +493,7 @@ async function bootstrapConnectedState(projectName: string) {
   }
 
   if (contextResult.status === "rejected") {
-    console.error("[ReddProwl panel] context bootstrap failed", contextResult.reason);
+    console.error("[Prowlit panel] context bootstrap failed", contextResult.reason);
     state.context = { ...DEFAULT_CONTEXT };
     renderHome();
     renderCampaignTarget();
@@ -504,7 +504,7 @@ async function bootstrapConnectedState(projectName: string) {
     startContextPolling();
     await loadCampaignSelection();
   } catch (error) {
-    console.error("[ReddProwl panel] selection bootstrap failed", error);
+    console.error("[Prowlit panel] selection bootstrap failed", error);
     setAppError("The panel loaded, but campaign details could not be initialized.");
   }
 }

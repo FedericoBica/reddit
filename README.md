@@ -1,4 +1,4 @@
-# Reddit Lead Radar
+# Prowlit
 
 Foundation for a multi-tenant, event-driven SaaS built with Next.js, Supabase, Inngest, and AI providers.
 
@@ -42,7 +42,7 @@ APIFY_REDDIT_ACTOR_ID=harshmaur/reddit-scraper
 APIFY_REDDIT_TIMEOUT_SECS=90
 REDDIT_CLIENT_ID=<optional reddit app client id if REDDIT_PROVIDER=oauth>
 REDDIT_CLIENT_SECRET=<optional reddit app client secret if REDDIT_PROVIDER=oauth>
-REDDIT_USER_AGENT=web:reddprowl:0.1.0 (contact: your-email-or-domain)
+REDDIT_USER_AGENT=web:prowlit:0.1.0 (contact: your-email-or-domain)
 SCRAPE_GLOBAL_CRON=*/30 * * * *
 SCRAPE_MAX_PROJECTS_PER_RUN=10
 SCRAPE_MAX_SUBREDDITS_PER_PROJECT=5

@@ -1,6 +1,6 @@
 declare const __API_BASE_URL__: string | undefined;
 
-const BASE_URL = __API_BASE_URL__ || "https://reddprowl.com";
+const BASE_URL = __API_BASE_URL__ || "https://prowlit.com";
 
 type Campaign = {
   id: string;

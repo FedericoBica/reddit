@@ -29,7 +29,7 @@ export function normalizeSubredditName(subreddit: string) {
 export function getRedditUserAgent() {
   return (
     process.env.REDDIT_USER_AGENT?.trim() ||
-    "web:reddprowl:0.1.0 (contact: local-dev)"
+    "web:prowlit:0.1.0 (contact: local-dev)"
   );
 }
 

@@ -11,7 +11,7 @@ export async function fetchRedditPostMetadata(postId: string): Promise<RedditPos
 
   try {
     const res = await fetch(`https://www.reddit.com/by_id/t3_${postId}.json`, {
-      headers: { "User-Agent": "ReddProwl/1.0 (+https://reddprowl.com)" },
+      headers: { "User-Agent": "Prowlit/1.0 (+https://prowlit.com)" },
       signal: AbortSignal.timeout(5_000),
     });
     if (!res.ok) return empty;

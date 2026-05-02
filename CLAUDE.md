@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this project is
 
-Reddit Lead Radar is a multi-tenant SaaS that monitors Reddit for buyer-intent posts, classifies them with AI, and helps users craft human-like replies. It is NOT a scraper — it is a full lead acquisition system.
+Prowlit is a multi-tenant SaaS that monitors Reddit for buyer-intent posts, classifies them with AI, and helps users craft human-like replies. It is NOT a scraper — it is a full lead acquisition system.
 
 ## Commands
 

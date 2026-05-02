@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Service – ReddProwl",
+  title: "Terms of Service – Prowlit",
 };
 
 const S = {
@@ -19,7 +19,7 @@ export default function TermsPage() {
   return (
     <main style={S.page}>
       <div style={S.inner}>
-        <p style={S.eyebrow}>ReddProwl</p>
+        <p style={S.eyebrow}>Prowlit</p>
         <h1 style={S.h1}>Terms of Service</h1>
         <p style={S.date}>Last updated: May 2, 2026</p>
 
@@ -27,18 +27,18 @@ export default function TermsPage() {
           <div>
             <h2 style={S.h2}>Acceptance</h2>
             <p>
-              By creating an account or using ReddProwl, you agree to these Terms of Service. If
+              By creating an account or using Prowlit, you agree to these Terms of Service. If
               you do not agree, do not use the service.
             </p>
           </div>
 
           <div>
-            <h2 style={S.h2}>What ReddProwl provides</h2>
+            <h2 style={S.h2}>What Prowlit provides</h2>
             <p>
-              ReddProwl monitors Reddit for posts and comments matching your configured keywords
+              Prowlit monitors Reddit for posts and comments matching your configured keywords
               and brand terms, classifies them with AI, and helps you draft replies. The service
               surfaces relevant conversations — you decide whether and how to engage with them.
-              ReddProwl never posts to Reddit on your behalf automatically.
+              Prowlit never posts to Reddit on your behalf automatically.
             </p>
           </div>
 
@@ -48,7 +48,7 @@ export default function TermsPage() {
               <li>You must provide a valid email address to create an account.</li>
               <li>You are responsible for keeping your account credentials secure.</li>
               <li>You may not share your account with others or create accounts on behalf of third parties without their consent.</li>
-              <li>You must be at least 18 years old to use ReddProwl.</li>
+              <li>You must be at least 18 years old to use Prowlit.</li>
             </ul>
           </div>
 
@@ -56,9 +56,9 @@ export default function TermsPage() {
             <h2 style={S.h2}>Acceptable use</h2>
             <p>You agree not to:</p>
             <ul style={S.ul}>
-              <li>Use ReddProwl to send spam, unsolicited messages, or harass Reddit users.</li>
+              <li>Use Prowlit to send spam, unsolicited messages, or harass Reddit users.</li>
               <li>Violate Reddit's User Agreement or Content Policy when engaging with leads or mentions.</li>
-              <li>Attempt to reverse-engineer, scrape, or extract data from ReddProwl's infrastructure.</li>
+              <li>Attempt to reverse-engineer, scrape, or extract data from Prowlit's infrastructure.</li>
               <li>Use the service for any unlawful purpose or in violation of applicable regulations.</li>
               <li>Attempt to circumvent account limits or billing restrictions.</li>
             </ul>
@@ -67,9 +67,9 @@ export default function TermsPage() {
           <div>
             <h2 style={S.h2}>AI-generated content</h2>
             <p>
-              ReddProwl uses AI to classify leads and generate reply suggestions. These suggestions
+              Prowlit uses AI to classify leads and generate reply suggestions. These suggestions
               are drafts only — you review and decide whether to use them. You are solely responsible
-              for any content you post to Reddit. ReddProwl makes no guarantees about the accuracy,
+              for any content you post to Reddit. Prowlit makes no guarantees about the accuracy,
               appropriateness, or effectiveness of AI-generated content.
             </p>
           </div>
@@ -78,7 +78,7 @@ export default function TermsPage() {
             <h2 style={S.h2}>Reddit content</h2>
             <p>
               Reddit posts and comments surfaced in the product are publicly available content
-              owned by their respective authors and subject to Reddit's terms. ReddProwl does not
+              owned by their respective authors and subject to Reddit's terms. Prowlit does not
               claim ownership of this content and displays it for your informational use only.
             </p>
           </div>
@@ -96,9 +96,9 @@ export default function TermsPage() {
           <div>
             <h2 style={S.h2}>Intellectual property</h2>
             <p>
-              ReddProwl and its underlying technology are owned by ReddProwl. You retain ownership
+              Prowlit and its underlying technology are owned by Prowlit. You retain ownership
               of any content you create (project configurations, custom reply drafts). By using the
-              service, you grant ReddProwl a limited license to process your configuration data
+              service, you grant Prowlit a limited license to process your configuration data
               solely to operate the service.
             </p>
           </div>
@@ -106,7 +106,7 @@ export default function TermsPage() {
           <div>
             <h2 style={S.h2}>Disclaimer of warranties</h2>
             <p>
-              ReddProwl is provided "as is" without warranties of any kind, express or implied.
+              Prowlit is provided "as is" without warranties of any kind, express or implied.
               We do not warrant that the service will be uninterrupted, error-free, or that any
               leads or mentions surfaced will result in business outcomes. Use the service at your
               own risk.
@@ -116,9 +116,9 @@ export default function TermsPage() {
           <div>
             <h2 style={S.h2}>Limitation of liability</h2>
             <p>
-              To the fullest extent permitted by law, ReddProwl's total liability for any claim
+              To the fullest extent permitted by law, Prowlit's total liability for any claim
               arising from use of the service is limited to the amount you paid in the 3 months
-              preceding the claim. ReddProwl is not liable for indirect, incidental, or
+              preceding the claim. Prowlit is not liable for indirect, incidental, or
               consequential damages.
             </p>
           </div>

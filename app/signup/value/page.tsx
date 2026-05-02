@@ -10,7 +10,7 @@ import { ValuePanel } from "./value-panel";
 import { SignupProgress } from "@/app/signup/components/signup-progress";
 
 export const metadata: Metadata = {
-  title: "Cómo ayuda ReddProwl",
+  title: "Cómo ayuda Prowlit",
 };
 
 type ValuePageProps = {

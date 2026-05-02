@@ -60,7 +60,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: { default: "ReddProwl", template: "%s — ReddProwl" },
+  title: { default: "Prowlit", template: "%s — Prowlit" },
   description: "Detect buying intent on Reddit and close more sales.",
 };
 

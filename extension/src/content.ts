@@ -36,8 +36,8 @@ type RedditContext = {
 };
 
 const DOCK_STATE_KEY = "dockState";
-const DOCK_HOST_ID = "reddprowl-dock-host";
-const DOCK_IFRAME_ID = "reddprowl-dock-frame";
+const DOCK_HOST_ID = "prowlit-dock-host";
+const DOCK_IFRAME_ID = "prowlit-dock-frame";
 const SESSION_USERNAME_CACHE_MS = 5 * 60 * 1000;
 let cachedSessionUsername: { value: string | null; expiresAt: number } | null = null;
 
@@ -47,7 +47,7 @@ chrome.runtime.onMessage.addListener(
       toggleDock()
         .then(() => sendResponse({ ok: true }))
         .catch((err: unknown) => {
-          console.error("[ReddProwl] TOGGLE_DOCK error", err);
+          console.error("[Prowlit] TOGGLE_DOCK error", err);
           sendResponse({ ok: false });
         });
       return true;
@@ -58,7 +58,7 @@ chrome.runtime.onMessage.addListener(
       fetchInboxMessages(pollMsg.afterFullname)
         .then((result) => sendResponse(result))
         .catch((err: unknown) => {
-          console.error("[ReddProwl] POLL_INBOX error", err);
+          console.error("[Prowlit] POLL_INBOX error", err);
           sendResponse({ messages: [], newAfterFullname: null });
         });
       return true;
@@ -71,7 +71,7 @@ chrome.runtime.onMessage.addListener(
       })
         .then((usernames) => sendResponse(usernames))
         .catch((err: unknown) => {
-          console.error("[ReddProwl] SCRAPE_THREAD error", err);
+          console.error("[Prowlit] SCRAPE_THREAD error", err);
           sendResponse([]);
         });
       return true;
@@ -81,7 +81,7 @@ chrome.runtime.onMessage.addListener(
       getRedditContext()
         .then((context) => sendResponse(context))
         .catch((err: unknown) => {
-          console.error("[ReddProwl] GET_REDDIT_CONTEXT error", err);
+          console.error("[Prowlit] GET_REDDIT_CONTEXT error", err);
           sendResponse({
             pageType: "other",
             url: window.location.href,
@@ -99,7 +99,7 @@ chrome.runtime.onMessage.addListener(
       fetchSubredditPosters(msg.subreddit, msg.keywords, msg.minScore, msg.after)
         .then((result) => sendResponse(result))
         .catch((err: unknown) => {
-          console.error("[ReddProwl] FETCH_SUBREDDIT_POSTS error", err);
+          console.error("[Prowlit] FETCH_SUBREDDIT_POSTS error", err);
           sendResponse({ authors: [], after: null });
         });
       return true;
@@ -230,25 +230,25 @@ function ensureDock(): DockRefs {
         }
       }
     </style>
-    <div id="reddprowl-panel" class="panel hidden">
+    <div id="prowlit-panel" class="panel hidden">
       <div class="toolbar">
-        <div class="brand">ReddProwl</div>
+        <div class="brand">Prowlit</div>
         <div class="actions">
-          <button id="reddprowl-minimize" class="icon-btn" aria-label="Minimize panel">−</button>
-          <button id="reddprowl-close" class="icon-btn" aria-label="Close panel">×</button>
+          <button id="prowlit-minimize" class="icon-btn" aria-label="Minimize panel">−</button>
+          <button id="prowlit-close" class="icon-btn" aria-label="Close panel">×</button>
         </div>
       </div>
       <iframe id="${DOCK_IFRAME_ID}" class="frame" src="${chrome.runtime.getURL("sidepanel.html")}"></iframe>
     </div>
-    <button id="reddprowl-launcher" class="launcher hidden" aria-label="Open ReddProwl panel">ReddProwl</button>
+    <button id="prowlit-launcher" class="launcher hidden" aria-label="Open Prowlit panel">Prowlit</button>
   `;
 
   document.documentElement.appendChild(host);
 
-  const panel = shadow.getElementById("reddprowl-panel");
-  const launcher = shadow.getElementById("reddprowl-launcher");
-  const minimize = shadow.getElementById("reddprowl-minimize");
-  const close = shadow.getElementById("reddprowl-close");
+  const panel = shadow.getElementById("prowlit-panel");
+  const launcher = shadow.getElementById("prowlit-launcher");
+  const minimize = shadow.getElementById("prowlit-minimize");
+  const close = shadow.getElementById("prowlit-close");
 
   if (!(panel instanceof HTMLDivElement) || !(launcher instanceof HTMLButtonElement)) {
     throw new Error("Failed to initialize dock");
@@ -283,7 +283,7 @@ function applyDockState(state: DockState) {
 
 async function setDockState(state: DockState): Promise<void> {
   chrome.storage.local.set({ [DOCK_STATE_KEY]: state }).catch((err) => {
-    console.error("[ReddProwl] failed to persist dock state", err);
+    console.error("[Prowlit] failed to persist dock state", err);
   });
   if (state === "closed") {
     destroyDock();
@@ -586,7 +586,7 @@ async function getSessionUsernameFromPageData(): Promise<{
       return { pageDataUsername: username, scriptRegexUsername: null };
     }
   } catch (error) {
-    console.debug("[ReddProwl] page context username lookup failed", error);
+    console.debug("[Prowlit] page context username lookup failed", error);
   }
 
   const scriptContents = Array.from(document.scripts)
@@ -650,7 +650,7 @@ function normalizeRedditUsername(value: unknown): string | null {
 
 async function readUsernameFromPageContext(): Promise<string | null> {
   return new Promise((resolve) => {
-    const eventName = `reddprowl:username:${Math.random().toString(36).slice(2)}`;
+    const eventName = `prowlit:username:${Math.random().toString(36).slice(2)}`;
     const cleanup = () => {
       window.removeEventListener(eventName, onResult as EventListener);
       script.remove();
@@ -666,7 +666,7 @@ async function readUsernameFromPageContext(): Promise<string | null> {
 
     const script = document.createElement("script");
     script.src = chrome.runtime.getURL("page-context.js");
-    script.dataset.reddprowlEvent = eventName;
+    script.dataset.prowlitEvent = eventName;
 
     (document.head ?? document.documentElement).appendChild(script);
     window.setTimeout(() => {

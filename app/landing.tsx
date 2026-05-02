@@ -796,35 +796,11 @@ function WhyReddit({ t }: { t: Translations }) {
 function WhyX({ t }: { t: Translations }) {
   const tw = t.whyX;
 
-  const cards: { tone: string; tag: string; h: string; b: string; icon: React.ReactNode }[] = [
-    {
-      tone: "amber",
-      tag: tw.card1tag,
-      h: tw.card1h,
-      b: tw.card1b,
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>,
-    },
-    {
-      tone: "rose",
-      tag: tw.card2tag,
-      h: tw.card2h,
-      b: tw.card2b,
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 11l18-8-8 18-2-8-8-2z"/></svg>,
-    },
-    {
-      tone: "green",
-      tag: tw.card3tag,
-      h: tw.card3h,
-      b: tw.card3b,
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>,
-    },
-    {
-      tone: "blue",
-      tag: tw.card4tag,
-      h: tw.card4h,
-      b: tw.card4b,
-      icon: <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z"/></svg>,
-    },
+  const cards = [
+    { tag: tw.card1tag, h: tw.card1h, b: tw.card1b },
+    { tag: tw.card2tag, h: tw.card2h, b: tw.card2b },
+    { tag: tw.card3tag, h: tw.card3h, b: tw.card3b },
+    { tag: tw.card4tag, h: tw.card4h, b: tw.card4b },
   ];
 
   return (
@@ -850,11 +826,15 @@ function WhyX({ t }: { t: Translations }) {
 
         <div className="why-mon-grid">
           {cards.map((card) => (
-            <article key={card.tag} className="why-mon-card">
-              <div className="why-mon-ico" data-tone={card.tone}>{card.icon}</div>
-              <div className="why-mon-tag mono">{card.tag}</div>
-              <h3 className="why-mon-h">{card.h}</h3>
-              <p className="why-mon-b">{card.b}</p>
+            <article key={card.tag} className="x-post-card">
+              <div className="x-post-top">
+                <span className="x-post-tag mono">{card.tag}</span>
+                <svg className="x-post-logo" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622 5.911-5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                </svg>
+              </div>
+              <h3 className="x-post-h">{card.h}</h3>
+              <p className="x-post-body">{card.b}</p>
             </article>
           ))}
         </div>
@@ -1316,7 +1296,7 @@ export default function LandingPage({ locale }: { locale: Locale }) {
             <a href="#pricing">{t.nav.pricing}</a>
             <a href="#how">{t.nav.howItWorks}</a>
             <Link href="/about">{t.nav.about}</Link>
-            <Link href="/login">{t.nav.login}</Link>
+            <Link className="btn dark sm" href="/login">{t.nav.login}</Link>
             <Link className="btn primary sm" href="/signup">{t.nav.startFree}</Link>
             <LangSwitcher locale={locale} />
           </div>
@@ -1344,13 +1324,12 @@ export default function LandingPage({ locale }: { locale: Locale }) {
           </h1>
           <p className="lede" style={{ margin: "24px auto 32px", maxWidth: 640 }}>{t.hero.lede}</p>
           <div className="cta-row" style={{ justifyContent: "center" }}>
-            <Link className="btn primary lg" href="/signup">{t.hero.ctaPrimary}</Link>
-            <a className="btn lg" href="#features">{t.hero.ctaSecondary}</a>
+            <Link className="btn dark lg" href="/signup">{t.hero.ctaPrimary}</Link>
+            <a className="btn primary lg" href="#features">{t.hero.ctaSecondary}</a>
           </div>
           <div className="hero-meta" style={{ justifyContent: "center" }}>
             <span>{t.hero.stat1}</span>
             <span>{t.hero.stat2}</span>
-            <span>{t.hero.stat3}</span>
           </div>
         </div>
       </section>

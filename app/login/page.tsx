@@ -46,7 +46,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           Login
         </div>
         <h1 className="login-form-title">
-          Ingresá a <em>ReddProwl</em>
+          Ingresá a <em>Prowlit</em>
         </h1>
         <p className="login-form-sub">
           Usá tu cuenta de Google o tu email y contraseña.

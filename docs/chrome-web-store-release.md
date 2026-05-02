@@ -22,7 +22,7 @@ The generated `dist/manifest.json` will include host permission for the selected
 
 The release artifact is created at:
 
-`/.artifacts/reddprowl-extension-v<version>.zip`
+`/.artifacts/prowlit-extension-v<version>.zip`
 
 ## Local QA
 
@@ -48,7 +48,7 @@ The release artifact is created at:
    - campaign builder
    - active campaign state
 4. Fill listing metadata:
-   - name: `ReddProwl Outbound`
+   - name: `Prowlit Outbound`
    - short description
    - full description
    - support email

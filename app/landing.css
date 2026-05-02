@@ -214,6 +214,15 @@
   color: var(--paper);
 }
 
+.landing-page .btn.dark {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+}
+.landing-page .btn.dark:hover {
+  box-shadow: 3px 3px 0 0 #000;
+}
+
 .landing-page .mono {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
@@ -2372,25 +2381,21 @@
 }
 
 /* Why Monitor X */
-.landing-page .why-mon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 1120px; margin: 0 auto; }
-.landing-page .why-mon-card { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 30px; position: relative; transition: border-color .2s ease, transform .2s ease; display: flex; flex-direction: column; gap: 14px; }
-.landing-page .why-mon-card:hover { border-color: var(--ink-3); transform: translateY(-2px); }
-.landing-page .why-mon-ico { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; border: 1px solid var(--line); }
-.landing-page .why-mon-ico[data-tone="amber"] { background: oklch(0.97 0.04 75); color: oklch(0.55 0.16 65); }
-.landing-page .why-mon-ico[data-tone="rose"]  { background: oklch(0.96 0.04 25); color: oklch(0.56 0.18 28); }
-.landing-page .why-mon-ico[data-tone="green"] { background: oklch(0.96 0.04 150); color: oklch(0.5 0.13 155); }
-.landing-page .why-mon-ico[data-tone="blue"]  { background: oklch(0.96 0.03 240); color: oklch(0.52 0.13 245); }
-.landing-page .why-mon-tag { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--ink-3); font-weight: 600; }
-.landing-page .why-mon-h { font-family: var(--font-serif), "Instrument Serif", Georgia, serif; font-size: 26px; line-height: 1.2; letter-spacing: -0.012em; margin: 0; color: var(--ink); font-weight: 400; text-wrap: pretty; }
-.landing-page .why-mon-b { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink-2); text-wrap: pretty; }
+.landing-page .why-mon-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; max-width: 1120px; margin: 0 auto; }
+/* X-inspired dark cards */
+.landing-page .x-post-card { background: #0F1419; border: 1px solid #2F3336; border-radius: 16px; padding: 28px; display: flex; flex-direction: column; gap: 14px; transition: border-color .2s ease, transform .2s ease; }
+.landing-page .x-post-card:hover { border-color: #536471; transform: translateY(-2px); }
+.landing-page .x-post-top { display: flex; align-items: center; justify-content: space-between; }
+.landing-page .x-post-tag { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: #536471; font-weight: 600; }
+.landing-page .x-post-logo { color: #536471; flex-shrink: 0; }
+.landing-page .x-post-h { font-family: var(--font-serif), "Instrument Serif", Georgia, serif; font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; margin: 0; color: #E7E9EA; font-weight: 400; text-wrap: pretty; }
+.landing-page .x-post-body { margin: 0; font-size: 14px; line-height: 1.65; color: #B0B8C1; text-wrap: pretty; }
 .landing-page .why-mon-foot { margin-top: 48px; max-width: 1120px; margin-left: auto; margin-right: auto; display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 24px 28px; border: 1px solid var(--line); border-radius: 16px; background: var(--paper); flex-wrap: wrap; }
 @media (max-width: 760px) {
-  .landing-page .why-mon-grid { gap: 12px; }
-  .landing-page .why-mon-card { padding: 18px 14px; gap: 8px; }
-  .landing-page .why-mon-ico { width: 36px; height: 36px; }
-  .landing-page .why-mon-tag { font-size: 10px; }
-  .landing-page .why-mon-h { font-size: 17px; }
-  .landing-page .why-mon-b { font-size: 12px; line-height: 1.45; }
+  .landing-page .why-mon-grid { grid-template-columns: 1fr; gap: 12px; }
+  .landing-page .x-post-card { padding: 18px; gap: 10px; }
+  .landing-page .x-post-h { font-size: 18px; }
+  .landing-page .x-post-body { font-size: 13px; }
   .landing-page .why-mon-foot { flex-direction: column; align-items: flex-start; }
 }
 

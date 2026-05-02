@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   try {
     const url = `https://www.reddit.com${permalink}.json?limit=15&sort=top&depth=1`;
     const res = await fetch(url, {
-      headers: { "User-Agent": "ReddProwl/1.0 (lead monitoring tool)" },
+      headers: { "User-Agent": "Prowlit/1.0 (lead monitoring tool)" },
       next: { revalidate: 300 },
     });
 

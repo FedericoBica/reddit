@@ -190,7 +190,7 @@
   },
   "auth": {
     "kicker": "Login",
-    "title": "Sign in to ReddProwl",
+    "title": "Sign in to Prowlit",
     "emailLabel": "Email",
     "submit": "Send magic link",
     "orContinueWith": "or continue with",

@@ -22,7 +22,7 @@ export type ScrapeNotificationEmailInput = {
 };
 
 export async function sendScrapeNotificationEmail(input: ScrapeNotificationEmailInput): Promise<void> {
-  const from = process.env.RESEND_FROM_EMAIL ?? "noreply@reddprowl.com";
+  const from = process.env.RESEND_FROM_EMAIL ?? "noreply@prowlit.com";
   const { to, projectName, type, count, projectUrl } = input;
 
   const labels: Record<typeof type, { subject: string; noun: string; path: string }> = {
@@ -51,7 +51,7 @@ export async function sendScrapeNotificationEmail(input: ScrapeNotificationEmail
   const { error } = await client.emails.send({
     from,
     to,
-    subject: `[ReddProwl] ${projectName} — ${subject}`,
+    subject: `[Prowlit] ${projectName} — ${subject}`,
     html,
   });
 

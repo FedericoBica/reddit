@@ -90,7 +90,7 @@ function fallbackAnalysis(website: ValidatedWebsite): CompanyAnalysis {
 
   return {
     companyName: name || website.hostname,
-    description: `${name || website.hostname} es una empresa digital que ayuda a sus clientes a resolver un problema específico con su producto o servicio. ReddProwl buscará en Reddit conversaciones con intención de compra, pedidos de recomendaciones y comparaciones relevantes para este negocio.`,
+    description: `${name || website.hostname} es una empresa digital que ayuda a sus clientes a resolver un problema específico con su producto o servicio. Prowlit buscará en Reddit conversaciones con intención de compra, pedidos de recomendaciones y comparaciones relevantes para este negocio.`,
   };
 }
 
@@ -106,7 +106,7 @@ export async function fetchWebsiteText(url: string): Promise<string> {
       signal: controller.signal,
       headers: {
         accept: "text/html,application/xhtml+xml,text/plain;q=0.8,*/*;q=0.5",
-        "user-agent": "Mozilla/5.0 (compatible; ReddProwl-bot/1.0)",
+        "user-agent": "Mozilla/5.0 (compatible; Prowlit-bot/1.0)",
       },
     });
 

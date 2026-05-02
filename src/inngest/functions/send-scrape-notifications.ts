@@ -54,7 +54,7 @@ export const sendScrapeNotifications = inngest.createFunction(
 
     if (!owner?.email) return { skipped: true, reason: "owner email not found" };
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://reddprowl.com";
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://prowlit.com";
     const projectUrl = `${appUrl}?projectId=${projectId}`;
 
     const results: { email?: string; telegram?: string } = {};
@@ -82,7 +82,7 @@ export const sendScrapeNotifications = inngest.createFunction(
       const plan = await getBillingPlanForUser(project.owner_id);
       if (plan.integrations.telegram) {
         const noun = type === "leads" ? "opportunities" : type === "searchbox" ? "Google results" : "mentions";
-        const msg = `<b>${project.name}</b> — ${count} new ${noun} found.\n\n<a href="${projectUrl}">View in ReddProwl</a>`;
+        const msg = `<b>${project.name}</b> — ${count} new ${noun} found.\n\n<a href="${projectUrl}">View in Prowlit</a>`;
         try {
           await sendTelegramMessage(telegramChatId, msg);
           results.telegram = "sent";

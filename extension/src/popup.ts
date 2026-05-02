@@ -24,7 +24,7 @@ async function refreshStatus() {
   const storage = await getStorage();
   if (!storage.token) {
     if (projectEl) projectEl.textContent = "Not connected";
-    if (statusEl) statusEl.textContent = "Connect the extension from ReddProwl, then open the side panel.";
+    if (statusEl) statusEl.textContent = "Connect the extension from Prowlit, then open the side panel.";
     if (openBtn) openBtn.disabled = false;
     return;
   }

@@ -1,7 +1,7 @@
-# ReddProwl Outbound System — Build Specification
+# Prowlit Outbound System — Build Specification
 
 > **Para:** Claude Code / Cursor
-> **Proyecto:** ReddProwl (`reddprowl.com`)
+> **Proyecto:** Prowlit (`prowlit.com`)
 > **Módulo:** Outbound System — Chrome Extension + Lead CRM dashboard
 > **Contexto previo:** El inbound system ya está implementado. Este prompt cubre SOLO el módulo Outbound, que consta de una Chrome Extension que envía DMs automatizados y un panel "Lead CRM" en el dashboard existente para gestionar las campañas y respuestas.
 
@@ -15,7 +15,7 @@ Este documento es la especificación completa de implementación. Seguí las fas
 
 ## 1. Visión del Módulo
 
-**Qué es:** La extensión es el brazo ejecutor del dashboard de ReddProwl. Los leads ya están clasificados por intent score (inbound), las menciones ya están rastreadas, la IA ya sabe generar respuestas. La extensión cierra el ciclo permitiendo al usuario enviar DMs directos a esos leads desde su propio navegador, usando su sesión de Reddit, sin exponer credenciales.
+**Qué es:** La extensión es el brazo ejecutor del dashboard de Prowlit. Los leads ya están clasificados por intent score (inbound), las menciones ya están rastreadas, la IA ya sabe generar respuestas. La extensión cierra el ciclo permitiendo al usuario enviar DMs directos a esos leads desde su propio navegador, usando su sesión de Reddit, sin exponer credenciales.
 
 **Diferencial vs competidores (RedReach, etc):** Los competidores son herramientas standalone. El usuario arma campañas a mano, sin contexto. Acá la extensión consume data clasificada del dashboard:
 
@@ -38,7 +38,7 @@ Este documento es la especificación completa de implementación. Seguí las fas
 Usar **Turborepo + pnpm workspaces**. Razón: Vercel lo mantiene, caché remoto gratis en Vercel, integración nativa con Next.js, estándar en SaaS modernos.
 
 ```
-reddprowl/
+prowlit/
 ├── apps/
 │   ├── web/              # Next.js dashboard (existente — solo agregamos el módulo Outbound)
 │   └── extension/        # Chrome Extension (MV3)
@@ -66,7 +66,7 @@ reddprowl/
 | **Estado extension** | Zustand | Liviano, funciona en extension context |
 | **Database** | Supabase (PostgreSQL) | Ya existe, agregamos tablas |
 | **Auth** | Supabase Auth | JWT del user, válido en extension y web |
-| **API validation** | Zod | Schemas en `@reddprowl/api-contracts` |
+| **API validation** | Zod | Schemas en `@prowlit/api-contracts` |
 | **IA (mensajes)** | OpenAI GPT-4o-mini | Generación de variantes de mensaje |
 | **Orquestación** | Inngest | Ya existe — jobs de polling de respuestas |
 | **Tipografía** | Outfit (Google Fonts) | Ya definido en brand kit |
@@ -88,7 +88,7 @@ EXTENSION_JWT_SECRET=    # clave separada para tokens de extensión
 
 **apps/extension/.env:**
 ```
-VITE_API_BASE_URL=https://app.reddprowl.com
+VITE_API_BASE_URL=https://app.prowlit.com
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
 ```
@@ -550,16 +550,16 @@ Return JSON: { variants: [{ id, template, preview }] }
 ```json
 {
   "manifest_version": 3,
-  "name": "ReddProwl Outbound",
-  "description": "Reddit outreach, powered by your ReddProwl leads.",
+  "name": "Prowlit Outbound",
+  "description": "Reddit outreach, powered by your Prowlit leads.",
   "version": "0.1.0",
-  "action": { "default_title": "ReddProwl" },
+  "action": { "default_title": "Prowlit" },
   "side_panel": { "default_path": "sidepanel.html" },
   "permissions": ["storage", "alarms", "tabs", "scripting", "sidePanel"],
   "host_permissions": [
     "https://www.reddit.com/*",
     "https://old.reddit.com/*",
-    "https://app.reddprowl.com/*"
+    "https://app.prowlit.com/*"
   ],
   "background": { "service_worker": "background.js", "type": "module" },
   "content_scripts": [
@@ -600,7 +600,7 @@ apps/extension/
 │   │   ├── main.tsx
 │   │   ├── App.tsx
 │   │   ├── components/
-│   │   │   ├── ConnectFlow.tsx   # Pantalla "conectar a ReddProwl"
+│   │   │   ├── ConnectFlow.tsx   # Pantalla "conectar a Prowlit"
 │   │   │   ├── CampaignList.tsx
 │   │   │   ├── CampaignDetail.tsx
 │   │   │   ├── ActiveProgress.tsx
@@ -621,8 +621,8 @@ apps/extension/
 
 ### 7.3 Flujo de conexión
 
-1. Usuario abre el side panel. Si no hay JWT en `chrome.storage.sync`, muestra pantalla "Conectar a ReddProwl".
-2. Botón "Conectar" abre `https://app.reddprowl.com/settings/extension` en nueva tab.
+1. Usuario abre el side panel. Si no hay JWT en `chrome.storage.sync`, muestra pantalla "Conectar a Prowlit".
+2. Botón "Conectar" abre `https://app.prowlit.com/settings/extension` en nueva tab.
 3. En el dashboard, el user hace click en "Generar token". El backend crea un `extension_connect_token` con TTL 5 min y lo muestra.
 4. El user copia el token y lo pega en la extensión (o usa deep link `chrome-extension://.../sidepanel.html?token=XXX`).
 5. La extensión llama `POST /api/ext/connect` con el connect token.
@@ -798,7 +798,7 @@ chrome.alarms.onAlarm.addListener(async (alarm) => {
 
 ```
 ┌─────────────────────────────────┐
-│  [Logo] ReddProwl        [user] │
+│  [Logo] Prowlit        [user] │
 ├─────────────────────────────────┤
 │                                 │
 │  📊 Quick Stats                 │
@@ -962,10 +962,10 @@ En el backend, usar `@upstash/ratelimit` (ya existe):
 
 ### 10.2 Terms of Service
 
-Agregar cláusulas en los ToS de ReddProwl:
+Agregar cláusulas en los ToS de Prowlit:
 1. El user es responsable del cumplimiento de Reddit's User Agreement y subreddit rules.
 2. Prohibido usar la extensión para spam, harassment o manipulación de votos.
-3. ReddProwl no se responsabiliza por bans de cuentas de Reddit.
+3. Prowlit no se responsabiliza por bans de cuentas de Reddit.
 4. El user acepta los límites de plan.
 
 Al generar un connect token la primera vez, el user debe aceptar estos ToS específicos del outbound (checkbox explícito).

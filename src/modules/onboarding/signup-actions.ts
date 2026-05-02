@@ -158,7 +158,7 @@ export async function createProjectFromCompanyProfile(formData: FormData) {
   }
 
   const project = await createProject({
-    name: hostname || "ReddProwl project",
+    name: hostname || "Prowlit project",
     websiteUrl: website,
     valueProposition: description,
     primaryLanguage: "en",

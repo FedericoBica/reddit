@@ -190,7 +190,7 @@
   },
   "auth": {
     "kicker": "Login",
-    "title": "Ingresá a ReddProwl",
+    "title": "Ingresá a Prowlit",
     "emailLabel": "Email",
     "submit": "Enviar magic link",
     "orContinueWith": "o continuá con",

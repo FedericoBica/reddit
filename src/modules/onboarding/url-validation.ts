@@ -71,5 +71,5 @@ export function generateCompanyDescription(hostname: string) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 
-  return `${name || hostname} ayuda a clientes a resolver un problema específico con una solución digital. ReddProwl usará esta descripción para detectar conversaciones con intención de compra, comparaciones y pedidos de recomendación en Reddit.`;
+  return `${name || hostname} ayuda a clientes a resolver un problema específico con una solución digital. Prowlit usará esta descripción para detectar conversaciones con intención de compra, comparaciones y pedidos de recomendación en Reddit.`;
 }

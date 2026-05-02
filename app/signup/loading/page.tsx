@@ -7,7 +7,7 @@ import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { LoadingProgress } from "./loading-progress";
 
 export const metadata: Metadata = {
-  title: "Preparando ReddProwl",
+  title: "Preparando Prowlit",
 };
 
 type LoadingPageProps = {

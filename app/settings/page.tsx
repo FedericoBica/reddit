@@ -71,6 +71,8 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
   const redditKeywords = keywords.filter((k) => k.type !== "competitor" && k.type !== "searchbox");
   const activeKeywords = redditKeywords.filter((k) => k.is_active);
   const activeSearchboxKeywords = searchboxKeywords.filter((k) => k.is_active);
+  const allContentKeywords = keywords.filter((k) => k.type !== "competitor");
+  const allActiveContentKeywords = allContentKeywords.filter((k) => k.is_active);
   const activeSubreddits = subreddits.filter((s) => s.is_active);
   const activeCompetitors = competitorKeywords.filter((k) => k.is_active);
   const activeXKeywords = xKeywords.filter((k) => k.is_active);
@@ -87,7 +89,7 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <p className="page-kicker">{t("kicker")}</p>
             <h1 className="page-title">{currentProject.name}</h1>
             <p className="page-copy">
-              {activeKeywords.length} active keywords · {activeCompetitors.length} competitors · {activeSubreddits.length} communities monitored{billingPlan.xEnabled ? ` · ${activeXKeywords.length} X rules` : ""}
+              {allActiveContentKeywords.length} active keywords · {activeCompetitors.length} competitors · {activeSubreddits.length} communities monitored{billingPlan.xEnabled ? ` · ${activeXKeywords.length} X rules` : ""}
             </p>
           </div>
         </header>
@@ -164,30 +166,26 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
           {selectedTab === "keywords" && (
             <div style={{ display: "grid", gap: 16 }}>
               <SettingsSection
-                title="Reddit Keywords"
-                description="AI suggested and custom terms used to discover keyword opportunities on Reddit. Toggle, edit, delete or add terms."
-                badge={`${activeKeywords.length} active`}
+                title="Keywords"
+                description="All terms used to discover opportunities. Reddit keywords match posts directly via the Reddit API. Searchbox queries find high-ranking Reddit threads via Google."
+                badge={`${allActiveContentKeywords.length} active`}
               >
                 <KeywordGroup title="Suggested by AI" keywords={redditKeywords.filter((k) => k.type === "ai_suggested")} projectId={currentProject.id} />
                 <KeywordGroup title="Custom" keywords={redditKeywords.filter((k) => k.type === "custom")} projectId={currentProject.id} editable />
-                <form action={addKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <input type="hidden" name="projectId" value={currentProject.id} />
-                  <input className="settings-input" name="term" placeholder="Add custom keyword" required style={{ flex: 1 }} />
-                  <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
-                </form>
-              </SettingsSection>
+                <KeywordGroup title="Searchbox" keywords={searchboxKeywords} projectId={currentProject.id} editable />
 
-              <SettingsSection
-                title="Searchbox Keywords"
-                description="Short Google search queries used to find high-ranking Reddit threads via Google. Optimized for search volume, not conversational matching."
-                badge={`${activeSearchboxKeywords.length} active`}
-              >
-                <KeywordGroup title="Suggested by AI" keywords={searchboxKeywords.filter((k) => k.type === "searchbox")} projectId={currentProject.id} editable />
-                <form action={addSearchboxKeywordFromForm} style={{ display: "flex", gap: 8, marginTop: 16 }}>
-                  <input type="hidden" name="projectId" value={currentProject.id} />
-                  <input className="settings-input" name="term" placeholder='Example: best CRM for small business' required style={{ flex: 1 }} />
-                  <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
-                </form>
+                <div style={{ display: "grid", gap: 8, marginTop: 16, borderTop: "1px solid #EDEFF1", paddingTop: 14 }}>
+                  <form action={addKeywordFromForm} style={{ display: "flex", gap: 8 }}>
+                    <input type="hidden" name="projectId" value={currentProject.id} />
+                    <input className="settings-input" name="term" placeholder="Add Reddit keyword" required style={{ flex: 1 }} />
+                    <button type="submit" className="settings-btn-primary" style={{ flexShrink: 0 }}>Add</button>
+                  </form>
+                  <form action={addSearchboxKeywordFromForm} style={{ display: "flex", gap: 8 }}>
+                    <input type="hidden" name="projectId" value={currentProject.id} />
+                    <input className="settings-input" name="term" placeholder='Add searchbox query — e.g. "best CRM for small business"' required style={{ flex: 1 }} />
+                    <button type="submit" className="settings-btn-secondary" style={{ flexShrink: 0 }}>Add Searchbox</button>
+                  </form>
+                </div>
               </SettingsSection>
 
               {billingPlan.xEnabled ? (
@@ -655,8 +653,12 @@ function KeywordRow({
   projectId: string;
   editable?: boolean;
 }) {
-  const typeBadgeColor = keyword.type === "ai_suggested" ? "#7C7C83" : "#1A1A1B";
-  const typeLabel = keyword.type === "ai_suggested" ? "AI" : keyword.type === "competitor" ? "Comp" : "Custom";
+  const typeBadgeColor = keyword.type === "ai_suggested" ? "#7C7C83" : keyword.type === "searchbox" ? "#0EA5E9" : "#1A1A1B";
+  const typeLabel =
+    keyword.type === "ai_suggested" ? "AI" :
+    keyword.type === "competitor" ? "Comp" :
+    keyword.type === "searchbox" ? "Search" :
+    "Custom";
 
   return (
     <div

@@ -1,4 +1,4 @@
-# ReddProwl Outbound System — Product + Architecture Prompt (Project-Adapted)
+# Prowlit Outbound System — Product + Architecture Prompt (Project-Adapted)
 
 > Para usar como prompt maestro de diseño e implementación.
 > Este documento reemplaza una lectura literal de `Outbound_BuildSpec.md` y adapta el módulo Outbound al estado real del proyecto actual.
@@ -8,12 +8,12 @@
 
 ## 0. Objetivo
 
-Diseñar e implementar el módulo **Outbound** de ReddProwl sobre el proyecto actual.
+Diseñar e implementar el módulo **Outbound** de Prowlit sobre el proyecto actual.
 
 El sistema debe permitir:
 
 - crear campañas outbound desde una **Chrome Extension**
-- usar el contexto ya existente de ReddProwl (leads inbound, intent score, proyecto activo, billing, membresía)
+- usar el contexto ya existente de Prowlit (leads inbound, intent score, proyecto activo, billing, membresía)
 - ejecutar DMs usando la sesión real de Reddit del usuario en su navegador
 - registrar resultados en el backend
 - mostrar campañas, contactos y respuestas en el dashboard actual
@@ -101,7 +101,7 @@ Hacerlo así:
 
 ## 2. Visión del producto
 
-ReddProwl hoy detecta conversaciones con intención en Reddit.
+Prowlit hoy detecta conversaciones con intención en Reddit.
 
 Outbound agrega la capa de ejecución:
 
@@ -174,7 +174,7 @@ La extensión puede tener su propio build tool si hace falta, pero sin forzar mo
 
 La extensión debe:
 
-- conectar con ReddProwl
+- conectar con Prowlit
 - crear campañas outbound
 - iniciar/pausar campañas
 - ejecutar envíos en Reddit

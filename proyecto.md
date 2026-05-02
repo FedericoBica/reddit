@@ -1,6 +1,6 @@
 
 
-**REDDIT LEAD RADAR**
+\*\*Prowlit\*\*
 
 Documento de Arquitectura y Producto
 
@@ -20,7 +20,7 @@ Las herramientas existentes (GummySearch, Syften, F5Bot) resuelven parcialmente 
 
 ## **1.2 Solución**
 
-Reddit Lead Radar es una plataforma SaaS que automatiza el ciclo completo de venta en Reddit:
+Prowlit es una plataforma SaaS que automatiza el ciclo completo de venta en Reddit:
 
 1. Descubrimiento inteligente de leads basado en intención de compra (no solo keywords).
 
@@ -1171,4 +1171,4 @@ Apple Developer Account: $99/anio. Google Play Developer: $25 (unico pago). Capg
 | Costos de IA escalan rápido | Baja | Alto — márgenes negativos | Cache semántico \+ metered billing \+ alertas de costo. |
 | Baja retención | Media | Alto — negocio no viable | Pipeline con ROI visible. Churn prediction \+ reengagement. |
 
-*Fin del Documento — Reddit Lead Radar v2.4*
+*Fin del Documento — Prowlit v2.4*

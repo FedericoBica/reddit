@@ -39,7 +39,7 @@ const DEFAULT_MESSAGE_VARIANTS: Record<DmCampaignType, string[]> = {
   ],
 };
 
-const PLACEHOLDER_TOKEN_PREFIX = "__REDDPROWL_TEMPLATE_TOKEN_";
+const PLACEHOLDER_TOKEN_PREFIX = "__PROWLIT_TEMPLATE_TOKEN_";
 
 export function filterSeedableLeadCandidates(
   leads: SeedLeadCandidate[],

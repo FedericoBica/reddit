@@ -5,7 +5,7 @@ import "@/app/landing.css";
 
 export const metadata: Metadata = {
   title: "About",
-  description: "Why we built ReddProwl and what we believe about honest, human-led growth.",
+  description: "Why we built Prowlit and what we believe about honest, human-led growth.",
 };
 
 export default function AboutPage() {
@@ -27,7 +27,7 @@ export default function AboutPage() {
       {/* Hero */}
       <section className="section-pad" style={{ paddingBottom: 48 }}>
         <div className="wrap" style={{ maxWidth: 760 }}>
-          <span className="eyebrow">About ReddProwl</span>
+          <span className="eyebrow">About Prowlit</span>
           <h1
             className="h-section"
             style={{ marginTop: 20, fontSize: "clamp(44px, 6vw, 80px)", lineHeight: 1 }}
@@ -35,7 +35,7 @@ export default function AboutPage() {
             We built the tool <em>we wished existed</em>.
           </h1>
           <p className="sub" style={{ marginTop: 24, fontSize: 20 }}>
-            ReddProwl started as a side project. We were spending hours every week manually
+            Prowlit started as a side project. We were spending hours every week manually
             scanning Reddit for threads where our product was relevant — and missing most of
             them. We built a scraper. Then a classifier. Then a reply helper. Then we realised
             other founders had the same problem.
@@ -68,7 +68,7 @@ export default function AboutPage() {
               you banned requires reading the room in a way that generic AI tools completely miss.
             </p>
             <p>
-              That&apos;s the gap ReddProwl fills: find the right threads automatically, then help
+              That&apos;s the gap Prowlit fills: find the right threads automatically, then help
               you say something real.
             </p>
           </div>
@@ -94,7 +94,7 @@ export default function AboutPage() {
               {
                 n: "01",
                 title: "Humans in the loop.",
-                body: "ReddProwl never posts on your behalf. We surface opportunities, draft replies, and flag risks. You decide what goes live — from your own account. That's not a limitation; it's the only thing that actually works long-term.",
+                body: "Prowlit never posts on your behalf. We surface opportunities, draft replies, and flag risks. You decide what goes live — from your own account. That's not a limitation; it's the only thing that actually works long-term.",
               },
               {
                 n: "02",

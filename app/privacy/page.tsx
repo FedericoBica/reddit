@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy – ReddProwl",
+  title: "Privacy Policy – Prowlit",
 };
 
 const S = {
@@ -19,15 +19,15 @@ export default function PrivacyPage() {
   return (
     <main style={S.page}>
       <div style={S.inner}>
-        <p style={S.eyebrow}>ReddProwl</p>
+        <p style={S.eyebrow}>Prowlit</p>
         <h1 style={S.h1}>Privacy Policy</h1>
         <p style={S.date}>Last updated: May 2, 2026</p>
 
         <section style={S.sections}>
           <div>
-            <h2 style={S.h2}>What ReddProwl is</h2>
+            <h2 style={S.h2}>What Prowlit is</h2>
             <p>
-              ReddProwl is a SaaS platform that monitors Reddit for buyer-intent posts and brand
+              Prowlit is a SaaS platform that monitors Reddit for buyer-intent posts and brand
               mentions, classifies them with AI, and helps you draft human-like replies. We process
               publicly available Reddit content on your behalf — we do not post to Reddit
               automatically.
@@ -83,7 +83,7 @@ export default function PrivacyPage() {
           <div>
             <h2 style={S.h2}>Third-party services</h2>
             <p>
-              ReddProwl uses the following sub-processors to deliver the service:
+              Prowlit uses the following sub-processors to deliver the service:
             </p>
             <ul style={S.ul}>
               <li>
@@ -111,7 +111,7 @@ export default function PrivacyPage() {
           <div>
             <h2 style={S.h2}>Cookies and local storage</h2>
             <p>
-              ReddProwl uses cookies and browser storage strictly for authentication (session
+              Prowlit uses cookies and browser storage strictly for authentication (session
               tokens) and product functionality (e.g. remembering your active project). We do not
               use third-party tracking cookies or behavioral analytics cookies.
             </p>

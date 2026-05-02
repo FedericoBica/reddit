@@ -1,16 +1,16 @@
 import { getStorage, setStorage } from "./storage";
 import { getNextQueueItem, reportQueueResult, syncInboxMessages, listCampaigns, getCampaign, addContactsBatch, syncRedditAccount } from "./api";
 
-const ALARM_NAME = "reddprowl-runner";
+const ALARM_NAME = "prowlit-runner";
 const ALARM_PERIOD_MINUTES = 1;
 
-const INBOX_ALARM_NAME = "reddprowl-inbox-poll";
+const INBOX_ALARM_NAME = "prowlit-inbox-poll";
 const INBOX_ALARM_PERIOD_MINUTES = 5;
 
-const SUBREDDIT_ALARM_NAME = "reddprowl-subreddit-poll";
+const SUBREDDIT_ALARM_NAME = "prowlit-subreddit-poll";
 const SUBREDDIT_ALARM_PERIOD_MINUTES = 10;
 
-const ACCOUNT_VERIFY_ALARM_NAME = "reddprowl-account-verify";
+const ACCOUNT_VERIFY_ALARM_NAME = "prowlit-account-verify";
 const ACCOUNT_VERIFY_PERIOD_MINUTES = 15;
 
 chrome.alarms.create(ALARM_NAME, { periodInMinutes: ALARM_PERIOD_MINUTES });
@@ -45,7 +45,7 @@ chrome.action.onClicked.addListener(async (tab) => {
   try {
     await sendMessageWithContentFallback(tabId, { type: "TOGGLE_DOCK" });
   } catch (err) {
-    console.error("[ReddProwl action]", err);
+    console.error("[Prowlit action]", err);
   }
 });
 
@@ -95,7 +95,7 @@ async function runCycle(): Promise<void> {
 
     chrome.runtime.sendMessage({ type: "RUNNER_TICK", success, username: item.contact.reddit_username }).catch(() => {});
   } catch (err) {
-    console.error("[ReddProwl runner]", err);
+    console.error("[Prowlit runner]", err);
   }
 }
 
@@ -127,13 +127,13 @@ async function pollInbox(): Promise<void> {
     }
 
     const result = await syncInboxMessages(storage.token, response.messages);
-    console.log("[ReddProwl inbox]", result);
+    console.log("[Prowlit inbox]", result);
 
     if (response.newAfterFullname) {
       await chrome.storage.local.set({ inboxCursor: response.newAfterFullname });
     }
   } catch (err) {
-    console.error("[ReddProwl inbox]", err);
+    console.error("[Prowlit inbox]", err);
   }
 }
 
@@ -188,9 +188,9 @@ async function pollSubreddits(): Promise<void> {
         await chrome.storage.local.set({ [cursorKey]: result.after });
       }
 
-      console.log(`[ReddProwl subreddit] r/${subreddit} → ${result.authors.length} authors`);
+      console.log(`[Prowlit subreddit] r/${subreddit} → ${result.authors.length} authors`);
     } catch (err) {
-      console.error(`[ReddProwl subreddit] campaign ${campaign.id}`, err);
+      console.error(`[Prowlit subreddit] campaign ${campaign.id}`, err);
     }
   }
 }

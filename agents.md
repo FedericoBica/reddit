@@ -1,8 +1,8 @@
-# Reddit Lead Radar — Full System Agent
+# Prowlit — Full System Agent
 
 ## 1. Product Definition
 
-Reddit Lead Radar is a full-cycle acquisition system for Reddit.
+Prowlit is a full-cycle acquisition system for Reddit.
 
 It is NOT a simple scraper. It is a **multi-module intelligence system** that:
 
