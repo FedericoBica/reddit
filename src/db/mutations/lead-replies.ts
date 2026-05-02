@@ -34,12 +34,24 @@ export async function requestLeadReplyGeneration(input: RequestLeadReplyGenerati
     })
     .eq("project_id", parsed.projectId)
     .eq("id", parsed.leadId)
-    .in("reply_generation_status", ["idle", "failed"])
+    .in("reply_generation_status", ["idle", "failed", "ready"])
     .select("id")
     .maybeSingle();
 
   if (error) {
     throw new Error(`Failed to request lead reply generation: ${error.message}`);
+  }
+
+  if (data) {
+    const { error: deleteError } = await supabase
+      .from("lead_replies")
+      .delete()
+      .eq("project_id", parsed.projectId)
+      .eq("lead_id", parsed.leadId);
+
+    if (deleteError) {
+      throw new Error(`Failed to clear old replies before regeneration: ${deleteError.message}`);
+    }
   }
 
   return Boolean(data);

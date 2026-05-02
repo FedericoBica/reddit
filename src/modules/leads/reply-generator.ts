@@ -252,12 +252,12 @@ BANNED STRUCTURES:
 function lengthInstruction(length: string): string {
   if (length === "short") {
     return [
-      "LENGTH — Short (1-2 sentences):",
-      "- Maximum 2 sentences. This is a tight constraint — do not exceed it.",
+      "SHORT: 1-2 sentences maximum. Hard limit — do not write a third sentence under any circumstance.",
+      "- Ignore any paragraph counts mentioned in the style rules. Those are overridden by this limit.",
       "- Pick the single most relevant point and make it count.",
-      "- If mentioning the product, it must fit naturally in those 2 sentences.",
+      "- If mentioning the product, it must fit naturally within those 2 sentences.",
       "- No warm-up, no closing, no questions — just the point.",
-      "Example of correct length: \"The Amazon SP-API requires seller consent per account which is the main integration friction — most teams start with report uploads and layer live sync later. [Product] does this automatically if you want a reference: [URL]\"",
+      "Example: \"The Amazon SP-API requires seller consent per account — most teams start with report uploads and layer live sync later. [Product] does this automatically if you want a reference: [URL]\"",
     ].join("\n");
   }
 
@@ -302,9 +302,12 @@ function buildSystemPrompt(style: ReplyStyle, replyLength: string): string {
     "- If the product doesn't fit what the user needs, say so or omit the mention entirely.",
     "- Do not mention that you are an AI.",
     "",
-    styleInstruction(style),
-    "",
+    "═══════════════════════════════════════════════",
+    "LENGTH — HIGHEST PRIORITY (overrides any paragraph count in the style rules below)",
+    "═══════════════════════════════════════════════",
     lengthInstruction(replyLength),
+    "",
+    styleInstruction(style),
   ].join("\n");
 }
 

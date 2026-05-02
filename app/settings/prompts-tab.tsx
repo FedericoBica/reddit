@@ -39,6 +39,7 @@ export function PromptsTab({
   defaultTone: string;
 }) {
   const [tone, setTone] = useState(defaultTone);
+  const [replyLength, setReplyLength] = useState<ReplyLength>(defaultReplyLength);
   const [activePersona, setActivePersona] = useState<string | null>(null);
 
   function applyPersona(description: string, name: string) {
@@ -74,7 +75,7 @@ export function PromptsTab({
             <label style={{ fontSize: 12, fontWeight: 600, color: "#7C7C83" }}>Reply length</label>
             <div style={{ display: "flex", gap: 8 }}>
               {(["short", "medium", "long"] as ReplyLength[]).map((opt) => {
-                const selected = defaultReplyLength === opt;
+                const selected = replyLength === opt;
                 return (
                   <label
                     key={opt}
@@ -98,7 +99,8 @@ export function PromptsTab({
                       type="radio"
                       name="replyLength"
                       value={opt}
-                      defaultChecked={selected}
+                      checked={selected}
+                      onChange={() => setReplyLength(opt)}
                       style={{ display: "none" }}
                     />
                     {REPLY_LENGTH_LABELS[opt]}
