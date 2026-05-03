@@ -38,6 +38,7 @@ export async function updateLeadStatusFromForm(formData: FormData) {
 
   revalidatePath("/dashboard");
   revalidatePath("/pipeline");
+  revalidatePath("/feed");
   revalidatePath(`/leads/${leadId}`);
   redirect(returnTo);
 }
@@ -53,6 +54,7 @@ export async function generateLeadRepliesFromForm(formData: FormData) {
     await assertAiReplyGenerationAvailable(user.id);
   } catch (error) {
     await failLeadReplyGeneration(projectId, leadId, error instanceof Error ? error.message : "AI reply limit reached.");
+    revalidatePath("/feed");
     revalidatePath(`/leads/${leadId}`);
     redirect(returnTo);
   }
@@ -83,6 +85,7 @@ export async function generateLeadRepliesFromForm(formData: FormData) {
     throw error;
   }
 
+  revalidatePath("/feed");
   revalidatePath(`/leads/${leadId}`);
   redirect(returnTo);
 }
@@ -102,6 +105,7 @@ export async function useLeadReplyFromForm(formData: FormData) {
   });
 
   revalidatePath("/dashboard");
+  revalidatePath("/feed");
   revalidatePath(`/leads/${leadId}`);
   redirect(returnTo);
 }
