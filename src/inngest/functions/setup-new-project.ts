@@ -10,6 +10,8 @@ import {
   getProjectById,
 } from "@/db/queries/projects";
 import { generateProjectSuggestions } from "@/modules/projects/suggestion-generator";
+import { generateXKeywords } from "@/modules/x/x-keyword-generator";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export const setupNewProject = inngest.createFunction(
   {
@@ -75,6 +77,27 @@ export const setupNewProject = inngest.createFunction(
       } catch (err) {
         // Suggestions failed — project is still marked completed, backfill will skip (no keywords)
         console.error("setup-new-project: suggestion generation failed", err);
+      }
+    });
+
+    await step.run("generate-x-keywords", async () => {
+      try {
+        const { keywords } = await generateXKeywords(project);
+        if (keywords.length === 0) return;
+
+        const supabase = createSupabaseAdminClient();
+        const rows = keywords.map((query) => ({
+          project_id: projectId,
+          query: query.trim().replace(/\s+/g, " "),
+          is_active: true,
+        }));
+
+        await supabase
+          .from("x_keywords")
+          .upsert(rows, { onConflict: "project_id,query", ignoreDuplicates: true });
+      } catch (err) {
+        // Non-critical — project continues without X keywords
+        console.error("setup-new-project: X keyword generation failed", err);
       }
     });
 
