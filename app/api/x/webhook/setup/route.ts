@@ -15,8 +15,13 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const webhooks = await listWebhooks();
-  return NextResponse.json({ webhooks });
+  try {
+    const webhooks = await listWebhooks();
+    return NextResponse.json({ webhooks });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }
 
 export async function POST(request: Request) {
@@ -24,6 +29,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await setupXWebhookStream();
-  return NextResponse.json({ ok: true, ...result });
+  try {
+    const result = await setupXWebhookStream();
+    return NextResponse.json({ ok: true, ...result });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
 }

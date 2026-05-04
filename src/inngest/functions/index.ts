@@ -11,5 +11,6 @@ import { setupNewProject } from "./setup-new-project";
 import { processXPost } from "./process-x-post";
 import { syncXStreamRules } from "./sync-x-stream-rules";
 import { generateXReply } from "./generate-x-reply";
+import { publishXScheduledPosts } from "./publish-x-scheduled-posts";
 
-export const functions = [hourlyScheduler, scrapeGlobalProjects, generateLeadReplies, sendLeadPushNotification, sendScrapeNotifications, backfillNewProject, searchboxWeeklyScan, setupNewProject, searchboxForProject, scrapeBrandMentions, processXPost, syncXStreamRules, generateXReply];
+export const functions = [hourlyScheduler, scrapeGlobalProjects, generateLeadReplies, sendLeadPushNotification, sendScrapeNotifications, backfillNewProject, searchboxWeeklyScan, setupNewProject, searchboxForProject, scrapeBrandMentions, processXPost, syncXStreamRules, generateXReply, publishXScheduledPosts];
