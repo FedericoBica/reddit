@@ -1240,6 +1240,7 @@ function Footer({ t, locale }: { t: Translations; locale: Locale }) {
 const LANG_OPTIONS: { locale: Locale; flag: string; label: string }[] = [
   { locale: "en", flag: "🇺🇸", label: "English" },
   { locale: "es", flag: "🇪🇸", label: "Español" },
+  { locale: "pt", flag: "🇧🇷", label: "Português" },
 ];
 
 function LangSwitcher({ locale }: { locale: Locale }) {

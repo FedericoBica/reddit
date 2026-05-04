@@ -1,0 +1,54 @@
+# RedProwl
+
+> RedProwl is a SaaS platform that monitors Reddit and X (Twitter) for buyer-intent signals and helps B2B teams reply authentically to convert leads — without getting banned.
+
+## What it does
+
+RedProwl continuously scans Reddit posts and X threads for keywords that match a user's product. It uses AI to score each post for buying intent (0–100), classify the opportunity type (active buying, competitor comparison, pain expression), and generate 3 human-sounding reply variants in different tones. Users review and post replies from their own accounts.
+
+## Core workflow
+
+1. User adds their website and top 3 competitors
+2. RedProwl AI generates relevant keywords and subreddits
+3. Background jobs scan Reddit + X every few hours
+4. High-intent posts appear in the feed, ranked by score
+5. User picks a reply variant, opens Reddit, posts it
+
+## Key capabilities
+
+- Keyword-based Reddit and X monitoring with intent scoring
+- AI-powered lead classification (competitor_comparison, active_buying, pain_expression, existing_user, low_intent)
+- Reply generator with 3 style variants (engaging, direct, balanced) in any language
+- Brand mention tracking (your brand + competitors)
+- Multi-project support for agencies and multi-product companies
+- Human-in-the-loop: never posts automatically — user always has final control
+
+## What it is NOT
+
+- Not a bot that posts automatically
+- Not a scraper that violates Reddit ToS
+- Not a mass-DM tool
+- Not an SEO rank tracker
+
+## Pricing
+
+Three plans: Startup, Growth, Professional. Free trial available. No credit card required to start.
+
+## Supported languages
+
+English, Spanish, Portuguese. Interface and AI-generated replies adapt to the user's selected language.
+
+## Technology
+
+Built on Next.js (App Router), Supabase, Inngest for background jobs, OpenAI for classification and reply generation.
+
+## Company
+
+RedProwl — helping founders and B2B marketing teams find and convert buying-intent conversations on Reddit and X before competitors do.
+
+## Contact / Links
+
+- App: /login
+- About: /about
+- Privacy: /privacy
+- Terms: /terms

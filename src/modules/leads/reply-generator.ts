@@ -355,7 +355,8 @@ function buildUserPrompt(
     `Reply length: ${replyLength.toUpperCase()} — enforce the length rule strictly from the system prompt.\n` +
     `Follow the intent strategy above — it determines how prominently to feature the product.\n` +
     `Do not use any opener from the BANNED OPENERS list. Start with something specific to this post.\n` +
-    `Do not use any of the anti-patterns listed.`,
+    `Do not use any of the anti-patterns listed.\n` +
+    `LANGUAGE: Write the reply in ${resolveLanguageName(project.primary_language)}. Every word of the reply must be in that language.`,
   );
 
   return lines.join("\n");
@@ -543,4 +544,20 @@ function normalizeToneKey(tone: string | null): string | null {
     .toLocaleLowerCase()
     .replace(/^template:/, "")
     .replace(/[\s-]+/g, "_");
+}
+
+function resolveLanguageName(lang: string | null): string {
+  switch ((lang ?? "en").toLowerCase()) {
+    case "pt":
+    case "pt-br":
+      return "Brazilian Portuguese";
+    case "es":
+      return "Spanish";
+    case "fr":
+      return "French";
+    case "de":
+      return "German";
+    default:
+      return "English";
+  }
 }
