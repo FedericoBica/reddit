@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { BrandLink } from "@/app/components/logo";
 import { Card } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
@@ -15,6 +16,7 @@ type LoadingPageProps = {
 };
 
 export default async function SignupLoadingPage({ searchParams }: LoadingPageProps) {
+  const t = await getTranslations("signup.loading");
   const user = await getCurrentUser();
   const params = await searchParams;
   const projectId = params?.projectId ?? "";
@@ -39,13 +41,13 @@ export default async function SignupLoadingPage({ searchParams }: LoadingPagePro
           <div className="signup-loader" />
           <div className="sw-eyebrow">
             <span className="sw-eyebrow-dot" />
-            Setting up your prowl
+            {t("eyebrow")}
           </div>
           <h1 className="signup-wizard-title" style={{ fontSize: 34, marginTop: 8 }}>
-            Learning about you<br />and your <em>competitors.</em>
+            {t("title1")}<br />{t("title2")} <em>{t("titleEm")}</em>
           </h1>
           <p className="signup-wizard-copy">
-            This takes a few seconds — we&apos;re finding the best Reddit discussions for your product.
+            {t("description")}
           </p>
           <LoadingProgress projectId={projectId} />
         </div>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { AutoRefresh } from "@/app/components/auto-refresh";
 import { ReplyEditor } from "@/app/components/reply-editor";
 import { DashboardShell } from "@/app/components/dashboard-shell";
@@ -30,6 +31,9 @@ type SearchboxPageProps = {
 };
 
 export default async function SearchboxPage({ searchParams }: SearchboxPageProps) {
+  const t = await getTranslations("searchbox");
+  const tStatus = await getTranslations("status");
+  const locale = await getLocale();
   const user = await requireUser("/dashboard");
   const params = await searchParams;
   const projectState = await resolveCurrentProject(params?.projectId);
@@ -93,22 +97,22 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
 
       <section className="searchbox-workspace">
         <header className="feed-page-header">
-          <h1 className="feed-page-title">Search Box</h1>
+          <h1 className="feed-page-title">{t("title")}</h1>
           <p className="feed-page-desc">
-            High-intent Reddit threads found via Google — posts where people are actively searching for a solution like yours. Ranked by relevance to your keywords so the best leads surface first.
+            {t("description")}
           </p>
         </header>
 
         <div className="searchbox-body">
-          <section className="opportunity-column" aria-label="Searchbox results">
+          <section className="opportunity-column" aria-label={t("resultsAria")}>
             <div className="feed-col-header">
               <div className="feed-col-meta">
-                <span>{displayResults.length} posts found · sorted by {sort === "recent" ? "date" : "intent"}</span>
+                <span>{t("resultsFound", { count: displayResults.length, sort: sort === "recent" ? t("sortDate") : t("sortIntent") })}</span>
                 <Link
                   href={`/dashboard?projectId=${currentProject.id}&sort=${sort === "recent" ? "relevance" : "recent"}`}
                   style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none" }}
                 >
-                  {sort === "recent" ? "Sort by Intent" : "Sort by Recent"}
+                  {sort === "recent" ? t("sortByIntent") : t("sortByRecent")}
                 </Link>
               </div>
             </div>
@@ -121,10 +125,18 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
                     result={result}
                     active={result.id === selectedResult?.id}
                     baseHref={baseHref(`&resultId=${result.id}`)}
+                    locale={locale}
+                    commentsWord={t("commentsWord")}
+                    relevanceLabel={t("relevance")}
+                    statusLabels={{
+                      new: tStatus("new"),
+                      replied: tStatus("replied"),
+                      dismissed: t("dismissed"),
+                    }}
                   />
                 ))
               ) : (
-                <EmptyState isNew={isNew} />
+                <EmptyState isNew={isNew} t={t} />
               )}
             </div>
 
@@ -158,6 +170,8 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
             projectId={currentProject.id}
             replyLength={(currentProject.reply_length ?? "medium") as import("@/db/schemas/domain").ReplyLength}
             isNew={isNew}
+            t={t}
+            locale={locale}
           />
         </div>
       </section>
@@ -171,10 +185,18 @@ function ResultCard({
   result,
   active,
   baseHref,
+  locale,
+  commentsWord,
+  relevanceLabel,
+  statusLabels,
 }: {
   result: SearchboxResultDTO;
   active: boolean;
   baseHref: string;
+  locale: string;
+  commentsWord: string;
+  relevanceLabel: string;
+  statusLabels: { new: string; replied: string; dismissed: string };
 }) {
   return (
     <Link href={baseHref} className={`opportunity-card${active ? " opportunity-card-active" : ""}`}>
@@ -186,8 +208,8 @@ function ResultCard({
           }}
         />
         <span>r/{result.subreddit}</span>
-        <span>{formatRelative(result.created_at)}</span>
-        {result.reddit_num_comments !== null && <span>{result.reddit_num_comments} comments</span>}
+        <span>{formatRelative(result.created_at, locale)}</span>
+        {result.reddit_num_comments !== null && <span>{result.reddit_num_comments} {commentsWord}</span>}
         <span style={{ display: "inline-flex", padding: "1px 6px", borderRadius: 3, fontSize: 9, fontWeight: 700, background: "#E5EAFF", color: "#7193FF" }}>
           Google #{result.google_rank}
         </span>
@@ -198,7 +220,7 @@ function ResultCard({
       {result.classification_reason && (
         <div>
           <span style={{ fontSize: 10, fontWeight: 700, color: "#46A758" }}>
-            Relevance: {result.intent_score ?? "–"}
+            {relevanceLabel}: {result.intent_score ?? "–"}
           </span>
           <p style={{ fontSize: 11, color: "#46A758", fontWeight: 500, lineHeight: 1.4, marginTop: 2 }}>
             {result.classification_reason.slice(0, 120)}
@@ -208,7 +230,7 @@ function ResultCard({
 
       {(result.status !== "new" || result.reddit_score !== null) && (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-          {result.status !== "new" ? <StatusPill status={result.status} /> : <span />}
+          {result.status !== "new" ? <StatusPill status={result.status} labels={statusLabels} /> : <span />}
           {result.reddit_score !== null && (
             <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 700 }}>▲ {result.reddit_score}</span>
           )}
@@ -227,6 +249,8 @@ function ResultDetail({
   projectId,
   replyLength,
   isNew,
+  t,
+  locale,
 }: {
   result: SearchboxResultDTO | null;
   lead: LeadDTO | null;
@@ -234,12 +258,14 @@ function ResultDetail({
   projectId: string;
   replyLength: import("@/db/schemas/domain").ReplyLength;
   isNew?: boolean;
+  t: Awaited<ReturnType<typeof getTranslations>>;
+  locale: string;
 }) {
   if (!result) {
     return (
       <section className="detail-pane">
         <div className="detail-content">
-          <EmptyState isNew={isNew} />
+          <EmptyState isNew={isNew} t={t} />
         </div>
       </section>
     );
@@ -251,7 +277,7 @@ function ResultDetail({
   const redditUrl = toRedditUrl(result.permalink);
 
   return (
-    <section className="detail-pane" aria-label="Detalle del resultado">
+    <section className="detail-pane" aria-label={t("detailAria")}>
       {/* Topbar */}
       <div className="detail-topbar">
         <div className="opportunity-meta">
@@ -259,7 +285,7 @@ function ResultDetail({
             background: result.status === "new" ? "#FF4500" : result.status === "replied" ? "#46A758" : "#B0B0B5",
           }} />
           <span>r/{result.subreddit}</span>
-          {result.reddit_created_utc && <span>{formatDate(result.reddit_created_utc)}</span>}
+          {result.reddit_created_utc && <span>{formatDate(result.reddit_created_utc, locale)}</span>}
           {result.author && <span>u/{result.author}</span>}
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
@@ -268,7 +294,7 @@ function ResultDetail({
             <input type="hidden" name="resultId" value={result.id} />
             <input type="hidden" name="status" value="dismissed" />
             <input type="hidden" name="returnTo" value={`/dashboard?projectId=${projectId}`} />
-            <button className="btn-reject" type="submit">Reject Post</button>
+            <button className="btn-reject" type="submit">{t("rejectPost")}</button>
           </form>
           <form action={updateSearchboxStatusFromForm}>
             <input type="hidden" name="projectId" value={projectId} />
@@ -276,7 +302,7 @@ function ResultDetail({
             <input type="hidden" name="status" value="replied" />
             <button className="btn-replied" type="submit">
               <CheckIcon />
-              Mark as Replied
+              {t("markAsReplied")}
             </button>
           </form>
         </div>
@@ -299,21 +325,21 @@ function ResultDetail({
       {/* Post body */}
       <article className="lead-post">
         <p className="reddit-body" style={{ fontSize: 13 }}>
-          {result.body?.trim() || "No body available. Open the post on Reddit to see the full context."}
+          {result.body?.trim() || t("noBody")}
         </p>
 
         <div className="post-stats-bar">
-          {result.reddit_score !== null && <span>▲ {result.reddit_score} upvotes</span>}
-          {result.reddit_num_comments !== null && <span>💬 {result.reddit_num_comments} comments</span>}
+          {result.reddit_score !== null && <span>{t("upvotes", { count: result.reddit_score })}</span>}
+          {result.reddit_num_comments !== null && <span>{t("commentsWithIcon", { count: result.reddit_num_comments })}</span>}
           <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, fontWeight: 700, color: "#7193FF", background: "#E5EAFF", padding: "2px 8px", borderRadius: 3 }}>
             <svg width="10" height="10" viewBox="0 0 24 24" fill="none" aria-hidden="true">
               <circle cx="11" cy="11" r="7" stroke="currentColor" strokeWidth="2.2" />
               <path d="M16.5 16.5L21 21" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
             </svg>
-            Visible in Google Search
+            {t("visibleInGoogle")}
           </span>
           <a href={redditUrl} target="_blank" rel="noreferrer" className="post-stats-link">
-            View Post on Reddit →
+            {t("viewOnReddit")}
           </a>
         </div>
       </article>
@@ -328,7 +354,7 @@ function ResultDetail({
 
         {isGenerating ? (
           <div style={{ padding: "14px 0", color: "#7C7C83", fontSize: 13, fontWeight: 600 }}>
-            Generating replies…
+            {t("generatingReplies")}
           </div>
         ) : (
           <ReplyEditor
@@ -347,7 +373,7 @@ function ResultDetail({
                   type="submit"
                   className={`composer-btn${replies.length === 0 ? " composer-btn-accent" : ""}`}
                 >
-                  {replies.length > 0 ? "⥁ Regenerate" : "✦ Generate Reply Suggestions"}
+                  {replies.length > 0 ? t("regenerate") : t("generateSuggestions")}
                 </button>
               </form>
             }
@@ -378,7 +404,13 @@ function KeywordsPill({ keywords, expanded = false }: { keywords: string[]; expa
   return <KeywordsPillCollapsible keywords={keywords} />;
 }
 
-function StatusPill({ status }: { status: SearchboxResultDTO["status"] }) {
+function StatusPill({
+  status,
+  labels,
+}: {
+  status: SearchboxResultDTO["status"];
+  labels: { new: string; replied: string; dismissed: string };
+}) {
   const styles = {
     new:       { bg: "#FFF3EC", color: "#E03D00" },
     replied:   { bg: "#DEF2E2", color: "#46A758" },
@@ -387,27 +419,33 @@ function StatusPill({ status }: { status: SearchboxResultDTO["status"] }) {
   const s = styles[status];
   return (
     <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 9px", borderRadius: 7, fontSize: 11, fontWeight: 800, background: s.bg, color: s.color }}>
-      {status === "new" ? "New" : status === "replied" ? "Replied" : "Dismissed"}
+      {status === "new" ? labels.new : status === "replied" ? labels.replied : labels.dismissed}
     </span>
   );
 }
 
-function EmptyState({ isNew }: { isNew?: boolean }) {
+function EmptyState({
+  isNew,
+  t,
+}: {
+  isNew?: boolean;
+  t: Awaited<ReturnType<typeof getTranslations>>;
+}) {
   if (isNew) {
     return (
       <div className="empty-state">
-        <p className="section-title" style={{ fontSize: 15 }}>Scanning Reddit now…</p>
+        <p className="section-title" style={{ fontSize: 15 }}>{t("emptyScanningTitle")}</p>
         <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
-          We&apos;re finding posts with buyer intent for your keywords. Results appear in a few minutes — refresh shortly.
+          {t("emptyScanningText")}
         </p>
       </div>
     );
   }
   return (
     <div className="empty-state">
-      <p className="section-title">No results yet</p>
+      <p className="section-title">{t("emptyTitle")}</p>
       <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
-        Searchbox finds Reddit posts ranking on Google for your keywords. It refreshes every 2 weeks.
+        {t("emptyText")}
       </p>
     </div>
   );
@@ -421,15 +459,15 @@ function CheckIcon() {
   );
 }
 
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(date));
+function formatDate(date: string, locale: string) {
+  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(date));
 }
 
-function formatRelative(dateStr: string) {
+function formatRelative(dateStr: string, locale: string) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.max(0, Math.floor(diff / 60000));
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(-mins, "minute");
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(-hours, "hour");
+  return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(-Math.floor(hours / 24), "day");
 }

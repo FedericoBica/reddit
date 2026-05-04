@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { SignupProgress } from "@/app/signup/components/signup-progress";
 
@@ -11,16 +12,16 @@ type CompanyWebsiteAnalyzerProps = {
   error?: string;
 };
 
-const analysisSteps = [
-  { label: "Reading your site", pending: "Crawling pages…" },
-  { label: "Discovering high-intent keywords", pending: "Queued" },
-  { label: "Generating company brief", pending: "Queued" },
-  { label: "Mapping target subreddits", pending: "Queued" },
-];
-
 export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: CompanyWebsiteAnalyzerProps) {
+  const t = useTranslations("signup.companyAnalyzer");
   const [mode, setMode] = useState<"ai" | "manual">("ai");
   const [submitted, setSubmitted] = useState(false);
+  const analysisSteps = [
+    { label: t("analysis.step1"), pending: t("analysis.pending1") },
+    { label: t("analysis.step2"), pending: t("analysis.pendingQueued") },
+    { label: t("analysis.step3"), pending: t("analysis.pendingQueued") },
+    { label: t("analysis.step4"), pending: t("analysis.pendingQueued") },
+  ];
 
   return (
     <>
@@ -28,10 +29,10 @@ export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: C
         <SignupProgress active={1} />
         <div className="sw-eyebrow" style={{ marginTop: 20 }}>
           <span className="sw-eyebrow-dot" />
-          Step 02 · Company
+          {t("eyebrow")}
         </div>
         <h1 className="signup-wizard-title">
-          Tell us about<br /><em>your company.</em>
+          {t("title1")}<br /><em>{t("titleEm")}</em>
         </h1>
 
         {/* Mode toggle */}
@@ -46,7 +47,7 @@ export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: C
               boxShadow: mode === "ai" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
             }}
           >
-            Analyze with AI
+            {t("analyzeMode")}
           </button>
           <button
             type="button"
@@ -58,7 +59,7 @@ export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: C
               boxShadow: mode === "manual" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
             }}
           >
-            Write manually
+            {t("manualMode")}
           </button>
         </div>
 
@@ -67,7 +68,7 @@ export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: C
         {mode === "ai" ? (
           <>
             <p className="signup-wizard-copy">
-              Drop your URL — we read your site, build a positioning brief, and learn the language buyers use to describe what you do.
+              {t("analyzeDescription")}
             </p>
             <form
               action={analyzeAction}
@@ -75,48 +76,48 @@ export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: C
               onSubmit={() => setSubmitted(true)}
             >
               <label className="field-group">
-                <span className="field-label">Company website <span style={{ color: "oklch(0.6 0.02 55)", fontWeight: 400 }}>— we&apos;ll handle the rest</span></span>
+                <span className="field-label">{t.rich("websiteLabel", { muted: (chunks) => <span style={{ color: "oklch(0.6 0.02 55)", fontWeight: 400 }}>{chunks}</span> })}</span>
                 <div className="sw-input-wrap">
                   <span className="sw-input-prefix">https://</span>
                   <input
                     className="sw-input"
                     name="website"
                     type="text"
-                    placeholder="yourcompany.com"
+                    placeholder={t("websitePlaceholder")}
                     required
                   />
                 </div>
               </label>
-              <AnalyzeButton />
+              <AnalyzeButton label={t("analyzeButton")} pendingLabel={t("analyzing")} />
             </form>
             <div className="sw-foot-note">
-              <span>🔒</span> We don&apos;t store the page text — only the positioning brief.
+              <span>🔒</span> {t("privacy")}
             </div>
           </>
         ) : (
           <>
             <p className="signup-wizard-copy">
-              Describe your product in your own words — who it&apos;s for, what it solves, and how it&apos;s different.
+              {t("manualDescription")}
             </p>
             <form action={manualAction} className="signup-form">
               <label className="field-group">
-                <span className="field-label">Website <span style={{ color: "oklch(0.6 0.02 55)", fontWeight: 400 }}>(optional)</span></span>
+                <span className="field-label">{t.rich("manualWebsiteLabel", { optional: (chunks) => <span style={{ color: "oklch(0.6 0.02 55)", fontWeight: 400 }}>{chunks}</span> })}</span>
                 <div className="sw-input-wrap">
                   <span className="sw-input-prefix">https://</span>
                   <input
                     className="sw-input"
                     name="website"
                     type="text"
-                    placeholder="yourcompany.com"
+                    placeholder={t("websitePlaceholder")}
                   />
                 </div>
               </label>
               <label className="field-group">
-                <span className="field-label">Company description</span>
+                <span className="field-label">{t("companyDescription")}</span>
                 <textarea
                   className="sw-input"
                   name="description"
-                  placeholder="We help B2B SaaS teams find buyer-intent leads on Reddit before competitors notice them. Targets: founders, marketers, growth leads at early-stage companies."
+                  placeholder={t("manualPlaceholder")}
                   rows={6}
                   maxLength={1200}
                   required
@@ -124,7 +125,7 @@ export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: C
                 />
               </label>
               <Button className="sw-btn-primary w-full" type="submit">
-                Continue →
+                {t("continue")}
               </Button>
             </form>
           </>
@@ -135,9 +136,9 @@ export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: C
         <div className="sw-pane-eyebrow">
           <span className="sw-live-tag">
             {submitted && <span className="sw-pulse" />}
-            {mode === "ai" ? "Live analysis" : "Your brief"}
+            {mode === "ai" ? t("liveAnalysis") : t("yourBrief")}
           </span>
-          <span className="sw-pane-meta">{mode === "ai" ? "~ 12s" : "instant"}</span>
+          <span className="sw-pane-meta">{mode === "ai" ? t("analysisEta") : t("instant")}</span>
         </div>
         {mode === "ai" ? (
           <div className="sw-run-list">
@@ -152,7 +153,7 @@ export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: C
                   </div>
                   <div className="sw-run-text">
                     <span className="sw-run-title">{step.label}</span>
-                    <span className="sw-run-status">{isActive ? step.pending : "Queued"}</span>
+                    <span className="sw-run-status">{isActive ? step.pending : t("analysis.pendingQueued")}</span>
                   </div>
                 </div>
               );
@@ -160,30 +161,30 @@ export function CompanyWebsiteAnalyzer({ analyzeAction, manualAction, error }: C
           </div>
         ) : (
           <div style={{ display: "grid", gap: 10 }}>
-            {["Who is your customer?", "What pain do you solve?", "Why choose you?"].map((q) => (
+            {[t("manualPrompt1"), t("manualPrompt2"), t("manualPrompt3")].map((q) => (
               <div key={q} style={{ padding: "10px 14px", background: "#F6F7F8", borderRadius: 8, fontSize: 12, color: "#7C7C83", fontStyle: "italic" }}>
                 {q}
               </div>
             ))}
             <p style={{ fontSize: 11, color: "#B0B0B5", marginTop: 4 }}>
-              Answer these in your description for better keyword suggestions.
+              {t("manualHint")}
             </p>
           </div>
         )}
         <div className="sw-divider" />
         <p style={{ fontSize: 12, color: "oklch(0.6 0.02 55)", fontFamily: "ui-monospace, Menlo, monospace", letterSpacing: "0.04em" }}>
-          Tip — the more specific, the better the keyword suggestions.
+          {t("tip")}
         </p>
       </aside>
     </>
   );
 }
 
-function AnalyzeButton() {
+function AnalyzeButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus();
   return (
     <Button className="sw-btn-primary w-full" disabled={pending} type="submit">
-      {pending ? "Analyzing…" : "Analyze my site →"}
+      {pending ? pendingLabel : label}
     </Button>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { toRedditUrl } from "@/lib/utils";
 
 export function CopyButton({
@@ -10,6 +11,7 @@ export function CopyButton({
   text: string;
   permalink?: string | null;
 }) {
+  const t = useTranslations("copyButton");
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -32,12 +34,12 @@ export function CopyButton({
           <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
-          Copied!
+          {t("copied")}
         </>
       ) : permalink ? (
-        "Copy & open Reddit ↗"
+        t("copyAndOpenReddit")
       ) : (
-        "Copy"
+        t("copy")
       )}
     </button>
   );

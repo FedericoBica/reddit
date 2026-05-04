@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { choosePlanFromSignup } from "@/modules/onboarding/signup-actions";
 import { Button } from "@/components/ui/button";
 import { SignupProgress } from "@/app/signup/components/signup-progress";
@@ -62,6 +63,7 @@ const PLANS = [
 type PlanId = (typeof PLANS)[number]["id"];
 
 export function PlanSelector() {
+  const t = useTranslations("signup.plan");
   const [selected, setSelected] = useState<PlanId>("growth");
   const plan = PLANS.find((p) => p.id === selected)!;
 
@@ -71,13 +73,13 @@ export function PlanSelector() {
         <SignupProgress active={0} />
         <div className="sw-eyebrow" style={{ marginTop: 20 }}>
           <span className="sw-eyebrow-dot" />
-          Step 01 · Plan
+          {t("eyebrow")}
         </div>
         <h1 className="signup-wizard-title">
-          Pick a plan,<br /><em>start in minutes.</em>
+          {t("title1")}<br /><em>{t("titleEm")}</em>
         </h1>
         <p className="signup-wizard-copy" style={{ marginBottom: 0 }}>
-          Every plan includes keyword tracking, intent scoring, AI replies, and battlecards.
+          {t("description")}
         </p>
 
         <div className="signup-plan-features-list">
@@ -95,18 +97,18 @@ export function PlanSelector() {
             type="submit"
             className="sw-btn-primary w-full"
           >
-            Continue with {plan.name} →
+            {t("continueWith", { name: plan.name })}
           </Button>
         </form>
         <div className="sw-foot-note">
-          <span>🔒</span> 7-day trial · cancel anytime · no card today
+          <span>🔒</span> {t("footNote")}
         </div>
       </div>
 
       <div className="signup-plan-cards-panel">
         <div className="sw-pane-eyebrow">
-          <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>Choose your plan</span>
-          <span className="sw-pane-meta">Monthly</span>
+          <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>{t("choosePlan")}</span>
+          <span className="sw-pane-meta">{t("monthly")}</span>
         </div>
         {PLANS.map((p) => (
           <button
@@ -116,12 +118,12 @@ export function PlanSelector() {
             onClick={() => setSelected(p.id)}
           >
             {"popular" in p && p.popular && (
-              <span className="signup-plan-badge">Recommended</span>
+              <span className="signup-plan-badge">{t("recommended")}</span>
             )}
             <div className="signup-plan-radio" aria-hidden="true" />
             <div className="signup-plan-card-select-name">
               <strong>{p.name}</strong>
-              <em>{p.price}<span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "oklch(0.6 0.02 55)", fontStyle: "normal", fontWeight: 500 }}>/mo</span></em>
+              <em>{p.price}<span style={{ fontFamily: "var(--font-sans)", fontSize: 13, color: "oklch(0.6 0.02 55)", fontStyle: "normal", fontWeight: 500 }}>{t("perMonth")}</span></em>
             </div>
             <small>{p.note}</small>
           </button>

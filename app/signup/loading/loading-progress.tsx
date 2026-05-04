@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type LoadingProgressProps = {
   projectId: string;
@@ -18,10 +19,17 @@ const TOTAL_MS = 4000;
 const STEP_INTERVALS = [700, 600, 550, 500];
 
 export function LoadingProgress({ projectId }: LoadingProgressProps) {
+  const t = useTranslations("signup.loading");
   const router = useRouter();
   const [activeStep, setActiveStep] = useState(0);
   const [progress, setProgress] = useState(0);
   const rafRef = useRef<number>(0);
+  const steps = [
+    t("progressStep1"),
+    t("progressStep2"),
+    t("progressStep3"),
+    t("progressStep4"),
+  ];
 
   useEffect(() => {
     const start = Date.now();
@@ -60,7 +68,7 @@ export function LoadingProgress({ projectId }: LoadingProgressProps) {
         <div className="signup-scan-fill" style={{ width: `${progress}%` }} />
       </div>
       <div className="signup-scan-steps">
-        {STEPS.map((step, i) => {
+        {steps.map((step, i) => {
           const done = i < activeStep;
           const active = i === activeStep;
           return (

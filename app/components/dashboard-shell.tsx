@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
+import { getTranslations } from "next-intl/server";
 import { BrandLink } from "./logo";
 import { MobileShell } from "./mobile-shell";
 import { ProjectSwitcher } from "./project-switcher";
@@ -65,6 +66,7 @@ async function DashboardShellContent({
     getNewItemsCount(currentProject.id),
     getCurrentBillingPlan(),
   ]);
+  const tNav = await getTranslations("nav");
 
   const sidebarContent = (
     <>
@@ -116,7 +118,7 @@ async function DashboardShellContent({
           <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
             <form action={signOut} style={{ flex: 1 }}>
               <button type="submit" className="ds-btn-quiet">
-                Sign out
+                {tNav("signOut")}
               </button>
             </form>
             {isAdmin && (
@@ -129,7 +131,7 @@ async function DashboardShellContent({
                   whiteSpace: "nowrap",
                 }}
               >
-                Admin
+                {tNav("admin")}
               </Link>
             )}
           </div>

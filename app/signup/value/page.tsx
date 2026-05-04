@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { BrandLink } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,6 +19,7 @@ type ValuePageProps = {
 };
 
 export default async function SignupValuePage({ searchParams }: ValuePageProps) {
+  const t = await getTranslations("signup.value");
   const user = await getCurrentUser();
   const params = await searchParams;
   const projectId = params?.projectId ?? "";
@@ -46,19 +48,19 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
           <section className="signup-wizard-main">
             <div className="sw-eyebrow">
               <span className="sw-eyebrow-dot" />
-              Step 03 · Why Us
+              {t("eyebrow")}
             </div>
             <h1 className="signup-wizard-title">
-              Where buyers<br /><em>ask out loud.</em>
+              {t("title1")}<br /><em>{t("titleEm")}</em>
             </h1>
             <p className="signup-wizard-copy">
-              Reddit & X are full of people comparing tools, asking for recommendations, and describing urgent pain — in plain language, with their wallet half-open.
+              {t("description")}
             </p>
 
             <ul className="sw-checklist">
-              <ValueItem title="Find buyers early" text="Catch recommendation requests before competitors do." />
-              <ValueItem title="Reply with context" text="Drafts use the post and your positioning — not boilerplate." />
-              <ValueItem title="Protect your account" text="Pace and tone checks keep you out of spam patterns." />
+              <ValueItem title={t("item1Title")} text={t("item1Text")} />
+              <ValueItem title={t("item2Title")} text={t("item2Text")} />
+              <ValueItem title={t("item3Title")} text={t("item3Text")} />
             </ul>
 
             <form action={continueToPlan}>
@@ -67,7 +69,7 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
                 className="sw-btn-primary w-full"
                 type="submit"
               >
-                Continue →
+                {t("continue")}
               </Button>
             </form>
           </section>
@@ -76,9 +78,9 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
             <div className="sw-pane-eyebrow">
               <span className="sw-live-tag">
                 <span className="sw-pulse" />
-                Live radar
+                {t("liveRadar")}
               </span>
-              <span className="sw-pane-meta">142 threads today</span>
+              <span className="sw-pane-meta">{t("threadsToday")}</span>
             </div>
             <ValuePanel />
           </aside>

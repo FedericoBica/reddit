@@ -1,30 +1,31 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 
 type TutorialCardProps = {
   projectId: string;
 };
 
-const steps = [
-  {
-    eyebrow: "Welcome · You&apos;re in",
-    title: "Welcome to",
-    titleEm: "Prowlit.",
-    copy: "Prowlit scans Reddit for buying intent, recommendation requests and competitor comparisons that match your company.",
-    detail: "Your Searchbox ranks posts by intent so you can focus on conversations worth answering.",
-  },
-  {
-    eyebrow: "Tutorial · Step 2",
-    title: "Start with the",
-    titleEm: "Searchbox.",
-    copy: "Open a post, read the context, and use the generated reply as a starting point.",
-    detail: "Battlecards, intent scores and reply generation are ready from the dashboard.",
-  },
-];
-
 export function TutorialCard({ projectId }: TutorialCardProps) {
+  const t = useTranslations("signup.tutorial");
+  const steps = [
+    {
+      eyebrow: t("step1Eyebrow"),
+      title: t("step1Title"),
+      titleEm: t("step1TitleEm"),
+      copy: t("step1Copy"),
+      detail: t("step1Detail"),
+    },
+    {
+      eyebrow: t("step2Eyebrow"),
+      title: t("step2Title"),
+      titleEm: t("step2TitleEm"),
+      copy: t("step2Copy"),
+      detail: t("step2Detail"),
+    },
+  ];
   const [step, setStep] = useState(0);
   const current = steps[step];
   const isLast = step === steps.length - 1;
@@ -32,7 +33,7 @@ export function TutorialCard({ projectId }: TutorialCardProps) {
   return (
     <>
       <section className="signup-wizard-main">
-        <div className="signup-tutorial-progress" aria-label={`Step ${step + 1} of ${steps.length}`}>
+        <div className="signup-tutorial-progress" aria-label={t("progressAria", { current: step + 1, total: steps.length })}>
           {steps.map((item, index) => (
             <span
               className={index <= step ? "signup-tutorial-progress-active" : undefined}
@@ -54,15 +55,15 @@ export function TutorialCard({ projectId }: TutorialCardProps) {
           <li>
             <span className="sw-ch-icon">✓</span>
             <div>
-              <div className="sw-ch-title">Open a high-intent post</div>
-              <div className="sw-ch-desc">Use the suggested reply as a starting point — edit, then post.</div>
+              <div className="sw-ch-title">{t("item1Title")}</div>
+              <div className="sw-ch-desc">{t("item1Text")}</div>
             </div>
           </li>
           <li>
             <span className="sw-ch-icon">✓</span>
             <div>
-              <div className="sw-ch-title">Battlecards on tap</div>
-              <div className="sw-ch-desc">Hover any competitor mention to see your one-line answer.</div>
+              <div className="sw-ch-title">{t("item2Title")}</div>
+              <div className="sw-ch-desc">{t("item2Text")}</div>
             </div>
           </li>
         </ul>
@@ -73,7 +74,7 @@ export function TutorialCard({ projectId }: TutorialCardProps) {
               asChild
               className="sw-btn-primary w-full"
             >
-              <a href={`/dashboard?projectId=${projectId}`}>Open my dashboard →</a>
+              <a href={`/dashboard?projectId=${projectId}`}>{t("openDashboard")}</a>
             </Button>
           ) : (
             <Button
@@ -81,7 +82,7 @@ export function TutorialCard({ projectId }: TutorialCardProps) {
               type="button"
               onClick={() => setStep((v) => v + 1)}
             >
-              Continue →
+              {t("continue")}
             </Button>
           )}
         </div>
@@ -108,6 +109,7 @@ const FEED_POOL = [
 type FeedItem = (typeof FEED_POOL)[0] & { uid: number };
 
 function TutorialFeedPanel() {
+  const t = useTranslations("signup.tutorial");
   const counter = useRef(FEED_POOL.length);
   const [stack, setStack] = useState<FeedItem[]>(
     FEED_POOL.slice(0, 3).map((t, i) => ({ ...t, uid: i }))
@@ -128,9 +130,9 @@ function TutorialFeedPanel() {
       <div className="sw-pane-eyebrow">
         <span className="sw-live-tag">
           <span className="sw-pulse" />
-          Your first lead
+          {t("firstLead")}
         </span>
-        <span className="sw-pane-meta">Demo</span>
+        <span className="sw-pane-meta">{t("demo")}</span>
       </div>
       {stack.map((thread, i) => (
         <TutorialFeedCard key={thread.uid} thread={thread} fresh={i === 0} dim={i === 2} />
@@ -184,6 +186,7 @@ const REPLY_TEXT =
   "Hey! I went through the same decision last year. We ended up switching to a lighter stack and it saved us a ton of overhead. Happy to share what worked — feel free to DM me.";
 
 function TutorialReplyPanel() {
+  const t = useTranslations("signup.tutorial");
   const [displayed, setDisplayed] = useState("");
   const indexRef = useRef(0);
 
@@ -202,8 +205,8 @@ function TutorialReplyPanel() {
   return (
     <div className="tutorial-visual-panel">
       <div className="sw-pane-eyebrow">
-        <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>Generated reply</span>
-        <span className="sw-pane-meta">Demo</span>
+        <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>{t("generatedReply")}</span>
+        <span className="sw-pane-meta">{t("demo")}</span>
       </div>
       <div className="tutorial-thread-card" style={{ opacity: 0.7 }}>
         <div className="tutorial-thread-meta">
@@ -216,7 +219,7 @@ function TutorialReplyPanel() {
       </div>
 
       <div className="tutorial-reply-editor">
-        <div className="tutorial-reply-header">Generated reply</div>
+        <div className="tutorial-reply-header">{t("generatedReply")}</div>
         <div className="tutorial-reply-body">
           {displayed}
           {displayed.length < REPLY_TEXT.length && (
@@ -227,7 +230,7 @@ function TutorialReplyPanel() {
 
       <div style={{ marginTop: 12, display: "flex", gap: 7, alignItems: "center", fontSize: 11, color: "oklch(0.6 0.02 55)", fontFamily: "ui-monospace, Menlo, monospace", letterSpacing: "0.04em" }}>
         <span style={{ display: "inline-block", width: 5, height: 5, borderRadius: "50%", background: "oklch(0.55 0.1 150)", flexShrink: 0 }} />
-        Tone: friendly · 0 spam flags
+        {t("toneMeta")}
       </div>
     </div>
   );

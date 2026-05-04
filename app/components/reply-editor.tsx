@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import type { LeadReplyDTO, ReplyLength } from "@/db/schemas/domain";
 import { useLeadReplyFromForm } from "@/modules/leads/actions";
 import { updateProjectFromForm } from "@/modules/projects/settings-actions";
@@ -35,6 +36,7 @@ export function ReplyEditor({
   generateForm: React.ReactNode;
   replyLength?: ReplyLength;
 }) {
+  const t = useTranslations("replyEditor");
   const [text, setText] = useState(replies[0]?.content ?? "");
   const [activeId, setActiveId] = useState<string | null>(replies[0]?.id ?? null);
   const [replyLength, setReplyLength] = useState<ReplyLength>(initialReplyLength);
@@ -56,9 +58,9 @@ export function ReplyEditor({
   return (
     <div>
       <div className="composer-head">
-        <span>Reply draft</span>
+        <span>{t("replyDraft")}</span>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
-          {activeLabel && <span className="composer-tone">tone: {activeLabel}</span>}
+          {activeLabel && <span className="composer-tone">{t("tone", { value: activeLabel })}</span>}
           <details ref={detailsRef} style={{ position: "relative" }}>
             <summary
               style={{
@@ -99,9 +101,9 @@ export function ReplyEditor({
             >
               {(["short", "medium", "long"] as const).map((opt) => {
                 const descriptions: Record<ReplyLength, string> = {
-                  short: "1-2 sentences",
-                  medium: "3-5 sentences",
-                  long: "Full reply",
+                  short: t("shortDescription"),
+                  medium: t("mediumDescription"),
+                  long: t("longDescription"),
                 };
                 const active = replyLength === opt;
                 return (
@@ -157,14 +159,14 @@ export function ReplyEditor({
       <textarea
         value={text}
         onChange={(e) => setText(e.target.value)}
-        placeholder="Reply with a genuine and informative response subtly mentioning your product..."
+        placeholder={t("placeholder")}
         rows={5}
         className={`composer-txa${replies.length > 0 ? " composer-txa-attached" : ""}`}
       />
 
       <div className="composer-foot">
         <span className="composer-foot-meta">
-          {text.length} chars · {wordCount} {wordCount === 1 ? "word" : "words"}
+          {t("meta", { chars: text.length, words: wordCount })}
         </span>
         <div className="composer-foot-right">
           {generateForm}
@@ -175,7 +177,7 @@ export function ReplyEditor({
               <input type="hidden" name="replyId" value={activeReply.id} />
               <input type="hidden" name="returnTo" value={returnTo} />
               <button className="composer-btn" type="submit">
-                Mark as Used
+                {t("markAsUsed")}
               </button>
             </form>
           )}

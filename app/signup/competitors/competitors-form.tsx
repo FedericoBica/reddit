@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -11,6 +12,7 @@ type CompetitorsFormProps = {
 };
 
 export function CompetitorsForm({ action, projectId }: CompetitorsFormProps) {
+  const t = useTranslations("signup.competitorsForm");
   const [values, setValues] = useState(["", "", ""]);
   const states = useMemo(() => values.map(getUrlState), [values]);
 
@@ -19,12 +21,12 @@ export function CompetitorsForm({ action, projectId }: CompetitorsFormProps) {
       <input type="hidden" name="projectId" value={projectId} />
       {[0, 1, 2].map((index) => (
         <label className="field-group signup-url-field" key={index}>
-          <span className="field-label">Competitor {index + 1}</span>
+          <span className="field-label">{t("competitor", { index: index + 1 })}</span>
           <Input
             className="h-11 rounded-[8px] bg-white px-3 text-sm"
             name="competitorUrl"
             type="url"
-            placeholder="https://competitor.com"
+            placeholder={t("placeholder")}
             required={index === 0}
             value={values[index]}
             onChange={(event) => {
@@ -34,22 +36,22 @@ export function CompetitorsForm({ action, projectId }: CompetitorsFormProps) {
             }}
           />
           {states[index] === "valid" && (
-            <span className="signup-url-valid">Website is valid and ready to check.</span>
+            <span className="signup-url-valid">{t("valid")}</span>
           )}
           {states[index] === "invalid" && (
-            <span className="signup-url-invalid">Enter a valid website URL.</span>
+            <span className="signup-url-invalid">{t("invalid")}</span>
           )}
         </label>
       ))}
       <span className="field-hint">
-        Add at least one. The more, the better.
+        {t("hint")}
       </span>
-      <CompetitorSubmitButton />
+      <CompetitorSubmitButton label={t("submit")} pendingLabel={t("pending")} />
     </form>
   );
 }
 
-function CompetitorSubmitButton() {
+function CompetitorSubmitButton({ label, pendingLabel }: { label: string; pendingLabel: string }) {
   const { pending } = useFormStatus();
 
   return (
@@ -58,7 +60,7 @@ function CompetitorSubmitButton() {
       disabled={pending}
       type="submit"
     >
-      {pending ? "Checking websites..." : "Next →"}
+      {pending ? pendingLabel : label}
     </Button>
   );
 }

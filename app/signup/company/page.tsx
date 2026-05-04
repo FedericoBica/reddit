@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { BrandLink } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -26,6 +27,7 @@ type CompanyPageProps = {
 };
 
 export default async function SignupCompanyPage({ searchParams }: CompanyPageProps) {
+  const t = await getTranslations("signup.company");
   const user = await getCurrentUser();
   const params = await searchParams;
   const cookieStore = await cookies();
@@ -56,19 +58,19 @@ export default async function SignupCompanyPage({ searchParams }: CompanyPagePro
               <section className="signup-wizard-main">
                 <div className="sw-eyebrow">
                   <span className="sw-eyebrow-dot" />
-                  Step 02 · Company
+                  {t("eyebrow")}
                 </div>
                 <h1 className="signup-wizard-title">
-                  AI-generated<br /><em>company brief.</em>
+                  {t("title1")}<br /><em>{t("titleEm")}</em>
                 </h1>
                 <p className="signup-wizard-copy">
-                  Review the description before we set up your competitor scan.
+                  {t("description")}
                 </p>
                 {params?.error && <div className="signup-error">{params.error}</div>}
                 <form action={createProjectFromCompanyProfile} className="signup-form">
                   <input type="hidden" name="website" value={website} />
                   <label className="field-group">
-                    <span className="field-label">Company description</span>
+                    <span className="field-label">{t("companyDescription")}</span>
                     <Textarea
                       className="min-h-[132px] rounded-[10px] bg-white px-3 py-3 text-sm"
                       name="description"
@@ -78,20 +80,20 @@ export default async function SignupCompanyPage({ searchParams }: CompanyPagePro
                     />
                   </label>
                   <Button className="sw-btn-primary w-full" type="submit">
-                    Continue →
+                    {t("continue")}
                   </Button>
                 </form>
               </section>
 
               <aside className="signup-wizard-visual">
                 <div className="sw-pane-eyebrow">
-                  <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>Analysis complete</span>
-                  <span className="sw-pane-meta">3 steps done</span>
+                  <span style={{ color: "oklch(0.58 0.18 38)", fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.18em" }}>{t("analysisComplete")}</span>
+                  <span className="sw-pane-meta">{t("stepsDone")}</span>
                 </div>
                 <div className="sw-run-list">
-                  <AnalysisStep done title="Analyzing your website" text="Complete" />
-                  <AnalysisStep done title="Discovering high-intent keywords" text="Keywords saved in background" />
-                  <AnalysisStep done title="Generating company brief" text="Ready to review" />
+                  <AnalysisStep done title={t("step1Title")} text={t("step1Status")} />
+                  <AnalysisStep done title={t("step2Title")} text={t("step2Status")} />
+                  <AnalysisStep done title={t("step3Title")} text={t("step3Status")} />
                 </div>
               </aside>
             </>

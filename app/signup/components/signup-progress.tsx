@@ -1,11 +1,17 @@
+import { useTranslations } from "next-intl";
+
 const STEP_LABELS = ["Plan", "Company", "Competitors"];
 
 export function SignupProgress({ active }: { active: number }) {
+  const t = useTranslations("signup.progress");
+  const labels = [t("plan"), t("company"), t("competitors")];
+
   return (
-    <div className="sw-progress" role="list" aria-label="Signup steps">
-      {STEP_LABELS.map((label, i) => {
+    <div className="sw-progress" role="list" aria-label={t("ariaLabel")}>
+      {STEP_LABELS.map((_, i) => {
         const done = i < active;
         const current = i === active;
+        const label = labels[i];
         return (
           <div
             key={label}

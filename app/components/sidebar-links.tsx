@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 export function SidebarLinks({
   currentProjectId,
@@ -15,6 +16,7 @@ export function SidebarLinks({
   newMentionsCount?: number;
   newSearchboxCount?: number;
 }) {
+  const t = useTranslations("nav");
   const pathname = usePathname();
   const [archiveOpen, setArchiveOpen] = useState(pathname.startsWith("/archive"));
 
@@ -51,14 +53,14 @@ export function SidebarLinks({
       }}
     >
       {/* ── REDDIT ── */}
-      <GroupLabel>Reddit</GroupLabel>
+      <GroupLabel>{t("redditGroup")}</GroupLabel>
 
       <Link
         href={`/dashboard?projectId=${currentProjectId}`}
         className={`sidebar-link${pathname === "/dashboard" || pathname.startsWith("/leads/") ? " sidebar-link-active" : ""}`}
       >
         <InboxIcon className="sidebar-icon" />
-        <span style={{ flex: 1 }}>Search Box</span>
+        <span style={{ flex: 1 }}>{t("searchbox")}</span>
         {newSearchboxCount > 0 && <span className="ds-nav-badge">{newSearchboxCount}</span>}
       </Link>
 
@@ -67,7 +69,7 @@ export function SidebarLinks({
         className={`sidebar-link${isFeedActive("opportunities") ? " sidebar-link-active" : ""}`}
       >
         <FlashIcon className="sidebar-icon" />
-        <span style={{ flex: 1 }}>Opportunities</span>
+        <span style={{ flex: 1 }}>{t("opportunities")}</span>
         {newOpportunitiesCount > 0 && <span className="ds-nav-badge">{newOpportunitiesCount}</span>}
       </Link>
 
@@ -76,7 +78,7 @@ export function SidebarLinks({
         className={`sidebar-link${isFeedActive("mentions") ? " sidebar-link-active" : ""}`}
       >
         <MentionIcon className="sidebar-icon" />
-        <span style={{ flex: 1 }}>Mentions</span>
+        <span style={{ flex: 1 }}>{t("mentions")}</span>
         {newMentionsCount > 0 && <span className="ds-nav-badge">{newMentionsCount}</span>}
       </Link>
 
@@ -85,7 +87,7 @@ export function SidebarLinks({
         className={`sidebar-link${isFeedActive("x") ? " sidebar-link-active" : ""}`}
       >
         <XIcon className="sidebar-icon" />
-        <span style={{ flex: 1 }}>X Leads</span>
+        <span style={{ flex: 1 }}>{t("xLeads")}</span>
       </Link>
 
       <Link
@@ -93,7 +95,7 @@ export function SidebarLinks({
         className={`sidebar-link${pathname === "/analytics" ? " sidebar-link-active" : ""}`}
       >
         <ChartIcon className="sidebar-icon" />
-        <span style={{ flex: 1 }}>Analytics</span>
+        <span style={{ flex: 1 }}>{t("analytics")}</span>
       </Link>
 
       {/* Archive sub-group */}
@@ -104,7 +106,7 @@ export function SidebarLinks({
         style={{ width: "100%", background: inArchive ? undefined : "transparent", border: "none", cursor: "pointer", textAlign: "left" }}
       >
         <ArchiveIcon className="sidebar-icon" />
-        <span style={{ flex: 1 }}>Archive</span>
+        <span style={{ flex: 1 }}>{t("archive")}</span>
         <ChevronIcon open={archiveIsOpen} />
       </button>
 
@@ -115,14 +117,14 @@ export function SidebarLinks({
             className={`sidebar-link${pathname === "/archive/replied" ? " sidebar-link-active" : ""}`}
             style={{ paddingLeft: 32 }}
           >
-            Replied
+            {t("repliedArchive")}
           </Link>
           <Link
             href={`/archive/rejected?projectId=${currentProjectId}`}
             className={`sidebar-link${pathname === "/archive/rejected" ? " sidebar-link-active" : ""}`}
             style={{ paddingLeft: 32 }}
           >
-            Dismissed
+            {t("dismissedArchive")}
           </Link>
         </>
       )}
@@ -134,7 +136,7 @@ export function SidebarLinks({
           className={`sidebar-link${pathname === "/settings" ? " sidebar-link-active" : ""}`}
         >
           <GearIcon className="sidebar-icon" />
-          <span style={{ flex: 1 }}>Settings</span>
+          <span style={{ flex: 1 }}>{t("settings")}</span>
         </Link>
       </div>
     </nav>

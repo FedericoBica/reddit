@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { BrandLink } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +25,7 @@ type SignUpPageProps = {
 };
 
 export default async function SignUpPage({ searchParams }: SignUpPageProps) {
+  const t = await getTranslations("signup.start");
   const user = await getCurrentUser();
   const params = await searchParams;
   const email = String(params?.email ?? "").trim().toLowerCase();
@@ -37,7 +39,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
       <header className="signup-wizard-brand">
         <BrandLink logoSize={28} wordmarkSize={18} />
         <div className="signup-topbar-right">
-          <a href="/login" className="signup-topbar-help">Already have an account?</a>
+          <a href="/login" className="signup-topbar-help">{t("alreadyHaveAccount")}</a>
         </div>
       </header>
 
@@ -50,13 +52,13 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
           <section className="signup-wizard-main">
             <div className="sw-eyebrow">
               <span className="sw-eyebrow-dot" />
-              Start here
+              {t("eyebrow")}
             </div>
             <h1 className="signup-wizard-title" id="signup-title">
-              Unlock Reddit&apos;s<br /><em>hidden buyers.</em>
+              {t("title1")}<br /><em>{t("titleEm")}</em>
             </h1>
             <p className="signup-wizard-copy" id="signup-description">
-              Join businesses finding high-quality leads from Reddit in minutes. No credit card required.
+              {t("description")}
             </p>
 
             {params?.error && (
@@ -79,11 +81,11 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
             <form action={signUpWithGoogle}>
               <button className="login-btn-google" type="submit">
                 <GoogleIcon />
-                Continue with Google
+                {t("google")}
               </button>
             </form>
 
-            <div className="signup-auth-divider">or sign up with email</div>
+            <div className="signup-auth-divider">{t("divider")}</div>
 
             <form
               action={signUpWithPassword}
@@ -92,34 +94,34 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
               className="signup-form"
             >
               <label className="field-group" htmlFor="signup-email">
-                <span className="field-label">Email</span>
+                <span className="field-label">{t("emailLabel")}</span>
                 <Input
                   aria-invalid={Boolean(params?.error)}
                   className="h-11 rounded-[10px] bg-white px-3 text-sm"
                   id="signup-email"
                   name="email"
                   type="email"
-                  placeholder="your@email.com"
+                  placeholder={t("emailPlaceholder")}
                   defaultValue={email}
                   autoComplete="email"
                   required
                 />
               </label>
               <label className="field-group" htmlFor="signup-password">
-                <span className="field-label">Password</span>
+                <span className="field-label">{t("passwordLabel")}</span>
                 <Input
                   className="h-11 rounded-[10px] bg-white px-3 text-sm"
                   id="signup-password"
                   name="password"
                   type="password"
-                  placeholder="At least 8 characters"
+                  placeholder={t("passwordPlaceholder")}
                   autoComplete="new-password"
                   minLength={8}
                   required
                 />
               </label>
               <Button className="sw-btn-primary w-full" type="submit">
-                Create account →
+                {t("submit")}
               </Button>
             </form>
           </section>
@@ -128,18 +130,18 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
             <div className="sw-pane-eyebrow">
               <span className="sw-live-tag">
                 <span className="sw-pulse" />
-                Live leads
+                {t("liveLeads")}
               </span>
-              <span className="sw-pane-meta">Today</span>
+              <span className="sw-pane-meta">{t("today")}</span>
             </div>
             <div className="sw-radar-feed">
-              <FloatingLead title="Best CRM for a bootstrapped SaaS?" score="94" fresh />
-              <FloatingLead title="Looking for a lightweight Intercom alternative" score="88" />
-              <FloatingLead title="Agency tools for social lead monitoring" score="81" dim />
+              <FloatingLead title={t("lead1")} score="94" fresh />
+              <FloatingLead title={t("lead2")} score="88" />
+              <FloatingLead title={t("lead3")} score="81" dim />
             </div>
             <div className="sw-divider" style={{ marginTop: 16 }} />
             <p style={{ fontSize: 12, color: "oklch(0.6 0.02 55)", fontFamily: "ui-monospace, Menlo, monospace", letterSpacing: "0.04em" }}>
-              Tip — works best for B2B SaaS, agencies, and dev tools.
+              {t("tip")}
             </p>
           </aside>
         </CardContent>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export function MobileShell({
   sidebar,
@@ -10,6 +11,7 @@ export function MobileShell({
   sidebar: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const t = useTranslations("nav");
   const [open, setOpen] = useState(false);
   const pathname = usePathname();
   const prevPathname = useRef(pathname);
@@ -31,7 +33,7 @@ export function MobileShell({
         <button
           className="ds-sidebar-close"
           onClick={() => setOpen(false)}
-          aria-label="Close menu"
+          aria-label={t("closeMenu")}
         >
           ✕
         </button>
@@ -43,7 +45,7 @@ export function MobileShell({
           <button
             className="ds-hamburger"
             onClick={() => setOpen(true)}
-            aria-label="Open menu"
+            aria-label={t("openMenu")}
           >
             <span />
             <span />

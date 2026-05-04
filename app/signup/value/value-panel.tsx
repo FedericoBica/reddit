@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 
 const POOL = [
   { sub: "r/startups", title: "Best CRM for a bootstrapped SaaS in 2026?", score: 94 },
@@ -15,6 +16,7 @@ const POOL = [
 type ThreadItem = (typeof POOL)[0] & { uid: number };
 
 export function ValuePanel() {
+  const t = useTranslations("signup.valuePanel");
   const counter = useRef(POOL.length);
   const [stack, setStack] = useState<ThreadItem[]>(
     POOL.slice(0, 3).map((t, i) => ({ ...t, uid: i }))
@@ -34,8 +36,8 @@ export function ValuePanel() {
     <div className="value-live-panel">
       <div className="value-live-header">
         <span className="value-live-dot" />
-        <span>Live radar</span>
-        <span className="value-live-stat">142 threads today</span>
+        <span>{t("liveRadar")}</span>
+        <span className="value-live-stat">{t("threadsToday")}</span>
       </div>
       <div className="value-live-feed">
         {stack.map((thread, i) => (
