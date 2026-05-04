@@ -46,7 +46,7 @@ export const processXPost = inngest.createFunction(
     id: "process-x-post",
     name: "Process X post",
     retries: 1,
-    concurrency: 10,
+    concurrency: 5,
     triggers: [{ event: "x/post.received" }],
   },
   async ({ event, step }) => {
