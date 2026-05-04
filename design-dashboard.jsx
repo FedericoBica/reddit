@@ -162,7 +162,7 @@ function HeroDashboard() {
       <div className="dash-frame">
         <div className="dash-top">
           <div className="dots"><i/><i/><i/></div>
-          <div className="dash-title">prowl.redprowl.app / workspace — acme inc.</div>
+          <div className="dash-title">prowl.prowlit.app / workspace — acme inc.</div>
         </div>
 
         <div className="dash-tabs">

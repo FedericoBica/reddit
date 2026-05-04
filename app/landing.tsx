@@ -173,7 +173,7 @@ function HeroDashboard({ td }: { td: Translations["dashboard"] }) {
   }
 
   return (
-    <div className="dash" aria-label="RedProwl product preview">
+    <div className="dash" aria-label="Prowlit product preview">
       <div className="dash-sticker a">live demo</div>
       <div className="dash-sticker b">try it</div>
 
@@ -184,7 +184,7 @@ function HeroDashboard({ td }: { td: Translations["dashboard"] }) {
             <i />
             <i />
           </div>
-          <div className="dash-title">prowl.redprowl.app / workspace - acme inc.</div>
+          <div className="dash-title">prowl.prowlit.app / workspace - acme inc.</div>
         </div>
 
         <div className="dash-tabs">
@@ -547,7 +547,7 @@ function IdealCustomers({ t }: { t: Translations }) {
         </div>
 
         <p className="closing-line">
-          <b>RedProwl</b>{tc.closingLine}<em>{tc.closingLineAuto}</em>
+          <b>Prowlit</b>{tc.closingLine}<em>{tc.closingLineAuto}</em>
         </p>
       </div>
     </section>
@@ -653,7 +653,7 @@ function Comparison({ t }: { t: Translations }) {
             </div>
           </div>
           <div className="comparison-card prowl">
-            <h3>{tc.prowlTitle} <span>RedProwl</span></h3>
+            <h3>{tc.prowlTitle} <span>Prowlit</span></h3>
             <ul>
               {prowl.map(([title, desc]) => (
                 <li key={title}>

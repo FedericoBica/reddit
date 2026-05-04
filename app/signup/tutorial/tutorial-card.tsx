@@ -11,8 +11,8 @@ const steps = [
   {
     eyebrow: "Welcome · You&apos;re in",
     title: "Welcome to",
-    titleEm: "RedProwl.",
-    copy: "RedProwl scans Reddit for buying intent, recommendation requests and competitor comparisons that match your company.",
+    titleEm: "Prowlit.",
+    copy: "Prowlit scans Reddit for buying intent, recommendation requests and competitor comparisons that match your company.",
     detail: "Your Searchbox ranks posts by intent so you can focus on conversations worth answering.",
   },
   {

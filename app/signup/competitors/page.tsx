@@ -51,7 +51,7 @@ export default async function SignupCompetitorsPage({ searchParams }: Competitor
               Who do you<br /><em>get compared</em> to?
             </h1>
             <p className="signup-wizard-copy">
-              Add the alternatives buyers weigh against you. RedProwl builds battlecards so you have a one-line answer ready when someone asks.
+              Add the alternatives buyers weigh against you. Prowlit builds battlecards so you have a one-line answer ready when someone asks.
             </p>
 
             {params?.error && <div className="signup-error">{params.error}</div>}

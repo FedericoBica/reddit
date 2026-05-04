@@ -186,7 +186,7 @@ function Pricing() {
       <div className="wrap" style={{textAlign:'center'}}>
         <span className="eyebrow" style={{margin:'0 auto'}}>Pricing</span>
         <h2 className="h-section" style={{marginTop: 16, maxWidth:900, marginLeft:'auto', marginRight:'auto'}}>Pricing that <em style={{fontStyle:'italic', color:'var(--accent-ink)'}}>pays for itself</em>.</h2>
-        <p className="sub" style={{margin:'0 auto 28px'}}>Ads can cost you thousands. RedProwl surfaces hidden Reddit opportunities and drives organic growth for a fraction of the cost — it pays for itself from a single new customer.</p>
+        <p className="sub" style={{margin:'0 auto 28px'}}>Ads can cost you thousands. Prowlit surfaces hidden Reddit opportunities and drives organic growth for a fraction of the cost — it pays for itself from a single new customer.</p>
 
         <div style={{display:'inline-flex', alignItems:'center', gap:12, marginBottom:10}}>
           <div style={{
@@ -238,7 +238,7 @@ function Pricing() {
 function FAQ() {
   const items = [
     ['Is this going to get my account banned?', 'The opposite is the goal. Every plan includes guardrails that enforce per-subreddit rules, cadence, and self-promo ratios. Accounts that follow our defaults have a <0.4% ban rate — below the Reddit baseline.'],
-    ['How is this different from F5Bot or Brand24?', 'Those tools alert you when a keyword appears. RedProwl also scores intent, drafts the reply in your voice, enforces account hygiene, and gives your team a shared inbox. It\'s the whole workflow, not just the tripwire.'],
+    ['How is this different from F5Bot or Brand24?', 'Those tools alert you when a keyword appears. Prowlit also scores intent, drafts the reply in your voice, enforces account hygiene, and gives your team a shared inbox. It\'s the whole workflow, not just the tripwire.'],
     ['Do you use my data to train models?', 'No. Your replies, threads, and ICPs stay in your workspace. We fine-tune on anonymized, opted-in data only, and you can opt out at onboarding.'],
     ['Can I use this for cold DMs?', 'Technically yes, but we actively discourage it — Reddit DMs at scale get accounts nuked fast. Public replies consistently convert 4-8x better anyway.'],
     ['What happens if Reddit changes their API?', 'We\'ve built with that in mind. We use authenticated API access under each workspace\'s own credentials, and we maintain a fallback scraping layer. Pricing is also inclusive of API fees.'],
@@ -303,7 +303,7 @@ function Footer() {
               <div className="brand-mark">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" fill="currentColor" opacity="0.3"/><circle cx="8" cy="8" r="3" fill="currentColor"/></svg>
               </div>
-              RedProwl
+              Prowlit
             </div>
             <p style={{color:'var(--ink-2)', fontSize:14, maxWidth: 300, lineHeight: 1.55, margin:0}}>
               Reddit lead-gen for founders who'd rather ship than lurk.
@@ -323,7 +323,7 @@ function Footer() {
           </div>
         </div>
         <div className="foot-bottom">
-          <span>© 2026 RedProwl, Inc. Not affiliated with Reddit, Inc.</span>
+          <span>© 2026 Prowlit, Inc. Not affiliated with Reddit, Inc.</span>
           <span className="mono">v4.2.1 · all systems operational</span>
         </div>
       </div>

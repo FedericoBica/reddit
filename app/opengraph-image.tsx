@@ -1,7 +1,7 @@
 import { ImageResponse } from "next/og";
 
 export const runtime = "edge";
-export const alt = "RedProwl — Find Buyers on Reddit & X";
+export const alt = "Prowlit — Find Buyers on Reddit & X";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -78,8 +78,8 @@ export default function OgImage() {
             justifyContent: "space-between",
           }}
         >
-          <span style={{ color: "#FF4500", fontSize: 22, fontWeight: 800 }}>RedProwl</span>
-          <span style={{ color: "#4A4A4F", fontSize: 18 }}>redprowl.com</span>
+          <span style={{ color: "#FF4500", fontSize: 22, fontWeight: 800 }}>Prowlit</span>
+          <span style={{ color: "#4A4A4F", fontSize: 18 }}>prowlit.com</span>
         </div>
       </div>
     ),

@@ -84,7 +84,7 @@ function IdealCustomers() {
         </div>
 
         <p style={{marginTop:40, fontFamily:'Instrument Serif, serif', fontSize:28, color:'var(--ink-2)'}}>
-          <b style={{color:'var(--ink)'}}>RedProwl</b> finds them for you. <em style={{color:'var(--accent-ink)'}}>Automatically.</em>
+          <b style={{color:'var(--ink)'}}>Prowlit</b> finds them for you. <em style={{color:'var(--accent-ink)'}}>Automatically.</em>
         </p>
       </div>
     </section>
@@ -101,7 +101,7 @@ function TwoWays() {
           <em style={{fontStyle:'italic', color:'var(--accent-ink)'}}>Two ways</em> to win Reddit.
         </h2>
         <p className="sub" style={{margin:'0 auto 48px'}}>
-          Public replies build authority and rank on Google + AI search. Private DMs convert that authority into booked calls. RedProwl handles both.
+          Public replies build authority and rank on Google + AI search. Private DMs convert that authority into booked calls. Prowlit handles both.
         </p>
 
         <div style={{display:'grid', gridTemplateColumns:'repeat(2, 1fr)', gap:24, maxWidth:1000, margin:'0 auto', textAlign:'left'}}>
@@ -172,7 +172,7 @@ function TwoWays() {
   );
 }
 
-// ===== Manual vs RedProwl comparison =====
+// ===== Manual vs Prowlit comparison =====
 function Comparison() {
   const manual = [
     'Do keyword research manually (1–2 hours)',
@@ -192,10 +192,10 @@ function Comparison() {
   return (
     <section className="section-pad">
       <div className="wrap" style={{textAlign:'center'}}>
-        <span className="eyebrow" style={{margin:'0 auto'}}>Why RedProwl</span>
+        <span className="eyebrow" style={{margin:'0 auto'}}>Why Prowlit</span>
         <h2 className="h-section" style={{marginTop:16, maxWidth:900, marginLeft:'auto', marginRight:'auto'}}>
           Finding customers feels too hard?<br/>
-          <em style={{fontStyle:'italic', color:'var(--accent-ink)'}}>RedProwl is the better way.</em>
+          <em style={{fontStyle:'italic', color:'var(--accent-ink)'}}>Prowlit is the better way.</em>
         </h2>
         <p className="sub" style={{margin:'0 auto 48px'}}>Stop burning hours on Reddit searches. Start joining high-intent conversations that actually convert.</p>
 
@@ -215,7 +215,7 @@ function Comparison() {
           </div>
 
           <div className="card" style={{padding:28, background:'var(--paper)'}}>
-            <h3 style={{fontFamily:'Instrument Serif, serif', fontSize:28, margin:'0 0 20px'}}>With <span style={{color:'var(--accent-ink)'}}>RedProwl</span></h3>
+            <h3 style={{fontFamily:'Instrument Serif, serif', fontSize:28, margin:'0 0 20px'}}>With <span style={{color:'var(--accent-ink)'}}>Prowlit</span></h3>
             <ul style={{listStyle:'none', padding:0, margin:0, display:'grid', gap:16}}>
               {prowl.map(([t, d], i) => (
                 <li key={i} style={{display:'grid', gap:4}}>
@@ -271,13 +271,13 @@ function HonestTruth() {
             <div className="mono" style={{fontSize:11, letterSpacing:'0.08em', textTransform:'uppercase', color:'var(--ink-3)', marginBottom:12}}>So what actually works?</div>
             <h3 style={{fontFamily:'Instrument Serif, serif', fontSize:30, margin:'0 0 12px', letterSpacing:'-0.01em'}}>Automate the 90%. <em style={{color:'var(--accent-ink)'}}>You do the 10% that matters.</em></h3>
             <p style={{fontSize:15.5, lineHeight:1.6, color:'var(--ink-2)', margin:'0 0 20px'}}>
-              RedProwl handles everything up to the last mile — finding conversations, scoring intent, drafting replies. You handle the final step: posting from your real account. That's not a limitation. That's your competitive edge.
+              Prowlit handles everything up to the last mile — finding conversations, scoring intent, drafting replies. You handle the final step: posting from your real account. That's not a limitation. That's your competitive edge.
             </p>
             <ol style={{listStyle:'none', padding:0, margin:0, display:'grid', gap:8, counterReset:'s'}}>
               {[
-                'RedProwl AI finds the right conversations for your product',
+                'Prowlit AI finds the right conversations for your product',
                 'Relevance filtering shows you only high-intent threads',
-                'RedProwl AI suggests authentic, context-aware replies',
+                'Prowlit AI suggests authentic, context-aware replies',
                 'You post from your account. Comments stick. You make $$$.',
               ].map((x, i) => (
                 <li key={i} style={{

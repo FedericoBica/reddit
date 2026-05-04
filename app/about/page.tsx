@@ -330,7 +330,7 @@ export default function AboutPage() {
             </div>
           </div>
           <div className="foot-bottom">
-            <span>© 2026 RedProwl, Inc. Not affiliated with Reddit, Inc.</span>
+            <span>© 2026 Prowlit, Inc. Not affiliated with Reddit, Inc.</span>
             <span className="mono">all systems operational</span>
           </div>
         </div>

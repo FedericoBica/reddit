@@ -59,23 +59,23 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://redprowl.com";
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://prowlit.com";
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
-  title: { default: "RedProwl", template: "%s — RedProwl" },
-  description: "Find people on Reddit and X actively looking for what you sell. RedProwl scores buyer intent and helps you reply before your competitors do.",
+  title: { default: "Prowlit", template: "%s — Prowlit" },
+  description: "Find people on Reddit and X actively looking for what you sell. Prowlit scores buyer intent and helps you reply before your competitors do.",
   robots: { index: true, follow: true, googleBot: { index: true, follow: true } },
   openGraph: {
     type: "website",
-    siteName: "RedProwl",
-    title: "RedProwl — Find Buyers on Reddit & X",
+    siteName: "Prowlit",
+    title: "Prowlit — Find Buyers on Reddit & X",
     description: "Find people on Reddit and X actively looking for what you sell. Scores buyer intent, drafts human replies, ships in 2 minutes.",
-    images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "RedProwl" }],
+    images: [{ url: "/opengraph-image.png", width: 1200, height: 630, alt: "Prowlit" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "RedProwl — Find Buyers on Reddit & X",
+    title: "Prowlit — Find Buyers on Reddit & X",
     description: "Find people on Reddit and X actively looking for what you sell. Scores buyer intent, drafts human replies.",
     images: ["/opengraph-image.png"],
   },
