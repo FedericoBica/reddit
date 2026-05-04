@@ -1081,8 +1081,7 @@ function Pricing({ t }: { t: Translations }) {
       monthly: 19,
       yearly: 15,
       desc: tp.tier1Desc,
-      inbound: [tp.tier1In1, tp.tier1In2, tp.tier1In3, tp.tier1In4, tp.tier1In5],
-      outbound: [tp.tier1Out1],
+      features: [tp.tier1F1, tp.tier1F2, tp.tier1F3, tp.tier1F4, tp.tier1F5, tp.tier1F6, tp.tier1F7, tp.tier1F8],
     },
     {
       name: tp.tier2Name,
@@ -1090,16 +1089,14 @@ function Pricing({ t }: { t: Translations }) {
       yearly: 31,
       desc: tp.tier2Desc,
       featured: true,
-      inbound: [tp.tier2In1, tp.tier2In2, tp.tier2In3, tp.tier2In4, tp.tier2In5],
-      outbound: [tp.tier2Out1],
+      features: [tp.tier2F1, tp.tier2F2, tp.tier2F3, tp.tier2F4, tp.tier2F5, tp.tier2F6, tp.tier2F7, tp.tier2F8, tp.tier2F9],
     },
     {
       name: tp.tier3Name,
       monthly: 79,
       yearly: 63,
       desc: tp.tier3Desc,
-      inbound: [tp.tier3In1, tp.tier3In2, tp.tier3In3, tp.tier3In4, tp.tier3In5],
-      outbound: [tp.tier3Out1, tp.tier3Out2],
+      features: [tp.tier3F1, tp.tier3F2, tp.tier3F3, tp.tier3F4, tp.tier3F5, tp.tier3F6, tp.tier3F7, tp.tier3F8, tp.tier3F9],
     },
   ];
 
@@ -1125,15 +1122,8 @@ function Pricing({ t }: { t: Translations }) {
               <span className="price-name">{tier.name}</span>
               <div className="price-num">${yearly ? tier.yearly : tier.monthly}<small> {tp.perMonth}</small></div>
               <div className="price-desc">{tier.desc}</div>
-              <div className="price-section">{tp.inboundLabel}</div>
               <ul className="price-list">
-                {tier.inbound.map((feature) => (
-                  <li key={feature}><span className="price-check">✓</span><span>{feature}</span></li>
-                ))}
-              </ul>
-              <div className="price-section">{tp.outboundLabel}</div>
-              <ul className="price-list">
-                {tier.outbound.map((feature) => (
+                {tier.features.map((feature) => (
                   <li key={feature}><span className="price-check">✓</span><span>{feature}</span></li>
                 ))}
               </ul>

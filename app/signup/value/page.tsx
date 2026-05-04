@@ -46,13 +46,13 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
           <section className="signup-wizard-main">
             <div className="sw-eyebrow">
               <span className="sw-eyebrow-dot" />
-              Step 03 · Why Reddit
+              Step 03 · Why Us
             </div>
             <h1 className="signup-wizard-title">
               Where buyers<br /><em>ask out loud.</em>
             </h1>
             <p className="signup-wizard-copy">
-              Reddit is full of people comparing tools, asking for recommendations, and describing urgent pain — in plain language, with their wallet half-open.
+              Reddit & X are full of people comparing tools, asking for recommendations, and describing urgent pain — in plain language, with their wallet half-open.
             </p>
 
             <ul className="sw-checklist">
