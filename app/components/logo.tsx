@@ -32,7 +32,7 @@ export function Wordmark({ size = 18 }: { size?: number }) {
           letterSpacing: "-0.01em",
         }}
       >
-        red
+        Prowl
       </span>
       <span
         style={{
@@ -42,7 +42,7 @@ export function Wordmark({ size = 18 }: { size?: number }) {
           letterSpacing: "-0.01em",
         }}
       >
-        Prowl
+        it
       </span>
     </span>
   );

@@ -52,9 +52,6 @@ export function SidebarLinks({
         gap: 2,
       }}
     >
-      {/* ── REDDIT ── */}
-      <GroupLabel>{t("redditGroup")}</GroupLabel>
-
       <Link
         href={`/dashboard?projectId=${currentProjectId}`}
         className={`sidebar-link${pathname === "/dashboard" || pathname.startsWith("/leads/") ? " sidebar-link-active" : ""}`}

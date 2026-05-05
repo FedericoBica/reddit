@@ -12,7 +12,7 @@ import {
   type ReplyStyle,
 } from "@/db/schemas/domain";
 
-export const REPLY_PROMPT_VERSION = "v4_natural";
+export const REPLY_PROMPT_VERSION = "v5_natural";
 
 const replyResponseSchema = z.object({
   content: z.string().trim().min(1).max(1_500),
@@ -210,6 +210,25 @@ the coordination overhead alone justifies something like [Product] — but it de
 on how structured your workflows are.
 What's the part that's breaking down most — deadlines, visibility, or handoffs?"
 Why good: Opens with specific empathy, asks before pitching, product mention is light and conditional.
+
+GOOD 4 — active_buying + direct style (recommendation-list thread):
+Post context: OP ranked 5 tools and asked what actually saves time for outbound teams.
+"Missed [Product] from the list — been using it for outbound sequences and the main thing
+is it doesn't require a full-time admin to keep it running. Pipedrive is solid for pipeline
+visibility but the automation gets limited fast if you're doing volume outreach.
+[Product]'s sequence builder is simpler than it sounds: [URL]"
+Why good: Engages with the OP's list (acknowledges Pipedrive specifically), states first-person experience,
+concrete claim (doesn't require admin), no hedging, short and punchy. Does NOT say "great list!" or pivot
+generically — it drops straight into the recommendation with a specific contrast.
+
+GOOD 5 — active_buying + engaging style (recommendation thread, short):
+"We use [Product] for this — the data model is fully custom so you're not cramming
+your process into whatever structure the tool assumes. For outbound-heavy teams especially
+the LinkedIn + email sequence combo is what makes it worth it over Pipedrive.
+Tried most on your list before landing here."
+Why good: First person throughout, specific feature tied to OP's exact use case (outbound-heavy),
+named a specific competitor the OP mentioned (Pipedrive) with an honest comparison, no URL needed
+because it sounds like genuine experience not a pitch.
 `.trim();
 
 // ─── Anti-Patterns ────────────────────────────────────────────
@@ -239,12 +258,21 @@ BANNED PHRASES anywhere in the reply:
 - "In terms of [topic]," — corporate transition phrase
 - "That being said," / "With that said," — filler
 - Bullet-point lists of product features as the reply body
+- "worth looking into" / "worth exploring" / "worth considering" — hedging filler
+- "might be a X" / "could be a X" — weak hedging, state things directly
+- "for teams looking to" / "for teams like yours" — ad copy phrasing
+- "your specific workflows" / "your specific needs" / "your unique situation" — generic filler
+- "it's worth noting that" / "it's important to note that" — blog post language
+- "definitely a plus" / "certainly a benefit" — watered-down praise
+- "[Product] focuses on" / "[Product] helps teams" — product description from the landing page, not a real person
 
 BANNED STRUCTURES:
 - 5 clean paragraphs each addressing a different topic — looks like an essay
 - Ending with a generic follow-up question ("What's your next step?") if it adds nothing
 - Ending with just a URL on its own line
 - Pivoting to the product mid-reply after 3+ paragraphs of advice — the pitch pivot is obvious
+- Indirect pivot: "If you're considering X, it's worth looking into Y that allows Z" — sounds like an ad
+- Starting with a competitor acknowledgment then smoothly pivoting — too slick, people notice
 `.trim();
 
 // ─── Length Instructions ──────────────────────────────────────
@@ -301,6 +329,10 @@ function buildSystemPrompt(style: ReplyStyle, replyLength: string): string {
     "- Never invent product features, user numbers, or case studies.",
     "- If the product doesn't fit what the user needs, say so or omit the mention entirely.",
     "- Do not mention that you are an AI.",
+    "- READ THE POST CAREFULLY. If the OP listed specific tools, named a use case, or described a constraint — reference it. Replies that ignore the post content get downvoted. Don't reply to the title only.",
+    "- DO NOT HEDGE. 'It might help' → 'It helps'. 'Could be useful' → 'Is useful for X'. 'Worth looking into' → just say what it does. State things with the confidence of someone who has actually used the product.",
+    "- FIRST PERSON BEATS THIRD PERSON. 'I use this for cold outreach' is 10x more credible than 'teams that need outreach automation can use this'. Use first person (I, we) when describing the product — it sounds like personal experience, not a product page.",
+    "- SPECIFIC BEATS GENERIC. 'The LinkedIn + email sequence combo' beats 'multi-channel outreach'. Name the actual features, describe the actual workflow. Generic claims read as marketing.",
     "",
     "═══════════════════════════════════════════════",
     "LENGTH — HIGHEST PRIORITY (overrides any paragraph count in the style rules below)",
@@ -474,7 +506,7 @@ export async function generateLeadReplyVariant(
   if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
 
   const model = process.env.OPENAI_REPLY_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
-  const temperature = Number(process.env.OPENAI_REPLY_TEMPERATURE ?? "0.4");
+  const temperature = Number(process.env.OPENAI_REPLY_TEMPERATURE ?? "0.7");
   const timeoutMs = Number(process.env.OPENAI_REPLY_TIMEOUT_MS ?? "30000");
   const client = new OpenAI({ apiKey, timeout: timeoutMs });
 
