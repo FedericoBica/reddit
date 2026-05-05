@@ -19,7 +19,7 @@ export default function AboutPage() {
             <Link href="/#pricing">Pricing</Link>
             <Link href="/about" style={{ color: "var(--ink)", fontWeight: 700 }}>About</Link>
             <Link href="/login">Log in</Link>
-            <Link className="btn primary sm" href="/signup">Start free</Link>
+            <Link className="btn primary sm" href="/signup">Start here</Link>
           </div>
         </div>
       </nav>

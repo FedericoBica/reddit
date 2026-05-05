@@ -1304,13 +1304,13 @@ export default function LandingPage({ locale }: { locale: Locale }) {
               <span className="logo-sticker logo-x" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="32" height="32"><path fill="currentColor" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
               </span>
-              {t.hero.h1_line1}
+              {t.hero.h1_1}
             </span>
             <span className="hero-line">
               <span className="logo-sticker logo-reddit" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="34" height="34"><path fill="currentColor" d="M12 0a12 12 0 1012 12A12 12 0 0012 0zm5.01 13.18a3.43 3.43 0 01.04.5c0 2.55-2.96 4.62-6.62 4.62s-6.62-2.07-6.62-4.62a3.43 3.43 0 01.04-.5 1.5 1.5 0 11 2 -1.39 4.79 4.79 0 014.59-2.46l.78-3.66a.27.27 0 01.32-.21l2.55.54a1 1 0 11-.1.45l-2.28-.48-.7 3.29a4.79 4.79 0 014.5 2.53 1.5 1.5 0 11 1.5 1zm-9.05-.5a1 1 0 101 1 1 1 0 00-1-1zm6.08 0a1 1 0 101 1 1 1 0 00-1-1zm-.18 2.4a.4.4 0 00-.57 0 2.5 2.5 0 01-3.56 0 .4.4 0 10-.57.57 3.31 3.31 0 004.7 0 .4.4 0 000-.57z"/></svg>
               </span>
-              <span className="mark">{t.hero.h1_line2}</span>
+              <span className="mark">{t.hero.h1_em}</span>{t.hero.h1_2}
             </span>
           </h1>
           <p className="lede" style={{ margin: "24px auto 32px", maxWidth: 640 }}>{t.hero.lede}</p>
