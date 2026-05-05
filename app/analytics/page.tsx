@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listAllProjectLeads } from "@/db/queries/leads";
 import { listSearchboxResults } from "@/db/queries/searchbox";
-import type { LeadDTO } from "@/db/schemas/domain";
+import { listProjectXPosts } from "@/db/queries/x";
+import type { LeadDTO, XPostDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
 
@@ -25,9 +26,10 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   const { currentProject } = projectState;
 
 
-  const [allLeads, searchboxResults] = await Promise.all([
+  const [allLeads, searchboxResults, xPosts] = await Promise.all([
     listAllProjectLeads(currentProject.id, 500),
     listSearchboxResults({ projectId: currentProject.id, limit: 500 }),
+    listProjectXPosts(currentProject.id, 500),
   ]);
 
   const analyticsPosts = normalizeAnalyticsPosts(allLeads, searchboxResults);
@@ -37,6 +39,10 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   const keywordStats = computeKeywordStats(analyticsPosts);
   const relevantSubreddits = computeRelevantSubreddits(analyticsPosts);
   const timeline = computeTimeline(allLeads);
+
+  const xStats = computeXStats(xPosts);
+  const xKeywordStats = computeXKeywordStats(xPosts);
+  const xTimeline = computeXTimeline(xPosts);
 
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
 
@@ -127,6 +133,46 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
               )}
             </div>
           </div>
+
+          {/* ── X Section ── */}
+          {xPosts.length > 0 && (
+            <>
+              <div style={{ display: "flex", alignItems: "center", gap: 10, margin: "8px 0 16px" }}>
+                <div style={{ flex: 1, height: 1, background: "#F0F0EE" }} />
+                <span style={{ fontSize: 11, fontWeight: 700, color: "#B0B0B5", letterSpacing: "0.08em", textTransform: "uppercase" }}>X / Twitter</span>
+                <div style={{ flex: 1, height: 1, background: "#F0F0EE" }} />
+              </div>
+
+              {/* X KPIs */}
+              <div className="metric-grid" style={{ gridTemplateColumns: "repeat(4, minmax(0, 1fr))", marginBottom: 20 }}>
+                <KpiCard label="Total posts X" value={xStats.total} />
+                <KpiCard label="Nuevos" value={xStats.new} accent />
+                <KpiCard label="Respondidos" value={xStats.replied} />
+                <KpiCard label="Score promedio" value={xStats.avgScore > 0 ? xStats.avgScore : "—"} />
+              </div>
+
+              {/* X Timeline + Keywords */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, marginBottom: 20 }}>
+                {xTimeline.some((r) => r.count > 0) && (
+                  <div className="panel panel-pad">
+                    <p className="section-title" style={{ marginBottom: 16 }}>Actividad X (últimos 14 días)</p>
+                    <TimelineChart rows={xTimeline} color="#1A1A1B" />
+                  </div>
+                )}
+
+                {xKeywordStats.length > 0 && (
+                  <div className="panel panel-pad">
+                    <p className="section-title" style={{ marginBottom: 16 }}>Keywords X con más matches</p>
+                    <div style={{ display: "grid", gap: 8 }}>
+                      {xKeywordStats.slice(0, 8).map((row) => (
+                        <KeywordRow key={row.keyword} {...row} maxCount={xKeywordStats[0].count} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
 
         </div>
       </div>
@@ -314,7 +360,7 @@ function KeywordRow({
   );
 }
 
-function TimelineChart({ rows }: { rows: { date: string; count: number }[] }) {
+function TimelineChart({ rows, color = "#FF4500" }: { rows: { date: string; count: number }[]; color?: string }) {
   const max = Math.max(...rows.map((r) => r.count), 1);
   return (
     <div
@@ -331,11 +377,11 @@ function TimelineChart({ rows }: { rows: { date: string; count: number }[] }) {
         return (
           <div
             key={r.date}
-            title={`${r.date}: ${r.count} lead${r.count !== 1 ? "s" : ""}`}
+            title={`${r.date}: ${r.count} post${r.count !== 1 ? "s" : ""}`}
             style={{
               flex: 1,
               height: h,
-              background: r.count > 0 ? "#FF4500" : "#F0F0EE",
+              background: r.count > 0 ? color : "#F0F0EE",
               borderRadius: "3px 3px 0 0",
               opacity: r.count > 0 ? 0.8 : 1,
               transition: "height 0.4s ease",
@@ -456,6 +502,40 @@ function computeTimeline(leads: LeadDTO[]) {
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().slice(0, 10);
     const count = leads.filter((l) => l.created_at?.slice(0, 10) === dateStr).length;
+    days.push({ date: dateStr, count });
+  }
+  return days;
+}
+
+function computeXStats(posts: XPostDTO[]) {
+  const total = posts.length;
+  const newCount = posts.filter((p) => p.status === "new").length;
+  const replied = posts.filter((p) => p.status === "replied").length;
+  const scores = posts.map((p) => p.intent_score ?? 0).filter((s) => s > 0);
+  const avgScore = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  return { total, new: newCount, replied, avgScore };
+}
+
+function computeXKeywordStats(posts: XPostDTO[]) {
+  const map = new Map<string, number>();
+  for (const p of posts) {
+    for (const kw of (p.keywords_matched ?? [])) {
+      map.set(kw, (map.get(kw) ?? 0) + 1);
+    }
+  }
+  return Array.from(map.entries())
+    .map(([keyword, count]) => ({ keyword, count }))
+    .sort((a, b) => b.count - a.count);
+}
+
+function computeXTimeline(posts: XPostDTO[]) {
+  const days: { date: string; count: number }[] = [];
+  const now = new Date();
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(now);
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const count = posts.filter((p) => p.created_at?.slice(0, 10) === dateStr).length;
     days.push({ date: dateStr, count });
   }
   return days;

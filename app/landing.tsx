@@ -1325,18 +1325,6 @@ export default function LandingPage({ locale }: { locale: Locale }) {
         </div>
       </section>
 
-      <section className="logobar">
-        <div className="wrap logobar-inner">
-          <div className="logobar-label">{t.logobar.label}</div>
-          <div className="logobar-logos">
-            <span>Acme SaaS</span>
-            <span>Northstar</span>
-            <span>FounderOps</span>
-            <span>SignalWorks</span>
-          </div>
-        </div>
-      </section>
-
       <IdealCustomers t={t} />
       <WhyReddit t={t} />
       <WhyX t={t} />
