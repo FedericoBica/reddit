@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BrandLink } from "@/app/components/logo";
 import { TRANSLATIONS, type Locale, type Translations } from "./landing-i18n";
 
@@ -1072,33 +1072,43 @@ function HowItWorks({ t }: { t: Translations }) {
   );
 }
 
+const X_ADDON = [
+  { monthly: 10, yearly: 8,  keywords: 5 },
+  { monthly: 15, yearly: 12, keywords: 7 },
+  { monthly: 20, yearly: 16, keywords: 12 },
+];
+
 function Pricing({ t }: { t: Translations }) {
   const [yearly, setYearly] = useState(false);
+  const [xEnabled, setXEnabled] = useState([false, false, false]);
   const tp = t.pricing;
+
   const tiers = [
     {
       name: tp.tier1Name,
-      monthly: 19,
-      yearly: 15,
+      monthly: 19, yearly: 15,
       desc: tp.tier1Desc,
       features: [tp.tier1F1, tp.tier1F2, tp.tier1F3, tp.tier1F4, tp.tier1F5, tp.tier1F6, tp.tier1F7, tp.tier1F8],
+      noXAddon: true,
     },
     {
       name: tp.tier2Name,
-      monthly: 39,
-      yearly: 31,
+      monthly: 39, yearly: 31,
       desc: tp.tier2Desc,
       featured: true,
       features: [tp.tier2F1, tp.tier2F2, tp.tier2F3, tp.tier2F4, tp.tier2F5, tp.tier2F6, tp.tier2F7, tp.tier2F8, tp.tier2F9],
     },
     {
       name: tp.tier3Name,
-      monthly: 79,
-      yearly: 63,
+      monthly: 79, yearly: 63,
       desc: tp.tier3Desc,
       features: [tp.tier3F1, tp.tier3F2, tp.tier3F3, tp.tier3F4, tp.tier3F5, tp.tier3F6, tp.tier3F7, tp.tier3F8, tp.tier3F9],
     },
   ];
+
+  function toggleX(i: number) {
+    setXEnabled((prev) => prev.map((v, j) => (j === i ? !v : v)));
+  }
 
   return (
     <section id="pricing" className="section-pad">
@@ -1116,20 +1126,59 @@ function Pricing({ t }: { t: Translations }) {
         </div>
 
         <div className="pricing">
-          {tiers.map((tier) => (
-            <div key={tier.name} className={`price ${tier.featured ? "featured" : ""}`}>
-              {tier.featured ? <span className="recommend">{tp.recommended}</span> : null}
-              <span className="price-name">{tier.name}</span>
-              <div className="price-num">${yearly ? tier.yearly : tier.monthly}<small> {tp.perMonth}</small></div>
-              <div className="price-desc">{tier.desc}</div>
-              <ul className="price-list">
-                {tier.features.map((feature) => (
-                  <li key={feature}><span className="price-check">✓</span><span>{feature}</span></li>
-                ))}
-              </ul>
-              <Link className="btn" href="/signup">{tp.ctaBtn}</Link>
-            </div>
-          ))}
+          {tiers.map((tier, i) => {
+            const addon = X_ADDON[i];
+            const addonPrice = yearly ? addon.yearly : addon.monthly;
+            const totalPrice = (yearly ? tier.yearly : tier.monthly) + (xEnabled[i] ? addonPrice : 0);
+            return (
+              <div key={tier.name} className={`price ${tier.featured ? "featured" : ""}`}>
+                {tier.featured ? <span className="recommend">{tp.recommended}</span> : null}
+
+                {!tier.noXAddon && (
+                  <div className={`price-x-addon${xEnabled[i] ? " active" : ""}`}>
+                    <button type="button" className="price-x-toggle" onClick={() => toggleX(i)}>
+                      <span className={`price-x-check${xEnabled[i] ? " checked" : ""}`}>
+                        <svg width="11" height="9" viewBox="0 0 11 9" fill="none" aria-hidden="true">
+                          <path d="M1 4L4 7.5L10 1" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </span>
+                      <div className="price-x-info">
+                        <span className="price-x-label">
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" aria-label="X" style={{ verticalAlign: "middle", marginRight: 4 }}>
+                            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                          </svg>
+                          Add X (Twitter) monitoring
+                        </span>
+                        <span className="price-x-price">+${addonPrice}/mo</span>
+                      </div>
+                    </button>
+                    {xEnabled[i] && (
+                      <ul className="price-x-features">
+                        <li><span>✓</span>{addon.keywords} X Keywords</li>
+                        <li><span>✓</span>X Lead Detection</li>
+                        <li><span>✓</span>X Competitor Tracking</li>
+                      </ul>
+                    )}
+                  </div>
+                )}
+
+                <span className="price-name">{tier.name}</span>
+                <div className="price-num">
+                  ${totalPrice}
+                  <small> {tp.perMonth}</small>
+                  {xEnabled[i] && <span className="price-x-badge">+ X</span>}
+                </div>
+                <div className="price-desc">{tier.desc}</div>
+                <ul className="price-list">
+                  {tier.features.map((feature) => (
+                    <li key={feature}><span className="price-check">✓</span><span>{feature}</span></li>
+                  ))}
+                </ul>
+
+                <Link className="btn" href="/signup">{tp.ctaBtn}</Link>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>
@@ -1227,6 +1276,104 @@ function Footer({ t, locale }: { t: Translations; locale: Locale }) {
   );
 }
 
+const NAV_FEATURES = [
+  { slug: "lead-generation", title: "Lead Generation", desc: "Turn high-intent Reddit users into a consistent stream of leads, app installs, and loyal customers through organic engagement." },
+  { slug: "ai-seo", title: "AI SEO", desc: "Enhance your product's visibility in AI search results like ChatGPT, Perplexity, Google Gemini, and more." },
+  { slug: "parasite-seo", title: "Parasite SEO", desc: "Leverage the massive domain authority of Reddit to hijack top Google rankings. We place your brand front and center in the discussions already winning the SEO race." },
+  { slug: "keyword-tracking", title: "AI Reddit Keyword Tracking", desc: "Get instant alerts when your target keywords appear on Reddit. Filtered by AI to only show relevant results." },
+  { slug: "brand-mentions", title: "Brand Mentions", desc: "Protect and grow your reputation with 24/7 brand tracking. Analyze comment sentiment and jump into conversations with customers." },
+  { slug: "competitor-monitoring", title: "Competitor Monitoring", desc: "Track your competitors' mentions across Reddit comments 24/7 and be present whenever they are being discussed." },
+];
+
+const NAV_FEATURE_ICONS: Record<string, React.ReactNode> = {
+  "lead-generation": (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" />
+    </svg>
+  ),
+  "ai-seo": (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 2l2.09 6.26H20.5l-5.36 3.9 2.09 6.26L12 14.52l-5.23 3.9 2.09-6.26L3.5 8.26H9.91z" />
+    </svg>
+  ),
+  "parasite-seo": (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" />
+    </svg>
+  ),
+  "keyword-tracking": (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 0 1-3.46 0" />
+    </svg>
+  ),
+  "brand-mentions": (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+    </svg>
+  ),
+  "competitor-monitoring": (
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+    </svg>
+  ),
+};
+
+function FeaturesNavDropdown() {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleOutside);
+    return () => document.removeEventListener("mousedown", handleOutside);
+  }, [open]);
+
+  return (
+    <div className="feat-nav-wrap" ref={ref}>
+      <button
+        className="feat-nav-trigger"
+        onClick={() => setOpen((v) => !v)}
+        type="button"
+      >
+        Features
+        <svg
+          className={`lang-chevron${open ? " open" : ""}`}
+          width="10"
+          height="10"
+          viewBox="0 0 10 10"
+          fill="none"
+          aria-hidden="true"
+        >
+          <path d="M2 3.5L5 6.5L8 3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </button>
+      {open && (
+        <div className="feat-nav-dropdown">
+          {NAV_FEATURES.map((f) => (
+            <Link
+              key={f.slug}
+              href={`/features/${f.slug}`}
+              className="feat-nav-item"
+              onClick={() => setOpen(false)}
+            >
+              <span className="feat-nav-icon">{NAV_FEATURE_ICONS[f.slug]}</span>
+              <div>
+                <div className="feat-nav-title">{f.title}</div>
+                <div className="feat-nav-desc">{f.desc}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const LANG_OPTIONS: { locale: Locale; flag: string; label: string }[] = [
   { locale: "en", flag: "🇺🇸", label: "English" },
   { locale: "es", flag: "🇪🇸", label: "Español" },
@@ -1283,7 +1430,7 @@ export default function LandingPage({ locale }: { locale: Locale }) {
         <div className="wrap nav-inner">
           <BrandLink href={`/${locale}`} logoSize={46} wordmarkSize={28} />
           <div className="nav-links">
-            <a href="#features">{t.nav.features}</a>
+            <FeaturesNavDropdown />
             <a href="#pricing">{t.nav.pricing}</a>
             <a href="#how">{t.nav.howItWorks}</a>
             <Link href="/about">{t.nav.about}</Link>
