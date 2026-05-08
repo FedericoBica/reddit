@@ -1,7 +1,6 @@
 import "server-only";
 
-import OpenAI from "openai";
-import { zodTextFormat } from "openai/helpers/zod";
+import Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
@@ -502,35 +501,40 @@ export async function generateLeadReplyVariant(
   context: ReplyGenerationContext,
   style: ReplyStyle,
 ): Promise<GeneratedLeadReplyVariant> {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) throw new Error("OPENAI_API_KEY is not configured");
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error("ANTHROPIC_API_KEY is not configured");
 
-  const model = process.env.OPENAI_REPLY_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
-  const temperature = Number(process.env.OPENAI_REPLY_TEMPERATURE ?? "0.7");
+  const model = process.env.ANTHROPIC_REPLY_MODEL ?? "claude-sonnet-4-6";
   const timeoutMs = Number(process.env.OPENAI_REPLY_TIMEOUT_MS ?? "30000");
-  const client = new OpenAI({ apiKey, timeout: timeoutMs });
+  const client = new Anthropic({ apiKey, timeout: timeoutMs });
 
   const replyLength = context.project.reply_length ?? "medium";
   const maxTokens = replyLength === "short" ? 120 : replyLength === "long" ? 900 : 400;
 
-  const response = await client.responses.parse(
-    {
-      model,
-      temperature,
-      instructions: buildSystemPrompt(style, replyLength),
-      input: buildUserPrompt(context, style),
-      max_output_tokens: maxTokens,
-      text: {
-        format: zodTextFormat(replyResponseSchema, `lead_reply_${style}`),
+  const response = await client.messages.create({
+    model,
+    max_tokens: maxTokens,
+    system: buildSystemPrompt(style, replyLength),
+    messages: [{ role: "user", content: buildUserPrompt(context, style) }],
+    tools: [
+      {
+        name: "reply",
+        description: "The generated Reddit reply",
+        input_schema: {
+          type: "object" as const,
+          properties: { content: { type: "string" } },
+          required: ["content"],
+        },
       },
-    },
-    { timeout: timeoutMs },
-  );
+    ],
+    tool_choice: { type: "tool", name: "reply" },
+  });
 
-  const parsed = response.output_parsed;
-  if (!parsed) {
-    throw new Error(`OpenAI returned no parsed ${style} reply`);
+  const toolBlock = response.content.find((b) => b.type === "tool_use");
+  if (!toolBlock || toolBlock.type !== "tool_use") {
+    throw new Error(`Anthropic returned no tool use block for ${style} reply`);
   }
+  const parsed = replyResponseSchema.parse(toolBlock.input);
 
   return {
     style,

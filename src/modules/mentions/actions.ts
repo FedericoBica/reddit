@@ -1,6 +1,6 @@
 "use server";
 
-import OpenAI from "openai";
+import Anthropic from "@anthropic-ai/sdk";
 import { requireUser } from "@/modules/auth/server";
 import { assertAiReplyGenerationAvailable, recordAiReplyGeneration } from "@/modules/billing/reply-generation";
 import { getBrandMentionById } from "@/db/queries/brand-mentions";
@@ -35,20 +35,20 @@ export async function generateMentionRepliesAction(
       };
     }
 
-    const apiKey = process.env.OPENAI_API_KEY;
+    const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return {
-        error: "OPENAI_API_KEY is not configured.",
+        error: "ANTHROPIC_API_KEY is not configured.",
         replies: [],
         usageLabel: null,
       };
     }
 
-    const client = new OpenAI({
+    const client = new Anthropic({
       apiKey,
       timeout: Number(process.env.OPENAI_REPLY_TIMEOUT_MS ?? "30000"),
     });
-    const model = process.env.OPENAI_REPLY_MODEL ?? process.env.OPENAI_MODEL ?? "gpt-4o-mini";
+    const model = process.env.ANTHROPIC_REPLY_MODEL ?? "claude-sonnet-4-6";
     const styles = [
       { key: "engaging", instruction: "Be warm, observant, and low-pressure." },
       { key: "direct", instruction: "Be concise, practical, and explicit about fit." },
@@ -57,46 +57,33 @@ export async function generateMentionRepliesAction(
 
     const replies = await Promise.all(
       styles.map(async (style) => {
-        const response = await client.responses.create({
+        const response = await client.messages.create({
           model,
-          temperature: 0.5,
-          max_output_tokens: 220,
-          input: [
-            {
-              role: "system",
-              content: [
-                {
-                  type: "input_text",
-                  text:
-                    "Write a Reddit reply for a SaaS founder/operator. Sound human, concrete, and non-spammy. Add value first. If the product is not a natural fit, avoid forcing it. Do not use hype, sales clichés, or say you are an AI.",
-                },
-              ],
-            },
+          max_tokens: 220,
+          system:
+            "Write a Reddit reply for a SaaS founder/operator. Sound human, concrete, and non-spammy. Add value first. If the product is not a natural fit, avoid forcing it. Do not use hype, sales clichés, or say you are an AI. Return only the final Reddit reply text.",
+          messages: [
             {
               role: "user",
               content: [
-                {
-                  type: "input_text",
-                  text: [
-                    `Project: ${project.name}`,
-                    `Website: ${project.website_url ?? "n/a"}`,
-                    `Value proposition: ${project.value_proposition ?? "n/a"}`,
-                    `Tone guidance: ${project.tone ?? "n/a"}`,
-                    `Mention target: ${mention.target_label}`,
-                    `Mention sentiment: ${mention.sentiment}`,
-                    `Mention title: ${mention.title}`,
-                    `Mention body: ${mention.body ?? "No body available."}`,
-                    `Sentiment rationale: ${mention.sentiment_reason ?? "n/a"}`,
-                    `Style: ${style.key}. ${style.instruction}`,
-                    "Return only the final Reddit reply text.",
-                  ].join("\n"),
-                },
-              ],
+                `Project: ${project.name}`,
+                `Website: ${project.website_url ?? "n/a"}`,
+                `Value proposition: ${project.value_proposition ?? "n/a"}`,
+                `Tone guidance: ${project.tone ?? "n/a"}`,
+                `Mention target: ${mention.target_label}`,
+                `Mention sentiment: ${mention.sentiment}`,
+                `Mention title: ${mention.title}`,
+                `Mention body: ${mention.body ?? "No body available."}`,
+                `Sentiment rationale: ${mention.sentiment_reason ?? "n/a"}`,
+                `Style: ${style.key}. ${style.instruction}`,
+                "Return only the final Reddit reply text.",
+              ].join("\n"),
             },
           ],
         });
 
-        return response.output_text.trim();
+        const textBlock = response.content.find((b) => b.type === "text");
+        return textBlock && textBlock.type === "text" ? textBlock.text.trim() : "";
       }),
     );
 

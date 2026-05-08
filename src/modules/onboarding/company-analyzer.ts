@@ -27,8 +27,7 @@ export async function analyzeCompanyWithAI(
   const websiteText = await fetchWebsiteText(website.url);
   const model =
     process.env.OPENAI_COMPANY_ANALYSIS_MODEL ??
-    process.env.OPENAI_MODEL ??
-    "gpt-4o-mini";
+    "gpt-4.1-mini";
   const temperature = Number(
     process.env.OPENAI_COMPANY_ANALYSIS_TEMPERATURE ?? "0.2",
   );
