@@ -9,9 +9,15 @@ export const metadata: Metadata = {
   title: "Choose a plan",
 };
 
-export default async function SignupPlanPage() {
+export default async function SignupPlanPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ projectId?: string }>;
+}) {
   const user = await getCurrentUser();
   if (!user) redirect("/signup");
+
+  const { projectId } = await searchParams;
 
   return (
     <main className="signup-wizard-shell">
@@ -21,7 +27,7 @@ export default async function SignupPlanPage() {
 
       <Card className="signup-wizard-card">
         <CardContent className="p-0">
-          <PlanSelector />
+          <PlanSelector projectId={projectId} />
         </CardContent>
       </Card>
     </main>

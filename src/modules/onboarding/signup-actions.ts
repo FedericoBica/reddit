@@ -54,13 +54,13 @@ export async function signUpWithPassword(formData: FormData) {
   }
 
   const headerStore = await headers();
-  const origin = headerStore.get("origin") ?? "http://localhost:3000";
+  const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ?? headerStore.get("origin") ?? "http://localhost:3000";
   const supabase = await createSupabaseServerClient();
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/signup/company")}`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/signup/plan")}`,
     },
   });
 
@@ -83,7 +83,7 @@ export async function signUpWithPassword(formData: FormData) {
 
 export async function signUpWithGoogle() {
   const headerStore = await headers();
-  const origin = headerStore.get("origin") ?? "http://localhost:3000";
+  const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ?? headerStore.get("origin") ?? "http://localhost:3000";
   const supabase = await createSupabaseServerClient();
   const next = "/signup/plan";
 
@@ -353,7 +353,11 @@ export async function choosePlanFromSignup(formData: FormData) {
   await requireUser("/signup/plan");
 
   const plan = parseBillingPlan(String(formData.get("plan") ?? "")) ?? "growth";
+  const projectId = String(formData.get("projectId") ?? "").trim();
   await setCurrentBillingPlan(plan as BillingPlan);
 
+  if (projectId) {
+    redirect(`/dashboard?projectId=${projectId}`);
+  }
   redirect("/signup/company");
 }

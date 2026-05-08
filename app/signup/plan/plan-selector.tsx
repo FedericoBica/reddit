@@ -62,7 +62,7 @@ const PLANS = [
 
 type PlanId = (typeof PLANS)[number]["id"];
 
-export function PlanSelector() {
+export function PlanSelector({ projectId }: { projectId?: string }) {
   const t = useTranslations("signup.plan");
   const [selected, setSelected] = useState<PlanId>("growth");
   const plan = PLANS.find((p) => p.id === selected)!;
@@ -93,6 +93,7 @@ export function PlanSelector() {
 
         <form action={choosePlanFromSignup} style={{ marginTop: "auto" }}>
           <input type="hidden" name="plan" value={selected} />
+          {projectId && <input type="hidden" name="projectId" value={projectId} />}
           <Button
             type="submit"
             className="sw-btn-primary w-full"

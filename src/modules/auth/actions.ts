@@ -14,7 +14,7 @@ export async function signInWithMagicLink(formData: FormData) {
   }
 
   const headerStore = await headers();
-  const origin = headerStore.get("origin") ?? "http://127.0.0.1:3000";
+  const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ?? headerStore.get("origin") ?? "http://localhost:3000";
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase.auth.signInWithOtp({
@@ -66,7 +66,7 @@ export async function verifyLoginCode(formData: FormData) {
 export async function signInWithGoogle(formData: FormData) {
   const next = sanitizeNextPath(String(formData.get("next") ?? "/dashboard"));
   const headerStore = await headers();
-  const origin = headerStore.get("origin") ?? "http://localhost:3000";
+  const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ?? headerStore.get("origin") ?? "http://localhost:3000";
   const supabase = await createSupabaseServerClient();
 
   // Clear any existing session so the OAuth callback always creates a fresh one
@@ -145,7 +145,7 @@ export async function verifySignUpCode(formData: FormData) {
     );
   }
 
-  redirect("/signup/company");
+  redirect("/signup/plan");
 }
 
 export async function signInWithPassword(formData: FormData) {
