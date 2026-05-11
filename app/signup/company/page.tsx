@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { getCurrentUser } from "@/modules/auth/server";
+import { redirectIfUserAlreadyHasProjects } from "@/modules/onboarding/signup-flow";
 import {
   analyzeCompanyWebsite,
   createProjectFromCompanyProfile,
@@ -38,6 +39,8 @@ export default async function SignupCompanyPage({ searchParams }: CompanyPagePro
   if (!user) {
     redirect("/signup");
   }
+
+  await redirectIfUserAlreadyHasProjects();
 
   return (
     <main className="signup-wizard-shell">

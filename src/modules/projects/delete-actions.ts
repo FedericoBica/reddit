@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { deleteProject } from "@/db/mutations/projects";
 import { listProjectsForCurrentUser } from "@/db/queries/projects";
 import { requireUser } from "@/modules/auth/server";
+import { requireProjectAccess } from "@/modules/projects/access";
 import { clearCurrentProject, setCurrentProject } from "@/modules/projects/current";
 
 export async function deleteProjectFromForm(formData: FormData) {
@@ -21,6 +22,7 @@ export async function deleteProjectFromForm(formData: FormData) {
     redirect(`/settings?projectId=${projectId}&tab=general`);
   }
 
+  await requireProjectAccess(projectId, "/settings");
   await deleteProject(projectId);
 
   const remainingProjects = await listProjectsForCurrentUser();

@@ -4,6 +4,7 @@ import { BrandLink } from "@/app/components/logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
 import { isCurrentUserAdmin } from "@/modules/auth/admin";
+import { getSignupProjectOrRedirect } from "@/modules/onboarding/signup-flow";
 import { TutorialCard } from "./tutorial-card";
 
 export const metadata: Metadata = {
@@ -26,6 +27,8 @@ export default async function SignupTutorialPage({ searchParams }: TutorialPageP
     } else {
       redirect("/signup/company");
     }
+  } else {
+    await getSignupProjectOrRedirect(projectId);
   }
 
   return (

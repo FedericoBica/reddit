@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { resolvePostAuthPath } from "@/modules/auth/post-auth";
 import { getCurrentUser } from "@/modules/auth/server";
 import LandingPage from "../landing";
 
@@ -54,7 +55,7 @@ const jsonLd = {
 
 export default async function EsPage() {
   const user = await getCurrentUser();
-  if (user) redirect("/dashboard");
+  if (user) redirect(await resolvePostAuthPath("/dashboard"));
   return (
     <>
       <script

@@ -33,13 +33,14 @@ import {
   generateConnectTokenFromForm,
   revokeExtensionTokenFromForm,
 } from "@/modules/outbound/extension-token-actions";
+import { ExtensionConnectTokenNotice } from "./extension-connect-token-notice";
 
 export const metadata: Metadata = {
   title: "Settings",
 };
 
 type SettingsPageProps = {
-  searchParams?: Promise<{ projectId?: string; tab?: string; connectToken?: string }>;
+  searchParams?: Promise<{ projectId?: string; tab?: string }>;
 };
 
 export default async function SettingsPage({ searchParams }: SettingsPageProps) {
@@ -64,7 +65,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
     getCurrentAiReplyUsage(),
     selectedTab === "extension" ? listActiveExtensionTokens(user.id, currentProject.id) : Promise.resolve([]),
   ]);
-  const connectToken = params?.connectToken ?? null;
   const competitorKeywords = keywords.filter((k) => k.type === "competitor");
   const redditKeywords = keywords.filter((k) => k.type !== "competitor");
   const activeKeywords = redditKeywords.filter((k) => k.is_active);
@@ -356,7 +356,6 @@ export default async function SettingsPage({ searchParams }: SettingsPageProps) 
             <ExtensionSection
               projectId={currentProject.id}
               tokens={extensionTokens}
-              connectToken={connectToken}
             />
           )}
         </main>
@@ -964,43 +963,13 @@ function XQuerySyntaxGuide() {
 function ExtensionSection({
   projectId,
   tokens,
-  connectToken,
 }: {
   projectId: string;
   tokens: ExtensionTokenDTO[];
-  connectToken: string | null;
 }) {
   return (
     <div style={{ display: "grid", gap: 16 }}>
-      {connectToken && (
-        <div style={{
-          background: "#F0FAF4",
-          border: "1px solid #BBF1CE",
-          borderRadius: 10,
-          padding: "16px 18px",
-        }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: "#46A758", marginBottom: 6 }}>
-            Connect token generated — copy it now, it won&apos;t be shown again.
-          </p>
-          <p style={{ fontSize: 11, color: "#7C7C83", marginBottom: 10 }}>
-            Expires in 15 minutes. Paste it in the Chrome Extension to connect.
-          </p>
-          <code style={{
-            display: "block",
-            background: "#FFFFFF",
-            border: "1px solid #D1FAE5",
-            borderRadius: 7,
-            padding: "10px 12px",
-            fontSize: 12,
-            fontFamily: "monospace",
-            color: "#1A1A1B",
-            wordBreak: "break-all",
-            userSelect: "all",
-          }}>
-            {connectToken}
-          </code>
-        </div>
-      )}
+      <ExtensionConnectTokenNotice />
 
       <SettingsSection
         title="Chrome Extension"

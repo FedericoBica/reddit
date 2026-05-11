@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
 import { isCurrentUserAdmin } from "@/modules/auth/admin";
+import { getSignupProjectOrRedirect } from "@/modules/onboarding/signup-flow";
 import { continueToPlan } from "@/modules/onboarding/signup-actions";
 import { ValuePanel } from "./value-panel";
 import { SignupProgress } from "@/app/signup/components/signup-progress";
@@ -31,6 +32,8 @@ export default async function SignupValuePage({ searchParams }: ValuePageProps) 
     } else {
       redirect("/signup/company");
     }
+  } else {
+    await getSignupProjectOrRedirect(projectId);
   }
 
   return (

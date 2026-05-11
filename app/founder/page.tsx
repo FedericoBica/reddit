@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { requireUser } from "@/modules/auth/server";
+import { requireAdmin } from "@/modules/auth/admin";
 
 export const metadata: Metadata = {
   title: "Founder Dashboard",
@@ -9,11 +9,11 @@ export const metadata: Metadata = {
 
 // Gate: only allow users whose email matches FOUNDER_EMAIL env var
 async function requireFounder() {
-  const user = await requireUser("/founder");
+  const user = await requireAdmin();
   const founderEmail = process.env.FOUNDER_EMAIL ?? "";
 
-  if (!founderEmail || user.email !== founderEmail) {
-    redirect("/dashboard");
+  if (!founderEmail || user.email?.toLowerCase() !== founderEmail.toLowerCase()) {
+    redirect("/admin");
   }
 
   return user;

@@ -5,6 +5,7 @@ import { BrandLink } from "@/app/components/logo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { resolvePostAuthPath } from "@/modules/auth/post-auth";
 import { getCurrentUser } from "@/modules/auth/server";
 import {
   signUpWithGoogle,
@@ -31,7 +32,7 @@ export default async function SignUpPage({ searchParams }: SignUpPageProps) {
   const email = String(params?.email ?? "").trim().toLowerCase();
 
   if (user) {
-    redirect("/dashboard");
+    redirect(await resolvePostAuthPath("/dashboard"));
   }
 
   return (

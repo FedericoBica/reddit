@@ -5,6 +5,7 @@ import { BrandLink } from "@/app/components/logo";
 import { Card } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
 import { isCurrentUserAdmin } from "@/modules/auth/admin";
+import { getSignupProjectOrRedirect } from "@/modules/onboarding/signup-flow";
 import { LoadingProgress } from "./loading-progress";
 
 export const metadata: Metadata = {
@@ -28,6 +29,8 @@ export default async function SignupLoadingPage({ searchParams }: LoadingPagePro
     } else {
       redirect("/signup/company");
     }
+  } else {
+    await getSignupProjectOrRedirect(projectId);
   }
 
   return (

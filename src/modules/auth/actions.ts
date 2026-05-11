@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { resolvePostAuthPath } from "@/modules/auth/post-auth";
+import { clearCurrentProject } from "@/modules/projects/current";
 
 export async function signInWithMagicLink(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
@@ -171,7 +172,21 @@ export async function signInWithPassword(formData: FormData) {
 
 export async function signOut() {
   const supabase = await createSupabaseServerClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    await supabase
+      .from("extension_tokens")
+      .update({ revoked_at: new Date().toISOString() })
+      .eq("user_id", user.id)
+      .is("revoked_at", null);
+  }
+
   await supabase.auth.signOut();
+  await clearCurrentProject();
   redirect("/login");
 }
 

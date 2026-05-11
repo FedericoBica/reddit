@@ -16,6 +16,8 @@ const auth = {
   userId: "11111111-1111-4111-8111-111111111111",
   projectId: "22222222-2222-4222-8222-222222222222",
   tokenId: "33333333-3333-4333-8333-333333333333",
+  redditUsername: null,
+  redditVerifiedAt: null,
 };
 
 test("parseLeadCampaignConfig applies outbound defaults", () => {
@@ -228,6 +230,7 @@ test("handleRecordQueueResult forwards auth project and mutation result", async 
     projectId: auth.projectId,
     success: false,
     errorReason: "rate limit",
+    messageBody: undefined,
   });
   assert.equal(result.status, 200);
   assert.deepEqual(result.body, { ok: true, processed: false });

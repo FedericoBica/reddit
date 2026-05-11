@@ -38,6 +38,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { data: membership } = await supabase
+      .from("project_members")
+      .select("role")
+      .eq("project_id", connectToken.project_id)
+      .eq("user_id", connectToken.user_id)
+      .eq("role", "owner")
+      .maybeSingle();
+
+    const { data: project } = await supabase
+      .from("projects")
+      .select("id, status")
+      .eq("id", connectToken.project_id)
+      .maybeSingle();
+
+    if (!membership || !project || project.status !== "active") {
+      return NextResponse.json(
+        { error: "Token is no longer valid for this project" },
+        { status: 403 },
+      );
+    }
+
     // Issue a persistent extension token (30-day expiry).
     const persistentPlaintext = randomBytes(32).toString("hex");
     const persistentHash = createHash("sha256").update(persistentPlaintext).digest("hex");

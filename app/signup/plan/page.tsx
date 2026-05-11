@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { BrandLink } from "@/app/components/logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { getCurrentUser } from "@/modules/auth/server";
+import { getSignupProjectOrRedirect } from "@/modules/onboarding/signup-flow";
 import { PlanSelector } from "./plan-selector";
 
 export const metadata: Metadata = {
@@ -18,6 +19,9 @@ export default async function SignupPlanPage({
   if (!user) redirect("/signup");
 
   const { projectId } = await searchParams;
+  if (projectId) {
+    await getSignupProjectOrRedirect(projectId);
+  }
 
   return (
     <main className="signup-wizard-shell">

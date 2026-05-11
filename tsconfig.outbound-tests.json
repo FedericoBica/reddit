@@ -11,6 +11,8 @@
   "include": [
     "src/db/schemas/database.types.ts",
     "src/db/schemas/domain.ts",
+    "src/lib/ext-cors.ts",
+    "src/lib/ext-cors.test.ts",
     "src/modules/outbound/api.ts",
     "src/modules/outbound/api.test.ts",
     "src/modules/outbound/logic.ts",

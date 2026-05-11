@@ -5,6 +5,7 @@ import {
   signInWithGoogle,
   signInWithPassword,
 } from "@/modules/auth/actions";
+import { resolvePostAuthPath } from "@/modules/auth/post-auth";
 import { getCurrentUser } from "@/modules/auth/server";
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const params = await searchParams;
   const next = sanitizeNext(params?.next);
 
-  if (user) redirect(next);
+  if (user) redirect(await resolvePostAuthPath(next));
 
   return (
     <div className="login-shell">

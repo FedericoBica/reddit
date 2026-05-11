@@ -21,6 +21,7 @@ import {
 } from "@/db/mutations/x";
 import { inngest } from "@/inngest/client";
 import { requireUser } from "@/modules/auth/server";
+import { requireProjectAccess } from "@/modules/projects/access";
 
 async function queueXRulesSync(projectId?: string) {
   await inngest.send({
@@ -33,6 +34,7 @@ export async function updateProjectFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const input: UpdateProjectInput = {};
 
   if (formData.has("name")) input.name = String(formData.get("name") ?? "").trim() || undefined;
@@ -55,6 +57,7 @@ export async function addKeywordFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const term = String(formData.get("term") ?? "").trim();
 
   if (!term) return;
@@ -67,6 +70,7 @@ export async function addSearchboxKeywordFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const term = String(formData.get("term") ?? "").trim();
 
   if (!term) return;
@@ -79,6 +83,7 @@ export async function addCompetitorFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const term = String(formData.get("term") ?? "").trim();
 
   if (!term) return;
@@ -91,6 +96,7 @@ export async function updateKeywordFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const keywordId = String(formData.get("keywordId") ?? "");
   const term = String(formData.get("term") ?? "").trim();
 
@@ -104,6 +110,7 @@ export async function removeKeywordFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const keywordId = String(formData.get("keywordId") ?? "");
 
   await removeKeyword(projectId, keywordId);
@@ -114,6 +121,7 @@ export async function toggleKeywordFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const keywordId = String(formData.get("keywordId") ?? "");
   const isActive = formData.get("isActive") === "true";
 
@@ -125,6 +133,7 @@ export async function addSubredditFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const name = String(formData.get("name") ?? "").trim();
 
   if (!name) return;
@@ -137,6 +146,7 @@ export async function removeSubredditFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const subredditId = String(formData.get("subredditId") ?? "");
 
   await removeSubreddit(projectId, subredditId);
@@ -147,6 +157,7 @@ export async function toggleSubredditFromForm(formData: FormData) {
   await requireUser("/dashboard");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const subredditId = String(formData.get("subredditId") ?? "");
   const isActive = formData.get("isActive") === "true";
 
@@ -161,6 +172,7 @@ export async function saveTelegramChatIdFromForm(formData: FormData): Promise<vo
   const chatId = String(formData.get("telegramChatId") ?? "").trim() || null;
 
   if (!projectId) return;
+  await requireProjectAccess(projectId, "/settings");
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase
@@ -177,6 +189,7 @@ export async function addXKeywordFromForm(formData: FormData) {
   await requireUser("/settings");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const query = String(formData.get("query") ?? "").trim();
 
   if (!query) return;
@@ -190,6 +203,7 @@ export async function updateXKeywordFromForm(formData: FormData) {
   await requireUser("/settings");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const keywordId = String(formData.get("keywordId") ?? "");
   const query = String(formData.get("query") ?? "").trim();
 
@@ -204,6 +218,7 @@ export async function toggleXKeywordFromForm(formData: FormData) {
   await requireUser("/settings");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const keywordId = String(formData.get("keywordId") ?? "");
   const isActive = formData.get("isActive") === "true";
 
@@ -216,6 +231,7 @@ export async function removeXKeywordFromForm(formData: FormData) {
   await requireUser("/settings");
 
   const projectId = String(formData.get("projectId") ?? "");
+  await requireProjectAccess(projectId, "/settings");
   const keywordId = String(formData.get("keywordId") ?? "");
 
   await removeXKeyword(projectId, keywordId);

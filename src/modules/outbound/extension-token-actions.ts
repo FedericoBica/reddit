@@ -28,7 +28,7 @@ export async function generateConnectTokenFromForm(formData: FormData): Promise<
   }
 
   redirect(
-    `/settings?projectId=${projectId}&tab=extension&connectToken=${plaintext}`,
+    `/settings?projectId=${projectId}&tab=extension#connectToken=${encodeURIComponent(plaintext)}`,
   );
 }
 

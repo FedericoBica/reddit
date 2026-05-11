@@ -65,7 +65,6 @@ export async function listProjectsForCurrentUser(): Promise<ProjectDTO[]> {
   const { data, error } = await supabase
     .from("projects")
     .select(projectColumns)
-    .eq("owner_id", user.id)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -84,7 +83,6 @@ export async function getProjectById(projectId: string): Promise<ProjectDTO | nu
     .from("projects")
     .select(projectColumns)
     .eq("id", projectId)
-    .eq("owner_id", user.id)
     .maybeSingle();
 
   if (error) {

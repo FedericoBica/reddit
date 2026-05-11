@@ -22,11 +22,11 @@ import { parseBillingPlan, getProjectLimitForPlan, type BillingPlan } from "@/mo
 import { addXKeyword } from "@/db/mutations/x";
 import { inngest } from "@/inngest/client";
 import { analyzeCompanyWithAI, fetchWebsiteText } from "@/modules/onboarding/company-analyzer";
+import { getSignupProjectOrRedirect } from "@/modules/onboarding/signup-flow";
 import { setCurrentProject } from "@/modules/projects/current";
 import { generateProjectSuggestions, type CompetitorContext } from "@/modules/projects/suggestion-generator";
 import { generateXKeywords } from "@/modules/projects/x-keyword-generator";
 import { validateAccessibleWebsite } from "@/modules/onboarding/url-validation";
-import { getProjectById } from "@/db/queries/projects";
 
 const SIGNUP_COMPANY_WEBSITE_COOKIE = "signup_company_website";
 const SIGNUP_COMPANY_DESCRIPTION_COOKIE = "signup_company_description";
@@ -171,6 +171,42 @@ export async function createProjectFromCompanyProfile(formData: FormData) {
   redirect(`/signup/competitors?projectId=${project.id}`);
 }
 
+export async function createProjectManually(formData: FormData) {
+  await requireUser("/signup/company");
+
+  const website = String(formData.get("website") ?? "").trim();
+  const description = String(formData.get("description") ?? "").trim();
+
+  if (!description) {
+    redirect(`/signup/company?error=${encodeURIComponent("La descripción no puede estar vacía.")}`);
+  }
+
+  let normalizedWebsite: string | null = null;
+  let hostname = "";
+
+  if (website) {
+    try {
+      normalizedWebsite = website.startsWith("http") ? website : `https://${website}`;
+      hostname = new URL(normalizedWebsite).hostname.replace(/^www\./i, "");
+    } catch {
+      hostname = website.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0];
+      normalizedWebsite = website.startsWith("http") ? website : `https://${website}`;
+    }
+  }
+
+  const project = await createProject({
+    name: hostname || "my-company",
+    websiteUrl: normalizedWebsite,
+    valueProposition: description,
+    region: null,
+    primaryLanguage: "en",
+    currencyCode: "USD",
+  });
+
+  await setCurrentProject(project.id);
+  redirect(`/signup/competitors?projectId=${project.id}`);
+}
+
 async function setSignupCompanyDraft(website: string, description: string) {
   const cookieStore = await cookies();
   const options = {
@@ -230,6 +266,7 @@ export async function saveCompetitorsFromSignup(formData: FormData) {
   const user = await requireUser("/signup/competitors");
 
   const projectId = String(formData.get("projectId") ?? "");
+  const project = await getSignupProjectOrRedirect(projectId, "/signup/company");
   const urls = formData
     .getAll("competitorUrl")
     .map((entry) => String(entry).trim())
@@ -272,7 +309,6 @@ export async function saveCompetitorsFromSignup(formData: FormData) {
   }
 
   // Scrape competitor websites + generate suggestions with full competitor context
-  const project = await getProjectById(projectId);
   if (project) {
     try {
       const competitorContexts: CompetitorContext[] = await Promise.all(
@@ -346,6 +382,7 @@ export async function saveCompetitorsFromSignup(formData: FormData) {
 export async function continueToPlan(formData: FormData) {
   await requireUser("/signup/value");
   const projectId = String(formData.get("projectId") ?? "");
+  await getSignupProjectOrRedirect(projectId, "/signup/company");
   redirect(`/signup/plan?projectId=${projectId}`);
 }
 
@@ -354,6 +391,9 @@ export async function choosePlanFromSignup(formData: FormData) {
 
   const plan = parseBillingPlan(String(formData.get("plan") ?? "")) ?? "growth";
   const projectId = String(formData.get("projectId") ?? "").trim();
+  if (projectId) {
+    await getSignupProjectOrRedirect(projectId, "/signup/company");
+  }
   await setCurrentBillingPlan(plan as BillingPlan);
 
   if (projectId) {
