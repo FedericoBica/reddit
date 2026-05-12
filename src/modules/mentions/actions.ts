@@ -1,10 +1,26 @@
 "use server";
 
 import Anthropic from "@anthropic-ai/sdk";
+import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { requireUser } from "@/modules/auth/server";
 import { assertAiReplyGenerationAvailable, recordAiReplyGeneration } from "@/modules/billing/reply-generation";
+import { updateBrandMentionStatus } from "@/db/mutations/brand-mentions";
 import { getBrandMentionById } from "@/db/queries/brand-mentions";
 import { getProjectById } from "@/db/queries/projects";
+
+export async function updateMentionStatusFromForm(formData: FormData) {
+  await requireUser("/feed");
+  const projectId = String(formData.get("projectId") ?? "");
+  const mentionId = String(formData.get("mentionId") ?? "");
+  const status = String(formData.get("status") ?? "") as "new" | "replied";
+  const returnTo = String(formData.get("returnTo") ?? "");
+  if (!projectId || !mentionId || !["new", "replied"].includes(status)) return;
+  await updateBrandMentionStatus(projectId, mentionId, status);
+  revalidatePath("/feed");
+  revalidatePath("/archive/replied");
+  if (returnTo) redirect(returnTo);
+}
 
 export type MentionReplyState = {
   error: string | null;

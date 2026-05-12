@@ -1,7 +1,7 @@
 "use server";
 
-import { cookies } from "next/headers";
-import { revalidatePath } from "next/cache";
+import { cookies, headers } from "next/headers";
+import { redirect } from "next/navigation";
 
 const SUPPORTED = ["en", "es", "pt", "auto"] as const;
 
@@ -21,5 +21,6 @@ export async function setLocale(formData: FormData) {
     });
   }
 
-  revalidatePath("/", "layout");
+  const referer = (await headers()).get("referer");
+  redirect(referer ?? "/settings");
 }

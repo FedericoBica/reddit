@@ -114,6 +114,7 @@ export type Database = {
           sentiment: string
           sentiment_evidence: string | null
           sentiment_reason: string | null
+          status: string
           subreddit: string
           summary: string | null
           target_label: string
@@ -142,6 +143,7 @@ export type Database = {
           sentiment?: string
           sentiment_evidence?: string | null
           sentiment_reason?: string | null
+          status?: string
           subreddit: string
           summary?: string | null
           target_label: string
@@ -170,6 +172,7 @@ export type Database = {
           sentiment?: string
           sentiment_evidence?: string | null
           sentiment_reason?: string | null
+          status?: string
           subreddit?: string
           summary?: string | null
           target_label?: string

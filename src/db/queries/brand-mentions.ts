@@ -4,7 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { BrandMentionDTO, BrandMentionSentiment } from "@/db/schemas/domain";
 
-const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, post_type, mention_context, response_priority, sentiment_evidence, summary, wrong_region, posted_at, opened_at, created_at, is_comment, parent_post_id`;
+const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, post_type, mention_context, response_priority, sentiment_evidence, summary, wrong_region, posted_at, opened_at, created_at, is_comment, parent_post_id, status`;
 
 export type ListBrandMentionsInput = {
   projectId: string;
@@ -34,6 +34,19 @@ export async function listBrandMentions(input: ListBrandMentionsInput): Promise<
 
   if (error) throw new Error(`Failed to list brand mentions: ${error.message}`);
 
+  return (data ?? []) as BrandMentionDTO[];
+}
+
+export async function listRepliedBrandMentions(projectId: string, limit = 100): Promise<BrandMentionDTO[]> {
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("brand_mentions")
+    .select(mentionColumns)
+    .eq("project_id", projectId)
+    .eq("status", "replied")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`Failed to list replied mentions: ${error.message}`);
   return (data ?? []) as BrandMentionDTO[];
 }
 

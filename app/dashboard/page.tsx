@@ -52,7 +52,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
     listProjectLeads({ projectId: currentProject.id, limit: 100, page: 0 }),
   ]);
 
-  const displayResults = allResults.filter((r) => r.status !== "dismissed");
+  const displayResults = allResults.filter((r) => r.status !== "dismissed" && r.status !== "replied");
   const newLeadsCount = allLeads.filter((l) => l.status === "new").length;
   const newResultsCount = displayResults.filter((r) => r.status === "new").length;
 

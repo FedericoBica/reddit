@@ -355,6 +355,7 @@ export type BrandMentionDTO = {
   created_at: string;
   is_comment: boolean;
   parent_post_id: string | null;
+  status: "new" | "replied";
 };
 
 export type XPostDTO = Pick<

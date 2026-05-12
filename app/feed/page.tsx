@@ -14,6 +14,8 @@ import { listProjectKeywords } from "@/db/queries/settings";
 import { listProjectXPosts } from "@/db/queries/x";
 import type { BrandMentionDTO, BrandMentionSentiment, KeywordDTO, LeadDTO, LeadReplyDTO, XPostDTO } from "@/db/schemas/domain";
 import { generateLeadRepliesFromForm, updateLeadStatusFromForm } from "@/modules/leads/actions";
+import { updateMentionStatusFromForm } from "@/modules/mentions/actions";
+import { updateXPostStatusFromForm } from "@/modules/x/actions";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import { toRedditUrl } from "@/lib/utils";
@@ -60,9 +62,9 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     listProjectXPosts(currentProject.id),
   ]);
 
-  const feedLeads = allLeads.filter((l) => l.status !== "irrelevant");
+  const feedLeads = allLeads.filter((l) => l.status !== "irrelevant" && l.status !== "replied");
   const competitors = keywords.filter((k) => k.type === "competitor" && k.is_active);
-  const xPosts = allXPosts.filter((p) => p.status !== "irrelevant");
+  const xPosts = allXPosts.filter((p) => p.status !== "irrelevant" && p.status !== "replied");
 
   const feedType = rawFeedType;
 
@@ -80,12 +82,12 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     feedType === "mentions"
       ? sortMentions(
           filterBySentiment(
-            filterByTarget(allMentionsRaw, selectedTarget, currentProject.name),
+            filterByTarget(allMentionsRaw.filter((m) => m.status !== "replied"), selectedTarget, currentProject.name),
             selectedSentiment,
           ),
           selectedSort,
         )
-      : allMentionsRaw;
+      : allMentionsRaw.filter((m) => m.status !== "replied");
 
   const sentimentStats = computeSentimentStats(
     filterByTarget(allMentionsRaw, selectedTarget, currentProject.name),
@@ -548,7 +550,7 @@ function DetailPane({
 }) {
   if (lead) return <LeadDetail lead={lead} replies={replies} projectId={projectId} replyLength={replyLength} filterBase={filterBase} />;
   if (mention) return <MentionDetail mention={mention} projectId={projectId} />;
-  if (xPost) return <XPostDetail post={xPost} />;
+  if (xPost) return <XPostDetail post={xPost} projectId={projectId} />;
 
   return (
     <section className="detail-pane">
@@ -701,6 +703,13 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           <SentimentPill sentiment={mention.sentiment} />
+          <form action={updateMentionStatusFromForm}>
+            <input type="hidden" name="projectId" value={projectId} />
+            <input type="hidden" name="mentionId" value={mention.id} />
+            <input type="hidden" name="status" value="replied" />
+            <input type="hidden" name="returnTo" value={`/feed?type=mentions&projectId=${projectId}`} />
+            <button className="btn-replied" type="submit">✓ Respondido</button>
+          </form>
         </div>
       </div>
 
@@ -776,7 +785,7 @@ function XPostCard({ post, active, href }: { post: XPostDTO; active: boolean; hr
 
 // ── X post detail ─────────────────────────────────────────────
 
-function XPostDetail({ post }: { post: XPostDTO }) {
+function XPostDetail({ post, projectId }: { post: XPostDTO; projectId: string }) {
   return (
     <section className="detail-pane" aria-label="X post detail">
       <div className="detail-topbar">
@@ -786,20 +795,28 @@ function XPostDetail({ post }: { post: XPostDTO }) {
           {post.author_username && <span>@{post.author_username}</span>}
           {post.posted_at && <span>{formatDate(post.posted_at)}</span>}
         </div>
-        {post.permalink && (
-          <a
-            href={post.permalink}
-            target="_blank"
-            rel="noreferrer"
-            style={{
-              fontSize: 12, fontWeight: 700, color: "#000", textDecoration: "none",
-              padding: "5px 14px", borderRadius: 20, border: "1px solid #000",
-              flexShrink: 0,
-            }}
-          >
-            View on X →
-          </a>
-        )}
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          {post.permalink && (
+            <a
+              href={post.permalink}
+              target="_blank"
+              rel="noreferrer"
+              style={{
+                fontSize: 12, fontWeight: 700, color: "#000", textDecoration: "none",
+                padding: "5px 14px", borderRadius: 20, border: "1px solid #000",
+              }}
+            >
+              View on X →
+            </a>
+          )}
+          <form action={updateXPostStatusFromForm}>
+            <input type="hidden" name="projectId" value={projectId} />
+            <input type="hidden" name="postId" value={post.id} />
+            <input type="hidden" name="status" value="replied" />
+            <input type="hidden" name="returnTo" value={`/feed?type=x&projectId=${projectId}`} />
+            <button className="btn-replied" type="submit">✓ Respondido</button>
+          </form>
+        </div>
       </div>
 
       <div className="detail-content">

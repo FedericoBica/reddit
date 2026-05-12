@@ -3,6 +3,8 @@ import { redirect } from "next/navigation";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listProjectLeads } from "@/db/queries/leads";
 import { listSearchboxResults } from "@/db/queries/searchbox";
+import { listRepliedBrandMentions } from "@/db/queries/brand-mentions";
+import { listRepliedXPosts } from "@/db/queries/x";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
 import { toRedditUrl } from "@/lib/utils";
@@ -22,10 +24,14 @@ export default async function RepliedArchivePage({ searchParams }: Props) {
 
   const { currentProject } = projectState;
 
-  const [leads, searchboxResults] = await Promise.all([
+  const [leads, searchboxResults, mentions, xPosts] = await Promise.all([
     listProjectLeads({ projectId: currentProject.id, status: "replied", limit: 100, page: 0 }),
     listSearchboxResults({ projectId: currentProject.id, status: "replied", limit: 100 }),
+    listRepliedBrandMentions(currentProject.id),
+    listRepliedXPosts(currentProject.id),
   ]);
+
+  const isEmpty = leads.length === 0 && searchboxResults.length === 0 && mentions.length === 0 && xPosts.length === 0;
 
   return (
     <DashboardShell user={user} currentProject={currentProject}>
@@ -39,66 +45,93 @@ export default async function RepliedArchivePage({ searchParams }: Props) {
           </p>
         </div>
 
-        {leads.length === 0 && searchboxResults.length === 0 ? (
+        {isEmpty ? (
           <EmptyState label="No hay posts respondidos todavía." />
         ) : (
-          <>
+          <div style={{ display: "flex", flexDirection: "column", gap: 32 }}>
             {leads.length > 0 && (
               <Section title="Oportunidades" count={leads.length}>
                 {leads.map((lead) => (
                   <ArchiveCard
                     key={lead.id}
                     title={lead.title}
-                    subreddit={lead.subreddit}
+                    subreddit={`r/${lead.subreddit}`}
                     date={lead.replied_at ?? lead.created_at}
                     dateLabel="Respondido"
                     score={lead.intent_score}
                     reason={lead.classification_reason}
-                    permalink={lead.permalink}
-                    statusColor="#46A758"
+                    href={toRedditUrl(lead.permalink)}
+                    source="reddit"
                   />
                 ))}
               </Section>
             )}
 
             {searchboxResults.length > 0 && (
-              <Section title="Searchbox" count={searchboxResults.length} style={{ marginTop: 32 }}>
+              <Section title="Searchbox" count={searchboxResults.length}>
                 {searchboxResults.map((r) => (
                   <ArchiveCard
                     key={r.id}
                     title={r.title}
-                    subreddit={r.subreddit}
+                    subreddit={`r/${r.subreddit}`}
                     date={r.created_at}
                     dateLabel="Encontrado"
                     score={r.intent_score}
                     reason={r.classification_reason}
-                    permalink={r.permalink}
-                    statusColor="#46A758"
+                    href={toRedditUrl(r.permalink)}
+                    source="reddit"
                     badge={`Google #${r.google_rank} · ${r.google_keyword}`}
                   />
                 ))}
               </Section>
             )}
-          </>
+
+            {mentions.length > 0 && (
+              <Section title="Mentions" count={mentions.length}>
+                {mentions.map((m) => (
+                  <ArchiveCard
+                    key={m.id}
+                    title={m.title}
+                    subreddit={`r/${m.subreddit}`}
+                    date={m.posted_at ?? m.created_at}
+                    dateLabel="Mencionado"
+                    score={null}
+                    reason={m.sentiment_reason}
+                    href={toRedditUrl(m.permalink)}
+                    source="reddit"
+                    badge={m.target_label}
+                  />
+                ))}
+              </Section>
+            )}
+
+            {xPosts.length > 0 && (
+              <Section title="X / Twitter" count={xPosts.length}>
+                {xPosts.map((p) => (
+                  <ArchiveCard
+                    key={p.id}
+                    title={p.text.slice(0, 120)}
+                    subreddit={p.author_username ? `@${p.author_username}` : "X post"}
+                    date={p.posted_at ?? p.created_at}
+                    dateLabel="Publicado"
+                    score={p.intent_score}
+                    reason={p.classification_reason}
+                    href={p.permalink}
+                    source="x"
+                  />
+                ))}
+              </Section>
+            )}
+          </div>
         )}
       </div>
     </DashboardShell>
   );
 }
 
-function Section({
-  title,
-  count,
-  children,
-  style,
-}: {
-  title: string;
-  count: number;
-  children: React.ReactNode;
-  style?: React.CSSProperties;
-}) {
+function Section({ title, count, children }: { title: string; count: number; children: React.ReactNode }) {
   return (
-    <div style={style}>
+    <div>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
         <span style={{ fontSize: 12, fontWeight: 800, color: "#7C7C83", letterSpacing: "0.05em", textTransform: "uppercase" }}>
           {title}
@@ -119,8 +152,8 @@ function ArchiveCard({
   dateLabel,
   score,
   reason,
-  permalink,
-  statusColor,
+  href,
+  source,
   badge,
 }: {
   title: string;
@@ -129,8 +162,8 @@ function ArchiveCard({
   dateLabel: string;
   score: number | null;
   reason: string | null;
-  permalink: string;
-  statusColor: string;
+  href: string;
+  source: "reddit" | "x";
   badge?: string;
 }) {
   return (
@@ -143,7 +176,7 @@ function ArchiveCard({
       gap: 12,
       alignItems: "flex-start",
     }}>
-      <span style={{ width: 8, height: 8, borderRadius: "50%", background: statusColor, flexShrink: 0, marginTop: 5 }} />
+      <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#46A758", flexShrink: 0, marginTop: 5 }} />
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
           <p style={{ fontSize: 13, fontWeight: 700, color: "#1A1A1B", lineHeight: 1.3 }}>{title}</p>
@@ -157,7 +190,7 @@ function ArchiveCard({
           )}
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 4, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 500 }}>r/{subreddit}</span>
+          <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 500 }}>{subreddit}</span>
           {date && (
             <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 500 }}>
               {dateLabel} {formatDate(date)}
@@ -175,12 +208,12 @@ function ArchiveCard({
           </p>
         )}
         <a
-          href={toRedditUrl(permalink)}
+          href={href}
           target="_blank"
           rel="noreferrer"
           style={{ fontSize: 11, color: "#FF4500", fontWeight: 700, textDecoration: "none", marginTop: 6, display: "inline-block" }}
         >
-          Ver en Reddit →
+          {source === "x" ? "Ver en X →" : "Ver en Reddit →"}
         </a>
       </div>
     </div>

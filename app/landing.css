@@ -1526,6 +1526,10 @@
   font-size: 13px;
 }
 
+.landing-page .foot-social-link:hover {
+  color: var(--accent-ink) !important;
+}
+
 .landing-page .centered {
   text-align: center;
 }

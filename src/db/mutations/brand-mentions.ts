@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { BrandMentionDTO } from "@/db/schemas/domain";
 
 export type UpsertBrandMentionInput = {
@@ -29,7 +30,7 @@ export type UpsertBrandMentionInput = {
   parentPostId?: string | null;
 };
 
-const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, post_type, mention_context, response_priority, sentiment_evidence, summary, wrong_region, posted_at, opened_at, created_at, is_comment, parent_post_id`;
+const mentionColumns = `id, project_id, reddit_post_id, target_type, target_label, title, body, subreddit, author, permalink, url, reddit_score, num_comments, sentiment, sentiment_reason, post_type, mention_context, response_priority, sentiment_evidence, summary, wrong_region, posted_at, opened_at, created_at, is_comment, parent_post_id, status`;
 
 export async function upsertBrandMention(input: UpsertBrandMentionInput): Promise<BrandMentionDTO | null> {
   const supabase = createSupabaseAdminClient();
@@ -76,6 +77,20 @@ export async function upsertBrandMention(input: UpsertBrandMentionInput): Promis
   }
 
   return data as BrandMentionDTO;
+}
+
+export async function updateBrandMentionStatus(
+  projectId: string,
+  mentionId: string,
+  status: "new" | "replied",
+): Promise<void> {
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("brand_mentions")
+    .update({ status })
+    .eq("project_id", projectId)
+    .eq("id", mentionId);
+  if (error) throw new Error(`Failed to update mention status: ${error.message}`);
 }
 
 export async function updateProjectLastMentionsScrapedAt(projectId: string): Promise<void> {

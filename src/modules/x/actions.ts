@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { updateXPostStatus, requestXPostReplyGeneration, markXPostReplyUsed } from "@/db/mutations/x";
 import { inngest } from "@/inngest/client";
 import { requireUser } from "@/modules/auth/server";
@@ -12,6 +13,7 @@ export async function updateXPostStatusFromForm(formData: FormData) {
   const postId = String(formData.get("postId") ?? "");
   const status = String(formData.get("status") ?? "");
   const replyId = String(formData.get("replyId") ?? "");
+  const returnTo = String(formData.get("returnTo") ?? "");
 
   if (!projectId || !postId || !status) return;
 
@@ -21,6 +23,8 @@ export async function updateXPostStatusFromForm(formData: FormData) {
 
   await updateXPostStatus(projectId, postId, status);
   revalidatePath("/feed");
+  revalidatePath("/archive/replied");
+  if (returnTo) redirect(returnTo);
 }
 
 export async function generateXReplyFromForm(formData: FormData) {

@@ -1239,6 +1239,25 @@ function FinalCTA({ t }: { t: Translations }) {
   );
 }
 
+function InstagramIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" strokeWidth="1.8"/>
+      <circle cx="12" cy="12" r="4.5" stroke="currentColor" strokeWidth="1.8"/>
+      <circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
+    </svg>
+  );
+}
+
+function EmailIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <rect x="2" y="4" width="20" height="16" rx="3" stroke="currentColor" strokeWidth="1.8"/>
+      <path d="M2 8l10 7 10-7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+    </svg>
+  );
+}
+
 function Footer({ t, locale }: { t: Translations; locale: Locale }) {
   const tf = t.footer;
   return (
@@ -1259,7 +1278,7 @@ function Footer({ t, locale }: { t: Translations; locale: Locale }) {
             <h5>{tf.companyTitle}</h5>
             <Link href="/about">{t.nav.about}</Link>
             <a href="#">{tf.company}</a>
-            <a href="#">Contact</a>
+            <a href="mailto:info.prowlit@gmail.com">Contact</a>
           </div>
           <div className="foot-col">
             <h5>{tf.legalTitle}</h5>
@@ -1269,7 +1288,27 @@ function Footer({ t, locale }: { t: Translations; locale: Locale }) {
         </div>
         <div className="foot-bottom">
           <span>{tf.copyright}</span>
-          <span className="mono">all systems operational</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+            <a
+              href="https://instagram.com/try_prowlit"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Instagram"
+              style={{ color: "var(--ink-3)", display: "flex", alignItems: "center", transition: "color 150ms ease" }}
+              className="foot-social-link"
+            >
+              <InstagramIcon />
+            </a>
+            <a
+              href="mailto:info.prowlit@gmail.com"
+              aria-label="Email"
+              style={{ color: "var(--ink-3)", display: "flex", alignItems: "center", transition: "color 150ms ease" }}
+              className="foot-social-link"
+            >
+              <EmailIcon />
+            </a>
+            <span className="mono">all systems operational</span>
+          </div>
         </div>
       </div>
     </footer>

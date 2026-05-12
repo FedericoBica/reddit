@@ -113,6 +113,23 @@ export async function listProjectXPosts(projectId: string, limit = 200): Promise
   return data;
 }
 
+export async function listRepliedXPosts(projectId: string, limit = 100): Promise<XPostDTO[]> {
+  const parsedProjectId = projectIdSchema.parse(projectId);
+  const supabase = await createSupabaseServerClient();
+  const { data, error } = await supabase
+    .from("x_posts")
+    .select(xPostColumns)
+    .eq("project_id", parsedProjectId)
+    .eq("status", "replied")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) {
+    if (isMissingXTableError(error)) return [];
+    return [];
+  }
+  return data;
+}
+
 export async function getXPostById(projectId: string, postId: string): Promise<XPostDTO | null> {
   const parsedProjectId = projectIdSchema.parse(projectId);
   const supabase = await createSupabaseServerClient();
