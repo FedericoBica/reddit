@@ -1,64 +1,54 @@
-import fs from "fs";
-import path from "path";
-import matter from "gray-matter";
-
-const BLOG_DIR = path.join(process.cwd(), "content/blog");
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export type PostMeta = {
+  id: string;
   slug: string;
   title: string;
   description: string;
   date: string;
-  author: string;
-  tags: string[];
-  coverImage?: string;
+  targetKeyword: string | null;
 };
 
 export type Post = PostMeta & {
   content: string;
 };
 
-export function listPosts(): PostMeta[] {
-  if (!fs.existsSync(BLOG_DIR)) return [];
+export async function listPosts(): Promise<PostMeta[]> {
+  const supabase = createSupabaseAdminClient();
+  const { data } = await supabase
+    .from("blog_posts")
+    .select("id, slug, title, meta_description, published_at, target_keyword")
+    .eq("status", "published")
+    .order("published_at", { ascending: false });
 
-  return fs
-    .readdirSync(BLOG_DIR)
-    .filter((f) => f.endsWith(".mdx") || f.endsWith(".md"))
-    .map((filename) => {
-      const slug = filename.replace(/\.mdx?$/, "");
-      const raw = fs.readFileSync(path.join(BLOG_DIR, filename), "utf-8");
-      const { data } = matter(raw);
-      return {
-        slug,
-        title: data.title ?? slug,
-        description: data.description ?? "",
-        date: data.date ?? "",
-        author: data.author ?? "Prowlit Team",
-        tags: data.tags ?? [],
-        coverImage: data.coverImage,
-      };
-    })
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+  return (data ?? []).map((row) => ({
+    id: row.id,
+    slug: row.slug,
+    title: row.title,
+    description: row.meta_description ?? "",
+    date: row.published_at ?? "",
+    targetKeyword: row.target_keyword,
+  }));
 }
 
-export function getPost(slug: string): Post | null {
-  const mdxPath = path.join(BLOG_DIR, `${slug}.mdx`);
-  const mdPath = path.join(BLOG_DIR, `${slug}.md`);
-  const filePath = fs.existsSync(mdxPath) ? mdxPath : fs.existsSync(mdPath) ? mdPath : null;
+export async function getPost(slug: string): Promise<Post | null> {
+  const supabase = createSupabaseAdminClient();
+  const { data } = await supabase
+    .from("blog_posts")
+    .select("id, slug, title, meta_description, content, published_at, target_keyword")
+    .eq("slug", slug)
+    .eq("status", "published")
+    .single();
 
-  if (!filePath) return null;
-
-  const raw = fs.readFileSync(filePath, "utf-8");
-  const { data, content } = matter(raw);
+  if (!data) return null;
 
   return {
-    slug,
-    title: data.title ?? slug,
-    description: data.description ?? "",
-    date: data.date ?? "",
-    author: data.author ?? "Prowlit Team",
-    tags: data.tags ?? [],
-    coverImage: data.coverImage,
-    content,
+    id: data.id,
+    slug: data.slug,
+    title: data.title,
+    description: data.meta_description ?? "",
+    date: data.published_at ?? "",
+    targetKeyword: data.target_keyword,
+    content: data.content ?? "",
   };
 }

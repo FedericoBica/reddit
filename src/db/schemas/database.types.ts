@@ -27,6 +27,51 @@ export type Database = {
         }
         Relationships: []
       }
+      blog_posts: {
+        Row: {
+          id: string
+          title: string
+          slug: string
+          meta_description: string | null
+          content: string | null
+          target_keyword: string | null
+          word_count: number | null
+          faq_schema: Json | null
+          status: string
+          published_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          slug: string
+          meta_description?: string | null
+          content?: string | null
+          target_keyword?: string | null
+          word_count?: number | null
+          faq_schema?: Json | null
+          status?: string
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title?: string
+          slug?: string
+          meta_description?: string | null
+          content?: string | null
+          target_keyword?: string | null
+          word_count?: number | null
+          faq_schema?: Json | null
+          status?: string
+          published_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       api_usage_log: {
         Row: {
           cost_usd: number

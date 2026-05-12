@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { MDXRemote } from "next-mdx-remote/rsc";
 import { BrandLink } from "@/app/components/logo";
 import { getPost, listPosts } from "@/lib/blog";
 import "@/app/landing.css";
 
+export const revalidate = 60;
+
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateStaticParams() {
-  return listPosts().map((p) => ({ slug: p.slug }));
+  const posts = await listPosts();
+  return posts.map((p) => ({ slug: p.slug }));
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPost(slug);
+  const post = await getPost(slug);
   if (!post) return {};
   return {
     title: `${post.title} — Prowlit Blog`,
@@ -30,7 +32,7 @@ function formatDate(dateStr: string) {
 
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params;
-  const post = getPost(slug);
+  const post = await getPost(slug);
   if (!post) notFound();
 
   return (
@@ -51,7 +53,6 @@ export default async function BlogPostPage({ params }: Props) {
       <article className="section-pad" style={{ paddingBottom: 80 }}>
         <div className="wrap" style={{ maxWidth: 720 }}>
 
-          {/* Back */}
           <Link
             href="/blog"
             style={{ fontSize: 13, color: "var(--ink-3)", textDecoration: "none", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 4, marginBottom: 40 }}
@@ -59,42 +60,32 @@ export default async function BlogPostPage({ params }: Props) {
             ← All posts
           </Link>
 
-          {/* Tags */}
-          {post.tags.length > 0 && (
-            <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 16 }}>
-              {post.tags.map((tag) => (
-                <span key={tag} className="chip" style={{ fontSize: 11, padding: "3px 10px" }}>{tag}</span>
-              ))}
+          {post.targetKeyword && (
+            <div style={{ marginBottom: 16 }}>
+              <span className="chip" style={{ fontSize: 11, padding: "3px 10px" }}>{post.targetKeyword}</span>
             </div>
           )}
 
-          {/* Title */}
           <h1 style={{ fontSize: "clamp(28px, 5vw, 48px)", fontWeight: 900, lineHeight: 1.1, color: "var(--ink)", letterSpacing: "-0.03em", marginBottom: 20 }}>
             {post.title}
           </h1>
 
-          {/* Meta */}
-          <div style={{ display: "flex", gap: 16, alignItems: "center", marginBottom: 48, paddingBottom: 32, borderBottom: "1px solid var(--border)" }}>
-            <span style={{ fontSize: 14, color: "var(--ink-3)", fontWeight: 600 }}>{post.author}</span>
-            {post.date && (
-              <>
-                <span style={{ color: "var(--ink-3)" }}>·</span>
-                <span style={{ fontSize: 14, color: "var(--ink-3)" }}>{formatDate(post.date)}</span>
-              </>
-            )}
-          </div>
+          {post.date && (
+            <div style={{ marginBottom: 48, paddingBottom: 32, borderBottom: "1px solid var(--border, var(--line))" }}>
+              <span style={{ fontSize: 14, color: "var(--ink-3)" }}>{formatDate(post.date)}</span>
+            </div>
+          )}
 
-          {/* Body */}
-          <div className="blog-body">
-            <MDXRemote source={post.content} />
-          </div>
+          <div
+            className="blog-body"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
 
-          {/* CTA */}
           <div
             style={{
               marginTop: 64,
               padding: "32px 36px",
-              background: "var(--surface-2, #F6F6F6)",
+              background: "var(--bg-2)",
               borderRadius: 16,
               textAlign: "center",
             }}

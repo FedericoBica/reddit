@@ -9,14 +9,16 @@ export const metadata: Metadata = {
   description: "Guides and insights on Reddit lead generation, buyer intent, and honest growth.",
 };
 
+export const revalidate = 60;
+
 function formatDate(dateStr: string) {
   return new Intl.DateTimeFormat("en", { month: "long", day: "numeric", year: "numeric" }).format(
     new Date(dateStr)
   );
 }
 
-export default function BlogIndexPage() {
-  const posts = listPosts();
+export default async function BlogIndexPage() {
+  const posts = await listPosts();
 
   return (
     <main className="landing-page">
@@ -46,28 +48,22 @@ export default function BlogIndexPage() {
           {posts.length === 0 ? (
             <p style={{ color: "var(--ink-3)" }}>No posts yet — check back soon.</p>
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            <div style={{ display: "flex", flexDirection: "column" }}>
               {posts.map((post, i) => (
-                <Link
-                  key={post.slug}
-                  href={`/blog/${post.slug}`}
-                  style={{ textDecoration: "none" }}
-                >
+                <Link key={post.slug} href={`/blog/${post.slug}`} style={{ textDecoration: "none" }}>
                   <article
-                    style={{
-                      padding: "32px 0",
-                      borderBottom: "1px solid var(--border)",
-                      borderTop: i === 0 ? "1px solid var(--border)" : undefined,
-                    }}
                     className="blog-card"
+                    style={{
+                      padding: "32px 12px",
+                      borderBottom: "1px solid var(--border, var(--line))",
+                      borderTop: i === 0 ? "1px solid var(--border, var(--line))" : undefined,
+                    }}
                   >
-                    <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
-                      {post.tags.map((tag) => (
-                        <span key={tag} className="chip" style={{ fontSize: 11, padding: "3px 10px" }}>
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
+                    {post.targetKeyword && (
+                      <span className="chip" style={{ fontSize: 11, padding: "3px 10px", marginBottom: 10, display: "inline-block" }}>
+                        {post.targetKeyword}
+                      </span>
+                    )}
                     <h2 style={{ fontSize: "clamp(18px, 2.5vw, 22px)", fontWeight: 800, color: "var(--ink)", lineHeight: 1.2, marginBottom: 10 }}>
                       {post.title}
                     </h2>
@@ -75,13 +71,9 @@ export default function BlogIndexPage() {
                       {post.description}
                     </p>
                     <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
-                      <span style={{ fontSize: 13, color: "var(--ink-3)", fontWeight: 500 }}>
-                        {post.author}
-                      </span>
-                      <span style={{ fontSize: 13, color: "var(--ink-3)" }}>·</span>
-                      <span style={{ fontSize: 13, color: "var(--ink-3)" }}>
-                        {post.date ? formatDate(post.date) : ""}
-                      </span>
+                      {post.date && (
+                        <span style={{ fontSize: 13, color: "var(--ink-3)" }}>{formatDate(post.date)}</span>
+                      )}
                       <span style={{ fontSize: 13, color: "var(--accent)", fontWeight: 700, marginLeft: "auto" }}>
                         Read →
                       </span>
