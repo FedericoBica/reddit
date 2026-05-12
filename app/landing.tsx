@@ -1193,6 +1193,12 @@ function FAQ({ t }: { t: Translations }) {
     [tf.q2, tf.a2],
     [tf.q3, tf.a3],
     [tf.q4, tf.a4],
+    [tf.q5, tf.a5],
+    [tf.q6, tf.a6],
+    [tf.q7, tf.a7],
+    [tf.q8, tf.a8],
+    [tf.q9, tf.a9],
+    [tf.q10, tf.a10],
   ];
 
   return (
@@ -1277,7 +1283,7 @@ function Footer({ t, locale }: { t: Translations; locale: Locale }) {
           <div className="foot-col">
             <h5>{tf.companyTitle}</h5>
             <Link href="/about">{t.nav.about}</Link>
-            <a href="#">{tf.company}</a>
+            <Link href="/blog">Blog</Link>
             <a href="mailto:info.prowlit@gmail.com">Contact</a>
           </div>
           <div className="foot-col">
@@ -1505,7 +1511,6 @@ export default function LandingPage({ locale }: { locale: Locale }) {
             <a className="btn primary lg" href="#features">{t.hero.ctaSecondary}</a>
           </div>
           <div className="hero-meta" style={{ justifyContent: "center" }}>
-            <span>{t.hero.stat1}</span>
             <span>{t.hero.stat2}</span>
           </div>
         </div>

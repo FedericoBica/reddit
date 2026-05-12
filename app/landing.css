@@ -2741,3 +2741,93 @@
     padding: 70px 0 56px;
   }
 }
+
+/* Blog */
+.landing-page .blog-card {
+  transition: background 120ms ease;
+  border-radius: 4px;
+  margin: 0 -12px;
+  padding-left: 12px !important;
+  padding-right: 12px !important;
+}
+.landing-page .blog-card:hover {
+  background: var(--bg-2);
+}
+
+.landing-page .blog-body {
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--ink-2);
+}
+.landing-page .blog-body h2 {
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 800;
+  color: var(--ink);
+  margin: 48px 0 16px;
+  letter-spacing: -0.02em;
+}
+.landing-page .blog-body h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 36px 0 12px;
+}
+.landing-page .blog-body p {
+  margin: 0 0 20px;
+}
+.landing-page .blog-body ul,
+.landing-page .blog-body ol {
+  padding-left: 24px;
+  margin: 0 0 20px;
+}
+.landing-page .blog-body li {
+  margin-bottom: 8px;
+}
+.landing-page .blog-body strong {
+  color: var(--ink);
+  font-weight: 700;
+}
+.landing-page .blog-body a {
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.landing-page .blog-body blockquote {
+  border-left: 3px solid var(--accent-soft);
+  margin: 24px 0;
+  padding: 4px 0 4px 20px;
+  color: var(--ink-3);
+  font-style: italic;
+}
+.landing-page .blog-body table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 15px;
+}
+.landing-page .blog-body th {
+  text-align: left;
+  padding: 8px 12px;
+  background: var(--bg-2);
+  font-weight: 700;
+  color: var(--ink);
+  border-bottom: 2px solid var(--border, var(--line));
+}
+.landing-page .blog-body td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--line-2);
+  color: var(--ink-2);
+}
+.landing-page .blog-body hr {
+  border: none;
+  border-top: 1px solid var(--line-2);
+  margin: 40px 0;
+}
+.landing-page .blog-body code {
+  background: var(--bg-2);
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 14px;
+  font-family: ui-monospace, monospace;
+}
