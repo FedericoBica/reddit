@@ -99,7 +99,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
 
         <div className="content-flow">
           <div className="detail-layout">
-            <div style={{ display: "flex", flexDirection: "column", gap: 20, minHeight: "calc(100svh - 160px)" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: 20, minHeight: "calc(100vh - 165px)" }}>
               <Card className="gap-0 rounded-[8px] border-[#F0F0EE] py-0 shadow-none ring-0">
                 <CardContent className="p-5">
                   <div
