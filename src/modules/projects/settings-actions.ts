@@ -21,7 +21,9 @@ import {
 } from "@/db/mutations/x";
 import { inngest } from "@/inngest/client";
 import { requireUser } from "@/modules/auth/server";
+import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { requireProjectAccess } from "@/modules/projects/access";
+import { listProjectKeywords } from "@/db/queries/settings";
 
 async function queueXRulesSync(projectId?: string) {
   await inngest.send({
@@ -61,6 +63,17 @@ export async function addKeywordFromForm(formData: FormData) {
   const term = String(formData.get("term") ?? "").trim();
 
   if (!term) return;
+
+  const plan = await getCurrentBillingPlan();
+  if (plan.maxKeywords !== null) {
+    const keywords = await listProjectKeywords(projectId);
+    const activeCount = keywords.filter(
+      (k) => k.is_active && k.type !== "competitor" && k.type !== "searchbox",
+    ).length;
+    if (activeCount >= plan.maxKeywords) {
+      throw new Error(`Active keyword limit reached (${plan.maxKeywords} on ${plan.label} plan).`);
+    }
+  }
 
   await addKeyword(projectId, term);
   revalidatePath("/settings");
@@ -124,6 +137,19 @@ export async function toggleKeywordFromForm(formData: FormData) {
   await requireProjectAccess(projectId, "/settings");
   const keywordId = String(formData.get("keywordId") ?? "");
   const isActive = formData.get("isActive") === "true";
+
+  if (isActive) {
+    const plan = await getCurrentBillingPlan();
+    if (plan.maxKeywords !== null) {
+      const keywords = await listProjectKeywords(projectId);
+      const activeCount = keywords.filter(
+        (k) => k.is_active && k.id !== keywordId && k.type !== "competitor" && k.type !== "searchbox",
+      ).length;
+      if (activeCount >= plan.maxKeywords) {
+        throw new Error(`Active keyword limit reached (${plan.maxKeywords} on ${plan.label} plan).`);
+      }
+    }
+  }
 
   await toggleKeyword(projectId, keywordId, isActive);
   revalidatePath("/settings");

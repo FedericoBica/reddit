@@ -396,7 +396,25 @@ export async function choosePlanFromSignup(formData: FormData) {
   }
   await setCurrentBillingPlan(plan as BillingPlan);
 
+  // Enforce keyword limit now that the plan is known.
+  // Auto-onboarding may have saved more keywords than the chosen plan allows.
   if (projectId) {
+    const limit = getProjectLimitForPlan(plan as BillingPlan);
+    if (limit.maxKeywords !== null) {
+      const supabase = await createClient();
+      const { data: activeKeywords } = await supabase
+        .from("keywords")
+        .select("id")
+        .eq("project_id", projectId)
+        .eq("is_active", true)
+        .in("type", ["ai_suggested", "custom"])
+        .order("created_at", { ascending: true });
+
+      if (activeKeywords && activeKeywords.length > limit.maxKeywords) {
+        const toDeactivate = activeKeywords.slice(limit.maxKeywords).map((k) => k.id);
+        await supabase.from("keywords").update({ is_active: false }).in("id", toDeactivate);
+      }
+    }
     redirect(`/dashboard?projectId=${projectId}`);
   }
   redirect("/signup/company");

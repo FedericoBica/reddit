@@ -11,6 +11,7 @@ import {
 } from "@/db/mutations/projects";
 import { getProjectById } from "@/db/queries/projects";
 import { requireUser } from "@/modules/auth/server";
+import { getCurrentBillingPlan } from "@/modules/billing/current";
 import { setCurrentProject } from "@/modules/projects/current";
 import { generateProjectSuggestions } from "@/modules/projects/suggestion-generator";
 
@@ -77,11 +78,18 @@ export async function completeProjectOnboarding(formData: FormData) {
     redirect("/bootstrap");
   }
 
+  const plan = await getCurrentBillingPlan();
+  const maxKeywords = plan.maxKeywords ?? Infinity;
+
+  const customKeywords = splitLines(formData.get("customKeywords")).slice(0, maxKeywords);
+  const remainingSlots = Math.max(0, maxKeywords - customKeywords.length);
+  const acceptedKeywordSuggestionIds = toStringArray(formData.getAll("keywordSuggestionIds")).slice(0, remainingSlots);
+
   await saveProjectOnboarding({
     projectId: project.id,
-    acceptedKeywordSuggestionIds: toStringArray(formData.getAll("keywordSuggestionIds")),
+    acceptedKeywordSuggestionIds,
     acceptedSubredditSuggestionIds: toStringArray(formData.getAll("subredditSuggestionIds")),
-    customKeywords: splitLines(formData.get("customKeywords")),
+    customKeywords,
     customSubreddits: splitLines(formData.get("customSubreddits")),
   });
 
