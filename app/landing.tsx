@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { BrandLink } from "@/app/components/logo";
+import { CookieBanner } from "@/app/components/cookie-banner";
 import { TRANSLATIONS, type Locale, type Translations } from "./landing-i18n";
 
 const THREADS = [
@@ -1529,6 +1530,7 @@ export default function LandingPage({ locale }: { locale: Locale }) {
       <FAQ t={t} />
       <FinalCTA t={t} />
       <Footer t={t} locale={locale} />
+      <CookieBanner t={t.cookieBanner} />
     </main>
   );
 }

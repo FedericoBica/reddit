@@ -102,6 +102,7 @@ type TranslationMap = {
   faq: { eyebrow: string; h2: string; q1: string; a1: string; q2: string; a2: string; q3: string; a3: string; q4: string; a4: string; q5: string; a5: string; q6: string; a6: string; q7: string; a7: string; q8: string; a8: string; q9: string; a9: string; q10: string; a10: string };
   finalCta: { eyebrow: string; h2: string; sub: string; ctaPrimary: string; ctaLogin: string };
   footer: { tagline: string; productTitle: string; company: string; companyTitle: string; legalTitle: string; copyright: string };
+  cookieBanner: { message: string; learnMore: string; accept: string; decline: string };
 };
 
 export type Translations = TranslationMap;
@@ -436,6 +437,12 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       legalTitle: "Legal",
       copyright: "© 2026 Prowlit, Inc. Not affiliated with Reddit, Inc.",
     },
+    cookieBanner: {
+      message: "We use cookies to improve your experience and analyze site traffic.",
+      learnMore: "Learn more",
+      accept: "Accept",
+      decline: "Decline",
+    },
   },
   es: {
     nav: {
@@ -766,6 +773,12 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       legalTitle: "Legal",
       copyright: "© 2026 Prowlit, Inc. No afiliado com Reddit, Inc.",
     },
+    cookieBanner: {
+      message: "Usamos cookies para mejorar tu experiencia y analizar el tráfico del sitio.",
+      learnMore: "Más información",
+      accept: "Aceptar",
+      decline: "Rechazar",
+    },
   },
   pt: {
     nav: {
@@ -1095,6 +1108,12 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       companyTitle: "Empresa",
       legalTitle: "Legal",
       copyright: "© 2026 Prowlit, Inc. Não afiliado com Reddit, Inc.",
+    },
+    cookieBanner: {
+      message: "Usamos cookies para melhorar sua experiência e analisar o tráfego do site.",
+      learnMore: "Saiba mais",
+      accept: "Aceitar",
+      decline: "Recusar",
     },
   },
 };
