@@ -25,6 +25,13 @@ import type { ProjectDTO } from "@/db/schemas/domain";
 const NEW_PROJECT_WEBSITE_COOKIE = "new_project_website";
 const NEW_PROJECT_DESCRIPTION_COOKIE = "new_project_description";
 
+export async function switchProjectAction(formData: FormData) {
+  const projectId = String(formData.get("projectId") ?? "");
+  await requireUser("/dashboard");
+  if (projectId) await setCurrentProject(projectId);
+  redirect(`/dashboard?projectId=${projectId}`);
+}
+
 export async function createFirstProject(formData: FormData) {
   const user = await requireUser("/bootstrap");
   const existing = await listProjectsForCurrentUser();

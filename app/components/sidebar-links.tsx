@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
 
@@ -18,23 +18,11 @@ export function SidebarLinks({
 }) {
   const t = useTranslations("nav");
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [archiveOpen, setArchiveOpen] = useState(pathname.startsWith("/archive"));
 
-  const isActive = (href: string, type?: string) => {
-    if (!pathname.startsWith("/feed")) return pathname === href || pathname.startsWith(href + "/");
-    if (href === "/dashboard") return false;
-    if (href === "/feed" && type) {
-      if (typeof window === "undefined") return false;
-      const params = new URLSearchParams(window.location.search);
-      return params.get("type") === type;
-    }
-    return false;
-  };
-
   const isFeedActive = (type: string) => {
-    if (typeof window === "undefined") return pathname === "/feed" && type === "opportunities";
-    const params = new URLSearchParams(window.location.search);
-    const current = params.get("type") ?? "opportunities";
+    const current = searchParams.get("type") ?? "opportunities";
     return pathname === "/feed" && current === type;
   };
 

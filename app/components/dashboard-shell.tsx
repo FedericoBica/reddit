@@ -1,5 +1,6 @@
 import type { User } from "@supabase/supabase-js";
 import Link from "next/link";
+import { Suspense } from "react";
 import { getTranslations } from "next-intl/server";
 import { BrandLink } from "./logo";
 import { MobileShell } from "./mobile-shell";
@@ -9,6 +10,7 @@ import { RefreshCountdowns } from "./refresh-countdowns";
 import { signOut } from "@/modules/auth/actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getNewItemsCount } from "@/db/queries/leads";
+import { listProjectsForCurrentUser } from "@/db/queries/projects";
 import { getCurrentBillingPlan } from "@/modules/billing/current";
 import type { ProjectDTO } from "@/db/schemas/domain";
 
@@ -61,10 +63,11 @@ async function DashboardShellContent({
   isAdminPromise: Promise<boolean>;
   children: React.ReactNode;
 }) {
-  const [isAdmin, newCounts, billingPlan] = await Promise.all([
+  const [isAdmin, newCounts, billingPlan, projects] = await Promise.all([
     isAdminPromise,
     getNewItemsCount(currentProject.id),
     getCurrentBillingPlan(),
+    listProjectsForCurrentUser(),
   ]);
   const tNav = await getTranslations("nav");
 
@@ -77,16 +80,18 @@ async function DashboardShellContent({
           wordmarkSize={14}
           style={{ gap: 6, marginBottom: 12, padding: "0 3px" }}
         />
-        <ProjectSwitcher currentProject={currentProject} />
+        <ProjectSwitcher currentProject={currentProject} projects={projects} />
       </div>
 
       {/* Nav links */}
-      <SidebarLinks
-        currentProjectId={currentProject.id}
-        newOpportunitiesCount={newCounts.opportunities}
-        newMentionsCount={newCounts.mentions}
-        newSearchboxCount={newSearchboxCount}
-      />
+      <Suspense fallback={null}>
+        <SidebarLinks
+          currentProjectId={currentProject.id}
+          newOpportunitiesCount={newCounts.opportunities}
+          newMentionsCount={newCounts.mentions}
+          newSearchboxCount={newSearchboxCount}
+        />
+      </Suspense>
 
       {/* Footer */}
       <div className="ds-sidebar-foot">
@@ -94,6 +99,7 @@ async function DashboardShellContent({
           lastOpportunitiesAt={currentProject.last_scraped_at}
           lastMentionsAt={currentProject.last_mentions_scraped_at}
           cycleHours={billingPlan.scrapeIntervalHours}
+          opportunitiesBackoffUntil={currentProject.scrape_backoff_until}
         />
 
         <div className="ds-user-row">

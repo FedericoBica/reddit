@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useMemo, useRef, useState } from "react";
 import { CopyButton } from "@/app/components/copy-button";
 import type { MentionReplyState } from "@/modules/mentions/actions";
 import { generateMentionRepliesAction } from "@/modules/mentions/actions";
@@ -13,6 +13,14 @@ const initialState: MentionReplyState = {
 
 const STYLE_LABELS = ["Engaging", "Direct", "Balanced"];
 
+type ReplyLength = "short" | "medium" | "long";
+const LENGTH_LABELS: Record<ReplyLength, string> = { short: "Short", medium: "Medium", long: "Long" };
+const LENGTH_DESCRIPTIONS: Record<ReplyLength, string> = {
+  short: "1–2 sentences",
+  medium: "3–5 sentences",
+  long: "6–10 sentences",
+};
+
 export function MentionReplyGenerator({
   projectId,
   mentionId,
@@ -24,6 +32,8 @@ export function MentionReplyGenerator({
 }) {
   const [state, formAction, pending] = useActionState(generateMentionRepliesAction, initialState);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [replyLength, setReplyLength] = useState<ReplyLength>("medium");
+  const detailsRef = useRef<HTMLDetailsElement>(null);
   const replies = state.replies;
 
   const activeReply = useMemo(
@@ -35,7 +45,55 @@ export function MentionReplyGenerator({
     <div>
       <div className="composer-head">
         <span>Reply draft</span>
-        {state.usageLabel && <span className="composer-tone">{state.usageLabel}</span>}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginLeft: "auto" }}>
+          {state.usageLabel && <span className="composer-tone">{state.usageLabel}</span>}
+          <details ref={detailsRef} style={{ position: "relative" }}>
+            <summary
+              style={{
+                display: "inline-flex", alignItems: "center", gap: 5,
+                padding: "2px 10px", borderRadius: 20, border: "1px solid #DAE0E6",
+                background: "#F6F7F8", fontSize: 11, fontWeight: 700, color: "#4B5563",
+                cursor: "pointer", listStyle: "none", userSelect: "none", whiteSpace: "nowrap",
+              }}
+            >
+              {LENGTH_LABELS[replyLength]}
+              <svg width="9" height="9" viewBox="0 0 10 10" fill="none" style={{ opacity: 0.5 }}>
+                <path d="M2 4l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </summary>
+            <div
+              style={{
+                position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50,
+                background: "#fff", border: "1px solid #E5E7EB", borderRadius: 8,
+                boxShadow: "0 4px 16px rgba(0,0,0,0.10)", minWidth: 140, overflow: "hidden",
+              }}
+            >
+              {(["short", "medium", "long"] as const).map((opt) => {
+                const active = replyLength === opt;
+                return (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => { setReplyLength(opt); if (detailsRef.current) detailsRef.current.open = false; }}
+                    style={{
+                      display: "flex", flexDirection: "column", width: "100%",
+                      padding: "8px 14px", textAlign: "left",
+                      background: active ? "#FFF3EC" : "transparent",
+                      border: "none", borderBottom: "1px solid #F5F5F5", cursor: "pointer",
+                    }}
+                  >
+                    <span style={{ fontSize: 12, fontWeight: active ? 700 : 500, color: active ? "#FF4500" : "#1A1A1B" }}>
+                      {LENGTH_LABELS[opt]}
+                    </span>
+                    <span style={{ fontSize: 10, color: "#9CA3AF", marginTop: 1 }}>
+                      {LENGTH_DESCRIPTIONS[opt]}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </details>
+        </div>
       </div>
 
       {state.error && (
@@ -78,6 +136,7 @@ export function MentionReplyGenerator({
           <form action={formAction}>
             <input type="hidden" name="projectId" value={projectId} />
             <input type="hidden" name="mentionId" value={mentionId} />
+            <input type="hidden" name="replyLength" value={replyLength} />
             <button
               type="submit"
               className={`composer-btn${replies.length === 0 ? " composer-btn-accent" : ""}`}

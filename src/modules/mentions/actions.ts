@@ -28,6 +28,16 @@ export type MentionReplyState = {
   usageLabel: string | null;
 };
 
+function lengthInstruction(length: string): string {
+  if (length === "short") {
+    return "SHORT: 1-2 sentences maximum. Pick the single most relevant point. No warm-up, no closing — just the point.";
+  }
+  if (length === "long") {
+    return "LONG: 6-10 sentences across 2-3 paragraphs. Go deeper, add context and a concrete tip. Still sound human — not a blog post.";
+  }
+  return "MEDIUM: 3-5 sentences. Get to the point fast, include one concrete observation, mention product if it fits naturally.";
+}
+
 export async function generateMentionRepliesAction(
   _prevState: MentionReplyState,
   formData: FormData,
@@ -35,6 +45,7 @@ export async function generateMentionRepliesAction(
   const user = await requireUser("/mentions");
   const projectId = String(formData.get("projectId") ?? "");
   const mentionId = String(formData.get("mentionId") ?? "");
+  const replyLength = String(formData.get("replyLength") ?? "medium");
 
   try {
     const usage = await assertAiReplyGenerationAvailable(user.id);
@@ -92,6 +103,7 @@ export async function generateMentionRepliesAction(
                 `Mention body: ${mention.body ?? "No body available."}`,
                 `Sentiment rationale: ${mention.sentiment_reason ?? "n/a"}`,
                 `Style: ${style.key}. ${style.instruction}`,
+                `Length: ${lengthInstruction(replyLength)}`,
                 "Return only the final Reddit reply text.",
               ].join("\n"),
             },

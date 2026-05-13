@@ -6,10 +6,12 @@ export function RefreshCountdowns({
   lastOpportunitiesAt,
   lastMentionsAt,
   cycleHours,
+  opportunitiesBackoffUntil,
 }: {
   lastOpportunitiesAt: string | null;
   lastMentionsAt: string | null;
   cycleHours: number;
+  opportunitiesBackoffUntil?: string | null;
 }) {
   const [now, setNow] = useState(() => Date.now());
 
@@ -18,11 +20,27 @@ export function RefreshCountdowns({
     return () => clearInterval(id);
   }, []);
 
-  function computeBar(lastAt: string | null) {
+  function computeBar(lastAt: string | null, nextRunOverride?: string | null) {
     if (!lastAt) return { pct: 0, label: "Pending", color: "#B0B0B5" };
-    const hoursSince = (now - new Date(lastAt).getTime()) / 3_600_000;
-    const hoursLeft = Math.max(0, cycleHours - hoursSince);
-    const pct = Math.max(0, Math.min(100, (hoursLeft / cycleHours) * 100));
+
+    const normalNext = new Date(lastAt).getTime() + cycleHours * 3_600_000;
+    const overrideNext = nextRunOverride ? new Date(nextRunOverride).getTime() : null;
+    const nextRun = overrideNext && overrideNext > normalNext ? overrideNext : normalNext;
+
+    const msLeft = nextRun - now;
+    const hoursLeft = msLeft / 3_600_000;
+
+    if (msLeft <= 0) {
+      // Overdue — show how long past due
+      const hoursOver = Math.abs(hoursLeft);
+      let label: string;
+      if (hoursOver < 1) label = "Due now";
+      else if (hoursOver < 24) label = `+${Math.round(hoursOver)}h`;
+      else label = `+${Math.round(hoursOver / 24)}d`;
+      return { pct: 0, label, color: "#B0B0B5" };
+    }
+
+    const pct = Math.min(100, (hoursLeft / cycleHours) * 100);
     let label: string;
     if (hoursLeft < 0.5) label = "Soon";
     else if (hoursLeft < 1) label = "< 1h";
@@ -32,7 +50,7 @@ export function RefreshCountdowns({
     return { pct, label, color };
   }
 
-  const opp = computeBar(lastOpportunitiesAt);
+  const opp = computeBar(lastOpportunitiesAt, opportunitiesBackoffUntil);
   const men = computeBar(lastMentionsAt);
 
   return (

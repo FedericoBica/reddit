@@ -35,10 +35,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <span className="login-brand-mark">
             <BrandIcon />
           </span>
-          <span>
-            <span style={{ color: "var(--li-ink)" }}>Redd</span>
-            <span style={{ color: "var(--li-accent)" }}>Prowl</span>
-          </span>
+          <span style={{ color: "var(--li-ink)", fontWeight: 700 }}>Prowlit</span>
         </a>
 
         {/* Title */}
