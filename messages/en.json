@@ -375,7 +375,7 @@
   },
   "searchbox": {
     "title": "Search Box",
-    "description": "High-intent Reddit threads found via Google — posts where people are actively searching for a solution like yours. Ranked by relevance to your keywords so the best leads surface first.",
+    "description": "The following reddit posts are showing up when people google for keywords related to you or your competitors. Commenting on these posts will guarantee more eyeballs on your product and if done right more sales.",
     "resultsAria": "Searchbox results",
     "resultsFound": "{count} posts found · sorted by {sort}",
     "sortDate": "date",

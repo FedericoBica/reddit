@@ -375,7 +375,7 @@
   },
   "searchbox": {
     "title": "Search Box",
-    "description": "Hilos de Reddit de alta intención encontrados vía Google: posts donde la gente está buscando activamente una solución como la tuya. Se ordenan por relevancia para tus keywords para que los mejores leads aparezcan primero.",
+    "description": "Los siguientes posts de Reddit aparecen cuando la gente busca en Google palabras clave relacionadas con vos o tus competidores. Comentar en estos posts va a garantizarte más visibilidad en tu producto y, si lo hacés bien, más ventas.",
     "resultsAria": "Resultados de Searchbox",
     "resultsFound": "{count} posts encontrados · ordenados por {sort}",
     "sortDate": "fecha",
