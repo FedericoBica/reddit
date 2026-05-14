@@ -1467,10 +1467,61 @@ function LangSwitcher({ locale }: { locale: Locale }) {
   );
 }
 
-export default function LandingPage({ locale }: { locale: Locale }) {
-  const t = TRANSLATIONS[locale];
+function VideoModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  if (!open) return null;
 
   return (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 9999,
+        background: "rgba(0,0,0,0.85)", display: "flex",
+        alignItems: "center", justifyContent: "center",
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{ position: "relative", width: "min(900px, 95vw)", aspectRatio: "16/9" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <iframe
+          src="https://www.youtube.com/embed/ASmi9JIDCaU?autoplay=1"
+          allow="autoplay; fullscreen"
+          allowFullScreen
+          style={{ width: "100%", height: "100%", border: "none", borderRadius: 12 }}
+        />
+        <button
+          onClick={onClose}
+          style={{
+            position: "absolute", top: -14, right: -14,
+            width: 32, height: 32, borderRadius: "50%",
+            background: "#fff", border: "none", cursor: "pointer",
+            fontSize: 18, lineHeight: 1, display: "flex",
+            alignItems: "center", justifyContent: "center",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.4)",
+          }}
+          aria-label="Cerrar video"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function LandingPage({ locale }: { locale: Locale }) {
+  const t = TRANSLATIONS[locale];
+  const [videoOpen, setVideoOpen] = useState(false);
+
+  return (
+    <>
+    <VideoModal open={videoOpen} onClose={() => setVideoOpen(false)} />
     <main className="landing-page">
       <nav className="nav">
         <div className="wrap nav-inner">
@@ -1509,7 +1560,7 @@ export default function LandingPage({ locale }: { locale: Locale }) {
           <p className="lede" style={{ margin: "24px auto 32px", maxWidth: 640 }}>{t.hero.lede}</p>
           <div className="cta-row" style={{ justifyContent: "center" }}>
             <Link className="btn dark lg" href="/signup">{t.hero.ctaPrimary}</Link>
-            <a className="btn primary lg" href="#features">{t.hero.ctaSecondary}</a>
+            <button className="btn primary lg" type="button" onClick={() => setVideoOpen(true)}>{t.hero.ctaSecondary}</button>
           </div>
           <div className="hero-meta" style={{ justifyContent: "center" }}>
             <span>{t.hero.stat2}</span>
@@ -1532,5 +1583,6 @@ export default function LandingPage({ locale }: { locale: Locale }) {
       <Footer t={t} locale={locale} />
       <CookieBanner t={t.cookieBanner} />
     </main>
+    </>
   );
 }
