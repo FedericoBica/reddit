@@ -199,11 +199,23 @@
   "auth": {
     "kicker": "Login",
     "title": "Sign in to Prowlit",
+    "subtitle": "Use your Google account or your email and password.",
     "emailLabel": "Email",
+    "emailPlaceholder": "you@company.com",
+    "passwordLabel": "Password",
+    "passwordPlaceholder": "••••••••••",
+    "forgotPassword": "Forgot it?",
     "submit": "Send magic link",
     "orContinueWith": "or continue with",
+    "orContinueWithEmail": "or use your email",
     "signInWithGoogle": "Sign in with Google",
-    "checkEmail": "Check your email — we sent you a login link."
+    "signInWithPassword": "Sign in",
+    "checkEmail": "Check your email — we sent you a login link.",
+    "termsPrefix": "By continuing you accept the",
+    "terms": "Terms",
+    "privacy": "Privacy Policy",
+    "noAccount": "No account?",
+    "startFree": "Start free"
   },
   "signup": {
     "progress": {

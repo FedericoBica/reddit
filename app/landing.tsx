@@ -1225,7 +1225,7 @@ function FAQ({ t }: { t: Translations }) {
   );
 }
 
-function FinalCTA({ t }: { t: Translations }) {
+function FinalCTA({ t, locale }: { t: Translations; locale: Locale }) {
   const tf = t.finalCta;
   return (
     <section className="section-pad-sm">
@@ -1234,10 +1234,10 @@ function FinalCTA({ t }: { t: Translations }) {
           <div>
             <span className="eyebrow">{tf.eyebrow}</span>
             <h2 className="h-section">{tf.h2}</h2>
-            <p className="sub">{tf.sub}</p>
+            {tf.sub && <p className="sub">{tf.sub}</p>}
             <div className="cta-row">
               <Link className="btn primary lg" href="/signup">{tf.ctaPrimary}</Link>
-              <Link className="btn lg ghost-on-dark" href="/login">{tf.ctaLogin}</Link>
+              <Link className="btn lg ghost-on-dark" href={`/login?locale=${locale}`}>{tf.ctaLogin}</Link>
             </div>
           </div>
         </div>
@@ -1531,7 +1531,7 @@ export default function LandingPage({ locale }: { locale: Locale }) {
             <a href="#pricing">{t.nav.pricing}</a>
             <a href="#how">{t.nav.howItWorks}</a>
             <Link href="/about">{t.nav.about}</Link>
-            <Link className="btn dark sm" href="/login">{t.nav.login}</Link>
+            <Link className="btn dark sm" href={`/login?locale=${locale}`}>{t.nav.login}</Link>
             <Link className="btn primary sm" href="/signup">{t.nav.startFree}</Link>
             <LangSwitcher locale={locale} />
           </div>
@@ -1579,7 +1579,7 @@ export default function LandingPage({ locale }: { locale: Locale }) {
       <SeoAiSearch t={t} />
       <Pricing t={t} />
       <FAQ t={t} />
-      <FinalCTA t={t} />
+        <FinalCTA t={t} locale={locale} />
       <Footer t={t} locale={locale} />
       <CookieBanner t={t.cookieBanner} />
     </main>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { detectLocale, normalizeLocale } from "@/i18n/request";
 import {
   signInWithGoogle,
   signInWithPassword,
@@ -16,6 +17,7 @@ type LoginPageProps = {
   searchParams?: Promise<{
     next?: string;
     error?: string;
+    locale?: string;
   }>;
 };
 
@@ -23,6 +25,28 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   const user = await getCurrentUser();
   const params = await searchParams;
   const next = sanitizeNext(params?.next);
+  const locale = normalizeLocale(params?.locale) ?? await detectLocale();
+  const messages = (await import(`../../messages/${locale}.json`)).default;
+  const auth = messages.auth as {
+    kicker: string;
+    title: string;
+    subtitle: string;
+    emailLabel: string;
+    emailPlaceholder: string;
+    passwordLabel: string;
+    passwordPlaceholder: string;
+    forgotPassword: string;
+    signInWithGoogle: string;
+    orContinueWithEmail: string;
+    signInWithPassword: string;
+    termsPrefix: string;
+    terms: string;
+    privacy: string;
+    noAccount: string;
+    startFree: string;
+  };
+  const authHref = `/login?locale=${locale}`;
+  const signupHref = `/signup?locale=${locale}`;
 
   if (user) redirect(await resolvePostAuthPath(next));
 
@@ -41,13 +65,13 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {/* Title */}
         <div className="login-form-eyebrow">
           <span className="login-form-eyebrow-dot" />
-          Login
+          {auth.kicker}
         </div>
         <h1 className="login-form-title">
-          Ingresá a <em>Prowlit</em>
+          {auth.title.replace("Prowlit", "").trim()} <em>Prowlit</em>
         </h1>
         <p className="login-form-sub">
-          Usá tu cuenta de Google o tu email y contraseña.
+          {auth.subtitle}
         </p>
 
         {/* Error */}
@@ -60,11 +84,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <input type="hidden" name="next" value={next} />
           <button className="login-btn-google" type="submit">
             <GoogleIcon />
-            Continuar con Google
+            {auth.signInWithGoogle}
           </button>
         </form>
 
-        <div className="login-divider">o con tu email</div>
+        <div className="login-divider">{auth.orContinueWithEmail}</div>
 
         {/* Email + password */}
         <form action={signInWithPassword} style={{ display: "grid", gap: 12 }}>
@@ -72,7 +96,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
           <div className="login-field">
             <label className="login-field-label" htmlFor="email">
-              Email
+              {auth.emailLabel}
             </label>
             <div className="login-input-wrap">
               <span className="login-input-icon"><MailIcon /></span>
@@ -80,7 +104,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="vos@empresa.com"
+                placeholder={auth.emailPlaceholder}
                 autoComplete="email"
                 required
               />
@@ -90,10 +114,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <div className="login-field" style={{ marginBottom: 4 }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
               <label className="login-field-label" htmlFor="password" style={{ marginBottom: 0 }}>
-                Contraseña
+                {auth.passwordLabel}
               </label>
               <a
-                href="#"
+                href={authHref}
                 style={{
                   fontSize: 12.5,
                   color: "var(--li-ink-3)",
@@ -102,7 +126,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   textUnderlineOffset: 3,
                 }}
               >
-                ¿La olvidaste?
+                {auth.forgotPassword}
               </a>
             </div>
             <div className="login-input-wrap">
@@ -111,7 +135,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 id="password"
                 name="password"
                 type="password"
-                placeholder="••••••••••"
+                placeholder={auth.passwordPlaceholder}
                 autoComplete="current-password"
                 required
               />
@@ -119,23 +143,23 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
 
           <button className="login-btn-submit" type="submit">
-            Ingresar
+            {auth.signInWithPassword}
             <span className="login-arrow">→</span>
           </button>
         </form>
 
         {/* Fine print */}
         <p className="login-fine">
-          Al continuar aceptás los{" "}
-          <Link href="/privacy">Términos</Link> y la{" "}
-          <Link href="/privacy">Política de privacidad</Link>.
+          {auth.termsPrefix}{" "}
+          <Link href="/terms">{auth.terms}</Link> y{" "}
+          <Link href="/privacy">{auth.privacy}</Link>.
         </p>
 
         {/* Sign-up link */}
         <p className="login-fine" style={{ marginTop: 10 }}>
-          ¿Sin cuenta?{" "}
-          <Link href="/signup" style={{ color: "var(--li-ink)", fontWeight: 600, textDecoration: "underline", textDecorationColor: "var(--li-line)" }}>
-            Empezá gratis →
+          {auth.noAccount}{" "}
+          <Link href={signupHref} style={{ color: "var(--li-ink)", fontWeight: 600, textDecoration: "underline", textDecorationColor: "var(--li-line)" }}>
+            {auth.startFree} →
           </Link>
         </p>
 

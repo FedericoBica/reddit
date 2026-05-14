@@ -199,11 +199,23 @@
   "auth": {
     "kicker": "Login",
     "title": "Ingresá a Prowlit",
+    "subtitle": "Usá tu cuenta de Google o tu email y contraseña.",
     "emailLabel": "Email",
+    "emailPlaceholder": "vos@empresa.com",
+    "passwordLabel": "Contraseña",
+    "passwordPlaceholder": "••••••••••",
+    "forgotPassword": "¿La olvidaste?",
     "submit": "Enviar magic link",
     "orContinueWith": "o continuá con",
+    "orContinueWithEmail": "o con tu email",
     "signInWithGoogle": "Entrar con Google",
-    "checkEmail": "Revisá tu email — te enviamos un link para ingresar."
+    "signInWithPassword": "Ingresar",
+    "checkEmail": "Revisá tu email — te enviamos un link para ingresar.",
+    "termsPrefix": "Al continuar aceptás los",
+    "terms": "Términos",
+    "privacy": "Política de privacidad",
+    "noAccount": "¿Sin cuenta?",
+    "startFree": "Empezá gratis"
   },
   "signup": {
     "progress": {

@@ -425,8 +425,8 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
     finalCta: {
       eyebrow: "Ready?",
       h2: "Your next 10 customers are already posting about you.",
-      sub: "Start the 7-day trial. No card. Cancel in two clicks.",
-      ctaPrimary: "Start free trial",
+      sub: "",
+      ctaPrimary: "Start here",
       ctaLogin: "Log in",
     },
     footer: {
@@ -761,8 +761,8 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
     finalCta: {
       eyebrow: "¿Listo?",
       h2: "Tus próximos 10 clientes ya están publicando sobre ti.",
-      sub: "Empieza la prueba de 7 días. Sin tarjeta. Cancela en dos clics.",
-      ctaPrimary: "Prueba gratis",
+      sub: "",
+      ctaPrimary: "Empezar aquí",
       ctaLogin: "Iniciar sesión",
     },
     footer: {
@@ -1097,8 +1097,8 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
     finalCta: {
       eyebrow: "Pronto?",
       h2: "Seus próximos 10 clientes já estão postando sobre você.",
-      sub: "Comece o teste de 7 dias. Sem cartão. Cancele em dois cliques.",
-      ctaPrimary: "Teste grátis",
+      sub: "",
+      ctaPrimary: "Começar aqui",
       ctaLogin: "Entrar",
     },
     footer: {
