@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listAllProjectLeads, listProjectLeads } from "@/db/queries/leads";
 import type { LeadDTO } from "@/db/schemas/domain";
@@ -44,6 +45,12 @@ export default async function PipelinePage({ searchParams }: PipelinePageProps) 
   if (projectState.status === "missing") redirect("/bootstrap");
 
   const { currentProject } = projectState;
+  const locale = await getLocale();
+  const copy = locale.startsWith("es")
+    ? { kicker: "Pipeline", title: "Embudo de conversión", won: "ganado", noRevenue: "Sin revenue aún" }
+    : locale.startsWith("pt")
+    ? { kicker: "Pipeline", title: "Funil de conversão", won: "ganho", noRevenue: "Sem receita ainda" }
+    : { kicker: "Pipeline", title: "Conversion funnel", won: "won", noRevenue: "No revenue yet" };
 
 
   const [allLeads, recentLeads] = await Promise.all([
@@ -78,10 +85,10 @@ export default async function PipelinePage({ searchParams }: PipelinePageProps) 
       <div className="app-page" style={{ minHeight: "100vh" }}>
         <header className="page-header">
           <div>
-            <p className="page-kicker">Pipeline</p>
-            <h1 className="page-title">Funnel de conversión</h1>
+            <p className="page-kicker">{copy.kicker}</p>
+            <h1 className="page-title">{copy.title}</h1>
             <p className="page-copy">
-              {allLeads.length} leads totales · {wonTotal > 0 ? `$${wonTotal.toLocaleString()} won` : "Sin revenue aún"} · {conversionRate}% conversión
+              {allLeads.length} leads totales · {wonTotal > 0 ? `$${wonTotal.toLocaleString()} ${copy.won}` : copy.noRevenue} · {conversionRate}% conversión
             </p>
           </div>
 

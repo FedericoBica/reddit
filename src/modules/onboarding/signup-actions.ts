@@ -3,6 +3,7 @@
 import { cookies } from "next/headers";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { logOpenAIUsage } from "@/db/mutations/api-usage";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
@@ -117,8 +118,9 @@ export async function analyzeCompanyWebsite(formData: FormData) {
   let errorMessage: string | null = null;
 
   try {
+    const locale = await getLocale();
     const validated = await validateAccessibleWebsite(website);
-    const analysis = await analyzeCompanyWithAI(validated);
+    const analysis = await analyzeCompanyWithAI(validated, locale);
     draftUrl = validated.url;
     draftDescription = analysis.description;
   } catch (error) {
@@ -157,11 +159,12 @@ export async function createProjectFromCompanyProfile(formData: FormData) {
     hostname = website.replace(/^https?:\/\//i, "").replace(/^www\./i, "").split("/")[0];
   }
 
+  const locale = await getLocale();
   const project = await createProject({
     name: hostname || "Prowlit project",
     websiteUrl: website,
     valueProposition: description,
-    primaryLanguage: "en",
+    primaryLanguage: locale,
     currencyCode: "USD",
   });
 
@@ -194,12 +197,13 @@ export async function createProjectManually(formData: FormData) {
     }
   }
 
+  const locale = await getLocale();
   const project = await createProject({
     name: hostname || "my-company",
     websiteUrl: normalizedWebsite,
     valueProposition: description,
     region: null,
-    primaryLanguage: "en",
+    primaryLanguage: locale,
     currencyCode: "USD",
   });
 

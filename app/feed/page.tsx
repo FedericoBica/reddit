@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { AutoRefresh } from "@/app/components/auto-refresh";
 import { KeywordsDropdown } from "@/app/components/keywords-dropdown";
 import { ReplyEditor } from "@/app/components/reply-editor";
@@ -47,11 +48,75 @@ type FeedPageProps = {
 export default async function FeedPage({ searchParams }: FeedPageProps) {
   const user = await requireUser("/feed");
   const params = await searchParams;
+  const locale = await getLocale();
   const projectState = await resolveCurrentProject(params?.projectId);
 
   if (projectState.status === "missing") redirect("/bootstrap");
 
   const { currentProject } = projectState;
+  const isEs = locale.startsWith("es");
+  const isPt = locale.startsWith("pt");
+  const copy = {
+    headerOpportunities: isEs ? "Nuevas oportunidades" : isPt ? "Novas oportunidades" : "New Opportunities",
+    headerMentions: isEs ? "Menciones" : isPt ? "Menções" : "Mentions",
+    headerX: isEs ? "Leads de X" : isPt ? "Leads de X" : "X Leads",
+    descOpportunities: isEs ? "Posts de Reddit donde podrías sumar valor y responder." : isPt ? "Posts do Reddit onde você pode agregar valor e responder." : "Reddit posts where you can add value and reply.",
+    descMentions: isEs ? "Conversaciones sobre tu marca y tus competidores, ordenadas para triage." : isPt ? "Conversas sobre sua marca e seus concorrentes, ordenadas para triagem." : "Conversations about your brand and competitors, ordered for triage.",
+    descX: isEs ? "Posts de X clasificados por intención para outreach manual." : isPt ? "Posts do X classificados por intenção para outreach manual." : "X posts classified by intent for manual outreach.",
+    postsFound: isEs ? "posts encontrados" : isPt ? "posts encontrados" : "posts found",
+    backToList: isEs ? "Volver a la lista" : isPt ? "Voltar para a lista" : "Back to list",
+    noItemsYet: isEs ? "Todavía no hay items" : isPt ? "Ainda não há itens" : "No items yet",
+    noItemsBody: isEs ? "Las oportunidades y menciones van a aparecer acá cuando corran los pipelines." : isPt ? "Oportunidades e menções aparecerão aqui quando os pipelines rodarem." : "Opportunities and mentions will appear here as the pipelines run.",
+    reject: isEs ? "Descartar post" : isPt ? "Descartar post" : "Reject Post",
+    markReplied: isEs ? "Marcar como respondido" : isPt ? "Marcar como respondido" : "Mark as Replied",
+    viewReddit: isEs ? "Ver post en Reddit →" : isPt ? "Ver post no Reddit →" : "View Post on Reddit →",
+    generatingReplies: isEs ? "Generando respuestas…" : isPt ? "Gerando respostas…" : "Generating replies…",
+    regenerate: isEs ? "⥁ Regenerar" : isPt ? "⥁ Gerar novamente" : "⥁ Regenerate",
+    generateReplySuggestions: isEs ? "✦ Generar sugerencias de respuesta" : isPt ? "✦ Gerar sugestões de resposta" : "✦ Generate Reply Suggestions",
+    viewX: isEs ? "Ver en X →" : isPt ? "Ver no X →" : "View on X →",
+    aiAnalysis: isEs ? "ANÁLISIS IA" : isPt ? "ANÁLISE IA" : "AI ANALYSIS",
+    noMentions: isEs ? "No hay menciones para este filtro" : isPt ? "Nenhuma menção corresponde a este filtro" : "No mentions match this filter",
+    noLeads: isEs ? "Todavía no hay leads" : isPt ? "Ainda não há leads" : "No leads yet",
+    scraperNotRun: isEs ? "El scraper todavía no corrió." : isPt ? "O scraper ainda não foi executado." : "Scraper hasn't run yet.",
+    statusReplied: isEs ? "✓ Respondido" : isPt ? "✓ Respondido" : "✓ Replied",
+    intentScore: isEs ? "Score de intención" : isPt ? "Pontuação de intenção" : "Intent score",
+    keywords: isEs ? "Keywords" : isPt ? "Palavras-chave" : "Keywords",
+    noBodyReddit: isEs ? "No hay cuerpo disponible. Abrí el post en Reddit para ver el contexto completo." : isPt ? "Não há corpo disponível. Abra o post no Reddit para ver o contexto completo." : "No body available. Open the post on Reddit to see the full context.",
+    upvotes: isEs ? "upvotes" : isPt ? "upvotes" : "upvotes",
+    comments: isEs ? "comentarios" : isPt ? "comentários" : "comments",
+    likes: isEs ? "likes" : isPt ? "curtidas" : "likes",
+    retweets: isEs ? "retweets" : isPt ? "retweets" : "retweets",
+    replies: isEs ? "respuestas" : isPt ? "respostas" : "replies",
+    views: isEs ? "vistas" : isPt ? "visualizações" : "views",
+    adjustFilters: isEs ? "Probá ajustar los filtros de target o sentimiento." : isPt ? "Tente ajustar os filtros de alvo ou sentimento." : "Try adjusting the target or sentiment filters above.",
+    lastScan: isEs ? "Último escaneo" : isPt ? "Última varredura" : "Last scan",
+    newPostsAppear: isEs ? "Los nuevos posts van a aparecer acá automáticamente." : isPt ? "Novos posts aparecerão aqui automaticamente." : "New posts will appear here automatically.",
+    feedAria: isEs ? "Feed de leads" : isPt ? "Feed de leads" : "Leads feed",
+    relevance: isEs ? "Relevancia" : isPt ? "Relevância" : "Relevance",
+    unknownAuthor: isEs ? "desconocido" : isPt ? "desconhecido" : "unknown",
+    viewOnRedditShort: isEs ? "Ver en Reddit ↗" : isPt ? "Ver no Reddit ↗" : "View on Reddit ↗",
+    allMentions: isEs ? "Todas las menciones" : isPt ? "Todas as menções" : "All mentions",
+    sentiment: isEs ? "Sentimiento" : isPt ? "Sentimento" : "Sentiment",
+    mostlyPositive: isEs ? "Mayormente positivo" : isPt ? "Majoritariamente positivo" : "Mostly Positive",
+    mostlyNegative: isEs ? "Mayormente negativo" : isPt ? "Majoritariamente negativo" : "Mostly Negative",
+    mixed: isEs ? "Mixto" : isPt ? "Misto" : "Mixed",
+    myCompany: isEs ? "Mi empresa" : isPt ? "Minha empresa" : "My Company",
+    sortedBy: isEs ? "ordenado por" : isPt ? "ordenado por" : "sorted by",
+    date: isEs ? "fecha" : isPt ? "data" : "date",
+    activity: isEs ? "actividad" : isPt ? "atividade" : "activity",
+    sortByActivity: isEs ? "Ordenar por actividad" : isPt ? "Ordenar por atividade" : "Sort by Activity",
+    sortByRecent: isEs ? "Ordenar por recientes" : isPt ? "Ordenar por recentes" : "Sort by Recent",
+    positive: isEs ? "Positivo" : isPt ? "Positivo" : "Positive",
+    neutral: isEs ? "Neutral" : isPt ? "Neutro" : "Neutral",
+    negative: isEs ? "Negativo" : isPt ? "Negativo" : "Negative",
+    statusNew: isEs ? "Nuevo" : isPt ? "Novo" : "New",
+    statusIrrelevant: isEs ? "Irrelevante" : isPt ? "Irrelevante" : "Irrelevant",
+    minutesAgo: isEs ? "m atrás" : isPt ? "min atrás" : "m ago",
+    hoursAgo: isEs ? "h atrás" : isPt ? "h atrás" : "h ago",
+    daysAgo: isEs ? "d atrás" : isPt ? "d atrás" : "d ago",
+    justNow: isEs ? "recién" : isPt ? "agora há pouco" : "just now",
+    dateLocale: isEs ? "es" : isPt ? "pt" : "en",
+  };
 
   const rawFeedType = parseFeedType(params?.type);
 
@@ -184,17 +249,19 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
         {/* Full-width page header — sits above both panes */}
         <header className="feed-page-header">
           <h1 className="feed-page-title">
-            {feedType === "opportunities" ? "New Opportunities" : feedType === "mentions" ? "Mentions" : "X Leads"}
+            {feedType === "opportunities" ? copy.headerOpportunities : feedType === "mentions" ? copy.headerMentions : copy.headerX}
           </h1>
           {feedType !== "all" && (
-            <p className="feed-page-desc">{FEED_META[feedType].description}</p>
+            <p className="feed-page-desc">
+              {feedType === "opportunities" ? copy.descOpportunities : feedType === "mentions" ? copy.descMentions : copy.descX}
+            </p>
           )}
         </header>
 
         <div className="searchbox-body" data-has-selected={String(!!(selectedFromList || selectedXPost))}>
           <section
             className="opportunity-column"
-            aria-label="Leads feed"
+            aria-label={copy.feedAria}
           >
             {/* Column header: count + optional mention filters */}
             <div className="feed-col-header">
@@ -202,7 +269,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                 <div className="feed-col-meta">
                   <span>
                     {feedType === "x" ? xPosts.length : feedLeads.length}
-                    {" "}posts found
+                    {" "}{copy.postsFound}
                   </span>
                 </div>
               )}
@@ -218,6 +285,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                   stats={sentimentStats}
                   totalCount={visibleMentions.length}
                   selectedItemId={selectedFromList?.kind === "mention" ? selectedFromList.data.id : undefined}
+                  copy={copy}
                 />
               )}
             </div>
@@ -225,7 +293,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
             <div className="opportunity-list">
               {feedType === "x" ? (
                 paginatedXPosts.length === 0 ? (
-                  <EmptyFeed feedType={feedType} lastScrapedAt={currentProject.last_scraped_at} projectId={currentProject.id} />
+                  <EmptyFeed feedType={feedType} lastScrapedAt={currentProject.last_scraped_at} copy={copy} />
                 ) : (
                   paginatedXPosts.map((post) => (
                     <XPostCard
@@ -233,11 +301,12 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                       post={post}
                       active={selectedXPost?.id === post.id}
                       href={`/feed?projectId=${currentProject.id}&type=x&itemId=${post.id}`}
+                      copy={copy}
                     />
                   ))
                 )
               ) : paginatedItems.length === 0 ? (
-                <EmptyFeed feedType={feedType} lastScrapedAt={currentProject.last_scraped_at} projectId={currentProject.id} />
+                <EmptyFeed feedType={feedType} lastScrapedAt={currentProject.last_scraped_at} copy={copy} />
               ) : (
                 paginatedItems.map((item) =>
                   item.kind === "opportunity" ? (
@@ -249,6 +318,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                         selectedFromList.data.id === item.data.id
                       }
                       href={baseHref(`&itemId=${item.data.id}&itemType=opportunity`)}
+                      copy={copy}
                     />
                   ) : (
                     <MentionCard
@@ -259,6 +329,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
                         selectedFromList.data.id === item.data.id
                       }
                       href={baseHref(`&itemId=${item.data.id}&itemType=mention`)}
+                      copy={copy}
                     />
                   ),
                 )
@@ -308,7 +379,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
               <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                 <path d="M10 3L5 8l5 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
-              Back to list
+              {copy.backToList}
             </Link>
             <DetailPane
               lead={selectedLead}
@@ -318,6 +389,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
               projectId={currentProject.id}
               replyLength={(currentProject.reply_length ?? "medium") as import("@/db/schemas/domain").ReplyLength}
               filterBase={filterBase}
+              copy={copy}
             />
           </div>
         </div>
@@ -348,7 +420,7 @@ const FEED_META: Record<Exclude<FeedType, "all">, { title: string; description: 
 
 // ── Lead card ─────────────────────────────────────────────────
 
-function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href: string }) {
+function LeadCard({ lead, active, href, copy }: { lead: LeadDTO; active: boolean; href: string; copy: Record<string, string> }) {
   const ageMs = lead.created_utc ? Date.now() - new Date(lead.created_utc).getTime() : null;
   const ageMinutes = ageMs !== null ? Math.floor(ageMs / 60_000) : null;
   const isUnread = lead.opened_at === null;
@@ -362,8 +434,8 @@ function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href
       <div className="opportunity-meta">
         <TypeDot kind="opportunity" />
         <span>r/{lead.subreddit}</span>
-        {ageMinutes !== null && <span>{formatAge(ageMinutes)}</span>}
-        {lead.num_comments != null && <span>{lead.num_comments} comments</span>}
+        {ageMinutes !== null && <span>{formatAge(ageMinutes, copy)}</span>}
+        {lead.num_comments != null && <span>{lead.num_comments} {copy.comments}</span>}
       </div>
 
       <h2 className="opportunity-heading">{lead.title}</h2>
@@ -371,7 +443,7 @@ function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href
       {lead.classification_reason && (
         <div style={{ marginTop: 5 }}>
           <span style={{ fontSize: 10, fontWeight: 700, color: "#46A758" }}>
-            Relevance: {lead.intent_score ?? "–"}
+            {copy.relevance}: {lead.intent_score ?? "–"}
           </span>
           <p style={{ fontSize: 11, color: "#46A758", fontWeight: 500, lineHeight: 1.4, marginTop: 2 }}>
             {lead.classification_reason.slice(0, 120)}
@@ -381,7 +453,7 @@ function LeadCard({ lead, active, href }: { lead: LeadDTO; active: boolean; href
 
       {(lead.status !== "new" || (lead.score ?? 0) > 0) && (
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 4 }}>
-          {lead.status !== "new" ? <StatusPill status={lead.status} /> : <span />}
+          {lead.status !== "new" ? <StatusPill status={lead.status} copy={copy} /> : <span />}
           {(lead.score ?? 0) > 0 && (
             <span style={{ fontSize: 11, color: "#B0B0B5", fontWeight: 700 }}>▲ {lead.score}</span>
           )}
@@ -427,9 +499,9 @@ function highlightMention(text: string, term: string): React.ReactNode {
   );
 }
 
-function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; active: boolean; href: string }) {
+function MentionCard({ mention, active, href, copy }: { mention: BrandMentionDTO; active: boolean; href: string; copy: Record<string, string> }) {
   const isUnread = mention.opened_at === null;
-  const cfg = SENTIMENT_CONFIG[mention.sentiment];
+  const cfg = getSentimentConfig(copy)[mention.sentiment];
   const summaryColor = SENTIMENT_SUMMARY_COLOR[mention.sentiment];
   const redditUrl = mention.permalink ? toRedditUrl(mention.permalink) : null;
   const displayUrl = redditUrl
@@ -452,17 +524,17 @@ function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; acti
           {mention.posted_at && (
             <>
               <span className="mc-sep">·</span>
-              <span>{formatRelative(mention.posted_at)}</span>
+              <span>{formatRelative(mention.posted_at, copy)}</span>
             </>
           )}
           {mention.num_comments != null && (
             <>
               <span className="mc-sep">·</span>
-              <span>{mention.num_comments} Comments</span>
+              <span>{mention.num_comments} {copy.comments}</span>
             </>
           )}
         </div>
-        <SentimentPill sentiment={mention.sentiment} />
+        <SentimentPill sentiment={mention.sentiment} copy={copy} />
       </div>
 
       {/* Thread title */}
@@ -493,8 +565,8 @@ function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; acti
                   <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                 </svg>
               </div>
-              <span className="mc-author">{mention.author ?? "unknown"}</span>
-              <span className="mc-author-date">{mention.posted_at ? formatDate(mention.posted_at) : ""}</span>
+              <span className="mc-author">{mention.author ?? copy.unknownAuthor}</span>
+              <span className="mc-author-date">{mention.posted_at ? formatDate(mention.posted_at, copy) : ""}</span>
             </div>
 
             {/* Body with highlighted mention */}
@@ -510,7 +582,7 @@ function MentionCard({ mention, active, href }: { mention: BrandMentionDTO; acti
             {/* Footer: sentiment + view link */}
             <div className="mc-comment-footer">
               <span className="mc-sent-label" style={{ color: cfg.color }}>● {cfg.label}</span>
-              {redditUrl && <span className="mc-view">View on Reddit ↗</span>}
+              {redditUrl && <span className="mc-view">{copy.viewOnRedditShort}</span>}
             </div>
           </div>
         </div>
@@ -539,6 +611,7 @@ function DetailPane({
   projectId,
   replyLength,
   filterBase,
+  copy,
 }: {
   lead: LeadDTO | null;
   mention: BrandMentionDTO | null;
@@ -547,18 +620,19 @@ function DetailPane({
   projectId: string;
   replyLength: import("@/db/schemas/domain").ReplyLength;
   filterBase: string;
+  copy: Record<string, string>;
 }) {
-  if (lead) return <LeadDetail lead={lead} replies={replies} projectId={projectId} replyLength={replyLength} filterBase={filterBase} />;
-  if (mention) return <MentionDetail mention={mention} projectId={projectId} />;
-  if (xPost) return <XPostDetail post={xPost} projectId={projectId} />;
+  if (lead) return <LeadDetail lead={lead} replies={replies} projectId={projectId} replyLength={replyLength} filterBase={filterBase} copy={copy} />;
+  if (mention) return <MentionDetail mention={mention} projectId={projectId} copy={copy} />;
+  if (xPost) return <XPostDetail post={xPost} projectId={projectId} copy={copy} />;
 
   return (
     <section className="detail-pane">
       <div className="detail-content">
         <div className="empty-state">
-          <p className="section-title">No items yet</p>
+          <p className="section-title">{copy.noItemsYet}</p>
           <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
-            Opportunities and mentions will appear here as the pipelines run.
+            {copy.noItemsBody}
           </p>
         </div>
       </div>
@@ -572,12 +646,14 @@ function LeadDetail({
   projectId,
   replyLength,
   filterBase,
+  copy,
 }: {
   lead: LeadDTO;
   replies: LeadReplyDTO[];
   projectId: string;
   replyLength: import("@/db/schemas/domain").ReplyLength;
   filterBase: string;
+  copy: Record<string, string>;
 }) {
   const isGenerating = lead.reply_generation_status === "generating";
   const hasFailed = lead.reply_generation_error;
@@ -597,7 +673,7 @@ function LeadDetail({
             }}
           />
           <span>r/{lead.subreddit}</span>
-          {lead.created_utc && <span>{formatDate(lead.created_utc)}</span>}
+          {lead.created_utc && <span>{formatDate(lead.created_utc, copy)}</span>}
           {lead.author && <span>u/{lead.author}</span>}
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0, alignItems: "center" }}>
@@ -609,7 +685,7 @@ function LeadDetail({
             <input type="hidden" name="leadId" value={lead.id} />
             <input type="hidden" name="status" value="irrelevant" />
             <input type="hidden" name="returnTo" value={`/feed?${filterBase}`} />
-            <button className="btn-reject" type="submit">Reject Post</button>
+            <button className="btn-reject" type="submit">{copy.reject}</button>
           </form>
           <form action={updateLeadStatusFromForm}>
             <input type="hidden" name="projectId" value={projectId} />
@@ -618,7 +694,7 @@ function LeadDetail({
             <input type="hidden" name="returnTo" value={returnTo} />
             <button className="btn-replied" type="submit">
               <CheckIcon />
-              Mark as Replied
+              {copy.markReplied}
             </button>
           </form>
         </div>
@@ -630,7 +706,7 @@ function LeadDetail({
         </h2>
         {lead.keywords_matched?.length > 0 && (
           <p style={{ fontSize: 11, color: "#7C7C83", fontWeight: 600, marginTop: 10 }}>
-            Keywords: {lead.keywords_matched.slice(0, 3).join(", ")}
+            {copy.keywords}: {lead.keywords_matched.slice(0, 3).join(", ")}
             {lead.keywords_matched.length > 3 ? ` +${lead.keywords_matched.length - 3}` : ""}
           </p>
         )}
@@ -638,13 +714,13 @@ function LeadDetail({
 
       <article className="lead-post">
         <p className="reddit-body" style={{ fontSize: 13 }}>
-          {lead.body?.trim() || "No body available. Open the post on Reddit to see the full context."}
+          {lead.body?.trim() || copy.noBodyReddit}
         </p>
         <div className="post-stats-bar">
-          {(lead.score ?? 0) > 0 && <span>▲ {lead.score} upvotes</span>}
-          {lead.num_comments != null && <span>💬 {lead.num_comments} comments</span>}
+          {(lead.score ?? 0) > 0 && <span>▲ {lead.score} {copy.upvotes}</span>}
+          {lead.num_comments != null && <span>💬 {lead.num_comments} {copy.comments}</span>}
           <a href={redditUrl} target="_blank" rel="noreferrer" className="post-stats-link">
-            View Post on Reddit →
+            {copy.viewReddit}
           </a>
         </div>
       </article>
@@ -657,7 +733,7 @@ function LeadDetail({
         )}
         {isGenerating ? (
           <div style={{ padding: "14px 0", color: "#7C7C83", fontSize: 13, fontWeight: 600 }}>
-            Generating replies…
+            {copy.generatingReplies}
           </div>
         ) : (
           <ReplyEditor
@@ -677,7 +753,7 @@ function LeadDetail({
                   type="submit"
                   className={`composer-btn${replies.length === 0 ? " composer-btn-accent" : ""}`}
                 >
-                  {replies.length > 0 ? "⥁ Regenerate" : "✦ Generate Reply Suggestions"}
+                  {replies.length > 0 ? copy.regenerate : copy.generateReplySuggestions}
                 </button>
               </form>
             }
@@ -688,7 +764,7 @@ function LeadDetail({
   );
 }
 
-function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; projectId: string }) {
+function MentionDetail({ mention, projectId, copy }: { mention: BrandMentionDTO; projectId: string; copy: Record<string, string> }) {
   const redditUrl = toRedditUrl(mention.permalink);
 
   return (
@@ -698,17 +774,17 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
         <div className="opportunity-meta">
           <TargetBadge type={mention.target_type} label={mention.target_label} />
           <span>r/{mention.subreddit}</span>
-          {mention.posted_at && <span>{formatDate(mention.posted_at)}</span>}
+          {mention.posted_at && <span>{formatDate(mention.posted_at, copy)}</span>}
           {mention.author && <span>u/{mention.author}</span>}
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-          <SentimentPill sentiment={mention.sentiment} />
+          <SentimentPill sentiment={mention.sentiment} copy={copy} />
           <form action={updateMentionStatusFromForm}>
             <input type="hidden" name="projectId" value={projectId} />
             <input type="hidden" name="mentionId" value={mention.id} />
             <input type="hidden" name="status" value="replied" />
             <input type="hidden" name="returnTo" value={`/feed?type=mentions&projectId=${projectId}`} />
-            <button className="btn-replied" type="submit">✓ Respondido</button>
+            <button className="btn-replied" type="submit">{copy.statusReplied}</button>
           </form>
         </div>
       </div>
@@ -726,13 +802,13 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
 
       <article className="lead-post">
         <p className="reddit-body" style={{ fontSize: 13 }}>
-          {mention.body?.trim() || "No body available. Open the post on Reddit to see the full context."}
+          {mention.body?.trim() || copy.noBodyReddit}
         </p>
         <div className="post-stats-bar">
-          {mention.reddit_score > 0 && <span>▲ {mention.reddit_score} upvotes</span>}
-          <span>💬 {mention.num_comments} comments</span>
+          {mention.reddit_score > 0 && <span>▲ {mention.reddit_score} {copy.upvotes}</span>}
+          <span>💬 {mention.num_comments} {copy.comments}</span>
           <a href={redditUrl} target="_blank" rel="noreferrer" className="post-stats-link">
-            View Post on Reddit →
+            {copy.viewReddit}
           </a>
         </div>
       </article>
@@ -752,7 +828,7 @@ function MentionDetail({ mention, projectId }: { mention: BrandMentionDTO; proje
 
 // ── X post card ───────────────────────────────────────────────
 
-function XPostCard({ post, active, href }: { post: XPostDTO; active: boolean; href: string }) {
+function XPostCard({ post, active, href, copy }: { post: XPostDTO; active: boolean; href: string; copy: Record<string, string> }) {
   return (
     <Link
       href={href}
@@ -761,7 +837,7 @@ function XPostCard({ post, active, href }: { post: XPostDTO; active: boolean; hr
       <div className="opportunity-meta">
         <span className="opportunity-dot" style={{ background: "#000" }} />
         {post.author_username && <span>@{post.author_username}</span>}
-        {post.posted_at && <span>{formatRelative(post.posted_at)}</span>}
+        {post.posted_at && <span>{formatRelative(post.posted_at, copy)}</span>}
         {post.like_count != null && <span>♥ {post.like_count}</span>}
       </div>
       <h2 className="opportunity-heading" style={{ fontSize: 13, fontWeight: 500, lineHeight: 1.5 }}>
@@ -785,7 +861,7 @@ function XPostCard({ post, active, href }: { post: XPostDTO; active: boolean; hr
 
 // ── X post detail ─────────────────────────────────────────────
 
-function XPostDetail({ post, projectId }: { post: XPostDTO; projectId: string }) {
+function XPostDetail({ post, projectId, copy }: { post: XPostDTO; projectId: string; copy: Record<string, string> }) {
   return (
     <section className="detail-pane" aria-label="X post detail">
       <div className="detail-topbar">
@@ -793,7 +869,7 @@ function XPostDetail({ post, projectId }: { post: XPostDTO; projectId: string })
           <span className="opportunity-dot" style={{ background: "#000" }} />
           {post.author_name && <span>{post.author_name}</span>}
           {post.author_username && <span>@{post.author_username}</span>}
-          {post.posted_at && <span>{formatDate(post.posted_at)}</span>}
+        {post.posted_at && <span>{formatDate(post.posted_at, copy)}</span>}
         </div>
         <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
           {post.permalink && (
@@ -806,7 +882,7 @@ function XPostDetail({ post, projectId }: { post: XPostDTO; projectId: string })
                 padding: "5px 14px", borderRadius: 20, border: "1px solid #000",
               }}
             >
-              View on X →
+              {copy.viewX}
             </a>
           )}
           <form action={updateXPostStatusFromForm}>
@@ -814,7 +890,7 @@ function XPostDetail({ post, projectId }: { post: XPostDTO; projectId: string })
             <input type="hidden" name="postId" value={post.id} />
             <input type="hidden" name="status" value="replied" />
             <input type="hidden" name="returnTo" value={`/feed?type=x&projectId=${projectId}`} />
-            <button className="btn-replied" type="submit">✓ Respondido</button>
+            <button className="btn-replied" type="submit">{copy.statusReplied}</button>
           </form>
         </div>
       </div>
@@ -826,26 +902,26 @@ function XPostDetail({ post, projectId }: { post: XPostDTO; projectId: string })
 
         {post.keywords_matched && post.keywords_matched.length > 0 && (
           <p style={{ fontSize: 11, color: "#7C7C83", fontWeight: 600, marginTop: 16 }}>
-            Keywords: {post.keywords_matched.join(", ")}
+            {copy.keywords}: {post.keywords_matched.join(", ")}
           </p>
         )}
       </div>
 
       <article className="lead-post">
         <div className="post-stats-bar">
-          {post.like_count != null && <span>♥ {post.like_count} likes</span>}
-          {post.retweet_count != null && <span>↺ {post.retweet_count} retweets</span>}
-          {post.reply_count != null && <span>💬 {post.reply_count} replies</span>}
-          {post.impression_count != null && <span>👁 {post.impression_count} views</span>}
+          {post.like_count != null && <span>♥ {post.like_count} {copy.likes}</span>}
+          {post.retweet_count != null && <span>↺ {post.retweet_count} {copy.retweets}</span>}
+          {post.reply_count != null && <span>💬 {post.reply_count} {copy.replies}</span>}
+          {post.impression_count != null && <span>👁 {post.impression_count} {copy.views}</span>}
         </div>
 
         {post.classification_reason && (
           <div style={{ marginTop: 12, padding: "10px 14px", background: "#F6F7F8", borderRadius: 8, border: "1px solid #E5E7EB" }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: "#7C7C83", marginBottom: 4 }}>AI ANALYSIS</p>
+            <p style={{ fontSize: 11, fontWeight: 700, color: "#7C7C83", marginBottom: 4 }}>{copy.aiAnalysis}</p>
             <p style={{ fontSize: 13, color: "#1A1A1B", lineHeight: 1.5 }}>{post.classification_reason}</p>
             {post.intent_score != null && (
               <p style={{ fontSize: 11, fontWeight: 700, color: "#46A758", marginTop: 6 }}>
-                Intent score: {post.intent_score}/100
+                {copy.intentScore}: {post.intent_score}/100
               </p>
             )}
           </div>
@@ -867,6 +943,7 @@ function MentionControls({
   stats,
   totalCount,
   selectedItemId,
+  copy,
 }: {
   projectId: string;
   companyName: string;
@@ -877,14 +954,33 @@ function MentionControls({
   stats: Record<string, number>;
   totalCount: number;
   selectedItemId?: string;
+  copy: Record<string, string>;
 }) {
-  const total = Math.max(stats.all ?? 0, 1);
-  const positivePct = Math.round(((stats.positive ?? 0) / total) * 100);
-  const sentimentLabel =
-    positivePct >= 60 ? "Mostly Positive" : positivePct <= 35 ? "Mostly Negative" : "Mixed";
-  const sentimentColor =
-    positivePct >= 60 ? "#10B981" : positivePct <= 35 ? "#DC2626" : "#F59E0B";
-  const sentimentEmoji = positivePct >= 60 ? "😊" : positivePct <= 35 ? "😔" : "😐";
+  const total = stats.all ?? 0;
+  const hasData = total > 0;
+  const positive = stats.positive ?? 0;
+  const negative = stats.negative ?? 0;
+  // Net score: +1 = all positive, 0 = neutral/mixed, -1 = all negative
+  const netScore = hasData ? (positive - negative) / total : 0;
+  // Bar: 0% = fully negative, 50% = neutral, 100% = fully positive
+  const barPct = hasData ? Math.round(((netScore + 1) / 2) * 100) : 50;
+  const sentimentLabel = !hasData
+    ? copy.neutral
+    : netScore > 0.25
+    ? copy.mostlyPositive
+    : netScore < -0.25
+    ? copy.mostlyNegative
+    : (stats.neutral ?? 0) > positive + negative
+    ? copy.neutral
+    : copy.mixed;
+  const sentimentColor = !hasData
+    ? "#7C7C83"
+    : netScore > 0.25
+    ? "#10B981"
+    : netScore < -0.25
+    ? "#DC2626"
+    : "#F59E0B";
+  const sentimentEmoji = !hasData ? "😐" : netScore > 0.25 ? "😊" : netScore < -0.25 ? "😔" : "😐";
 
   const isCompanySelected = selectedTarget === companyName;
   const companyHref = buildMentionHref({
@@ -896,11 +992,11 @@ function MentionControls({
   });
 
   const competitorTargets = [
-    { id: "all", label: "All mentions" },
+    { id: "all", label: copy.allMentions },
     ...competitors.map((c) => ({ id: c.term, label: c.term })),
   ];
   const dropdownSelectedLabel =
-    competitorTargets.find((t) => t.id === selectedTarget)?.label ?? "All mentions";
+    competitorTargets.find((t) => t.id === selectedTarget)?.label ?? copy.allMentions;
 
   const sortToggleHref = buildMentionHref({
     projectId,
@@ -916,13 +1012,12 @@ function MentionControls({
       <div className="mc-ctrl-row1">
         <div className="mc-ctrl-sentiment">
           <div className="mc-ctrl-sent-label">
-            Sentiment:{" "}
+            {copy.sentiment}:{" "}
             <span style={{ color: sentimentColor, fontWeight: 700 }}>{sentimentLabel}</span>
             {" "}{sentimentEmoji}
-            {" "}<span style={{ color: "#9B9BA2", fontWeight: 600 }}>{positivePct}%</span>
           </div>
           <div className="mc-ctrl-sent-bar">
-            <div className="mc-ctrl-sent-fill" style={{ width: `${positivePct}%`, background: sentimentColor }} />
+            <div className="mc-ctrl-sent-fill" style={{ width: `${barPct}%`, background: sentimentColor }} />
           </div>
         </div>
 
@@ -936,7 +1031,7 @@ function MentionControls({
                 <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z" clipRule="evenodd" />
               </svg>
             </span>
-            My Company
+            {copy.myCompany}
           </Link>
           <details className="mc-ctrl-details">
             <summary className="mc-ctrl-summary">
@@ -978,12 +1073,12 @@ function MentionControls({
 
       {/* Row 2: Post count · sorted by | Sort link (matches /dashboard style) */}
       <div className="feed-col-meta">
-        <span>{totalCount} posts found · sorted by {selectedSort === "recent" ? "date" : "activity"}</span>
+        <span>{totalCount} {copy.postsFound} · {copy.sortedBy} {selectedSort === "recent" ? copy.date : copy.activity}</span>
         <Link
           href={sortToggleHref}
           style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none" }}
         >
-          {selectedSort === "recent" ? "Sort by Activity" : "Sort by Recent"}
+          {selectedSort === "recent" ? copy.sortByActivity : copy.sortByRecent}
         </Link>
       </div>
     </div>
@@ -1169,7 +1264,13 @@ function SentimentBar({
       {items.map((item) => {
         const count = item.value === "all" ? stats.all : (stats[item.value] ?? 0);
         const active = selectedSentiment === item.value;
-        const cfg = item.value !== "all" ? SENTIMENT_CONFIG[item.value] : null;
+        const cfg = item.value !== "all"
+          ? {
+              positive: { color: "#059669", bg: "#ECFDF5" },
+              neutral: { color: "#7C7C83", bg: "#F8F8F7" },
+              negative: { color: "#DC2626", bg: "#FEF2F2" },
+            }[item.value]
+          : null;
         return (
           <Link
             key={item.value}
@@ -1215,14 +1316,16 @@ function TargetBadge({ type, label }: { type: string; label: string }) {
   );
 }
 
-const SENTIMENT_CONFIG: Record<BrandMentionSentiment, { label: string; color: string; bg: string }> = {
-  positive: { label: "Positive", color: "#059669", bg: "#ECFDF5" },
-  negative: { label: "Negative", color: "#DC2626", bg: "#FEF2F2" },
-  neutral:  { label: "Neutral",  color: "#7C7C83", bg: "#F8F8F7" },
-};
+function getSentimentConfig(copy: Record<string, string>): Record<BrandMentionSentiment, { label: string; color: string; bg: string }> {
+  return {
+    positive: { label: copy.positive, color: "#059669", bg: "#ECFDF5" },
+    negative: { label: copy.negative, color: "#DC2626", bg: "#FEF2F2" },
+    neutral: { label: copy.neutral, color: "#7C7C83", bg: "#F8F8F7" },
+  };
+}
 
-function SentimentPill({ sentiment }: { sentiment: BrandMentionSentiment }) {
-  const cfg = SENTIMENT_CONFIG[sentiment];
+function SentimentPill({ sentiment, copy }: { sentiment: BrandMentionSentiment; copy: Record<string, string> }) {
+  const cfg = getSentimentConfig(copy)[sentiment];
   return (
     <span style={{ fontSize: 11, fontWeight: 800, padding: "2px 8px", borderRadius: 6, color: cfg.color, background: cfg.bg }}>
       {cfg.label}
@@ -1230,7 +1333,7 @@ function SentimentPill({ sentiment }: { sentiment: BrandMentionSentiment }) {
   );
 }
 
-function StatusPill({ status }: { status: LeadDTO["status"] }) {
+function StatusPill({ status, copy }: { status: LeadDTO["status"]; copy: Record<string, string> }) {
   const styles: Record<string, { bg: string; color: string }> = {
     new:        { bg: "#FFF3EC", color: "#E03D00" },
     replied:    { bg: "#DEF2E2", color: "#46A758" },
@@ -1239,7 +1342,7 @@ function StatusPill({ status }: { status: LeadDTO["status"] }) {
   const s = styles[status] ?? styles.irrelevant;
   return (
     <span style={{ display: "inline-flex", alignItems: "center", padding: "3px 9px", borderRadius: 7, fontSize: 11, fontWeight: 800, background: s.bg, color: s.color }}>
-      {status === "new" ? "New" : status === "replied" ? "Replied" : "Irrelevant"}
+      {status === "new" ? copy.statusNew : status === "replied" ? copy.statusReplied.replace("✓ ", "") : copy.statusIrrelevant}
     </span>
   );
 }
@@ -1247,24 +1350,24 @@ function StatusPill({ status }: { status: LeadDTO["status"] }) {
 function EmptyFeed({
   feedType,
   lastScrapedAt,
-  projectId,
+  copy,
 }: {
   feedType: FeedType;
   lastScrapedAt: string | null;
-  projectId: string;
+  copy: Record<string, string>;
 }) {
 
   return (
     <div className="empty-state">
       <p className="section-title">
-        {feedType === "mentions" ? "No mentions match this filter" : "No leads yet"}
+        {feedType === "mentions" ? copy.noMentions : copy.noLeads}
       </p>
       <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
         {feedType === "mentions"
-          ? "Try adjusting the target or sentiment filters above."
+          ? copy.adjustFilters
           : lastScrapedAt
-          ? `Last scan ${formatDate(lastScrapedAt)}. New posts will appear here automatically.`
-          : "Scraper hasn't run yet."}
+          ? `${copy.lastScan} ${formatDate(lastScrapedAt, copy)}. ${copy.newPostsAppear}`
+          : copy.scraperNotRun}
       </p>
     </div>
   );
@@ -1384,25 +1487,25 @@ function buildMentionHref({
   return `/feed?${p.toString()}`;
 }
 
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(date));
+function formatDate(date: string, copy: Record<string, string>) {
+  return new Intl.DateTimeFormat(copy.dateLocale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(date));
 }
 
-function formatRelative(dateStr: string) {
+function formatRelative(dateStr: string, copy: Record<string, string>) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.max(0, Math.floor(diff / 60000));
-  if (mins < 60) return `${mins}m ago`;
+  if (mins < 60) return `${mins}${copy.minutesAgo}`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return `${hours}${copy.hoursAgo}`;
+  return `${Math.floor(hours / 24)}${copy.daysAgo}`;
 }
 
-function formatAge(minutes: number): string {
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes}m ago`;
+function formatAge(minutes: number, copy: Record<string, string>): string {
+  if (minutes < 1) return copy.justNow;
+  if (minutes < 60) return `${minutes}${copy.minutesAgo}`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return `${hours}${copy.hoursAgo}`;
+  return `${Math.floor(hours / 24)}${copy.daysAgo}`;
 }
 
 function truncate(value: string, max: number) {
@@ -1414,4 +1517,3 @@ function formatFollowers(count: number): string {
   if (count >= 1_000) return `${(count / 1_000).toFixed(1)}K`;
   return String(count);
 }
-

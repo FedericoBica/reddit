@@ -7,6 +7,7 @@ import { MobileShell } from "./mobile-shell";
 import { ProjectSwitcher } from "./project-switcher";
 import { SidebarLinks } from "./sidebar-links";
 import { RefreshCountdowns } from "./refresh-countdowns";
+import { SidebarProfile } from "./sidebar-profile";
 import { signOut } from "@/modules/auth/actions";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getNewItemsCount } from "@/db/queries/leads";
@@ -103,44 +104,15 @@ async function DashboardShellContent({
         />
 
         <div className="ds-user-row">
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-            <div style={{
-              width: 24, height: 24, borderRadius: 999,
-              background: "#FF4500", display: "flex", alignItems: "center", justifyContent: "center",
-              flexShrink: 0,
-            }}>
-              <span style={{ fontSize: 10, fontWeight: 700, color: "#FFF" }}>
-                {(user.email?.[0] ?? "?").toUpperCase()}
-              </span>
-            </div>
-            <p style={{
-              fontSize: 11, fontWeight: 500, color: "#7C7C83",
-              overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1,
-            }}>
-              {user.email}
-            </p>
-          </div>
-
-          <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-            <form action={signOut} style={{ flex: 1 }}>
-              <button type="submit" className="ds-btn-quiet">
-                {tNav("signOut")}
-              </button>
-            </form>
-            {isAdmin && (
-              <Link
-                href="/admin"
-                style={{
-                  fontSize: 10, fontWeight: 700, color: "#FF4500",
-                  textDecoration: "none", padding: "3px 10px", borderRadius: 99,
-                  background: "#FFF3EC", border: "1px solid rgba(255,69,0,0.2)",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {tNav("admin")}
-              </Link>
-            )}
-          </div>
+          <SidebarProfile
+            email={user.email ?? ""}
+            isAdmin={isAdmin}
+            planLabel={planDisplayName(billingPlan.plan)}
+            onSignOut={signOut}
+            signOutLabel={tNav("signOut")}
+            settingsLabel={tNav("settings")}
+            adminLabel={tNav("admin")}
+          />
         </div>
       </div>
     </>
@@ -151,4 +123,11 @@ async function DashboardShellContent({
       {children}
     </MobileShell>
   );
+}
+
+function planDisplayName(plan: string): string {
+  if (plan === "startup") return "Startup";
+  if (plan === "growth") return "Growth";
+  if (plan === "professional") return "Professional";
+  return plan.charAt(0).toUpperCase() + plan.slice(1);
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { listAllProjectLeads } from "@/db/queries/leads";
 import { listSearchboxResults } from "@/db/queries/searchbox";
@@ -24,6 +25,10 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
   if (projectState.status === "missing") redirect("/bootstrap");
 
   const { currentProject } = projectState;
+  const locale = await getLocale();
+  const copy = locale.startsWith("pt")
+    ? { kicker: "Analytics", title: "ROI do projeto" }
+    : { kicker: "Analytics", title: locale.startsWith("es") ? "ROI del proyecto" : "Project ROI" };
 
 
   const [allLeads, searchboxResults, xPosts] = await Promise.all([
@@ -56,8 +61,8 @@ export default async function AnalyticsPage({ searchParams }: AnalyticsPageProps
         {/* Header */}
         <header className="page-header">
           <div>
-            <p className="page-kicker">Analytics</p>
-            <h1 className="page-title">ROI del proyecto</h1>
+            <p className="page-kicker">{copy.kicker}</p>
+            <h1 className="page-title">{copy.title}</h1>
             <p className="page-copy">
               Rendimiento de {currentProject.name}. Últimos {allLeads.length} leads
               {currentProject.last_scraped_at

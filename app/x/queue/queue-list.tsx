@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
+import { useLocale } from "next-intl";
 import type { XScheduledPostDTO } from "@/db/schemas/domain";
 import { deletePostAction, postNowAction, schedulePostAction } from "@/modules/x/post-actions";
 
@@ -26,11 +27,54 @@ function formatDateTime(iso: string | null) {
 }
 
 function PostCard({ post, projectId }: { post: XScheduledPostDTO; projectId: string }) {
+  const locale = useLocale();
+  const copy = locale.startsWith("es")
+    ? {
+        statuses: { draft: "Borrador", scheduled: "Programado", publishing: "Publicando", published: "Publicado", failed: "Falló" },
+        sources: { ai_writer: "AI Writer", inspiration: "Inspiración", manual: "Manual" },
+        chars: "caracteres",
+        scheduled: "Programado:",
+        published: "Publicado:",
+        viewOnX: "Ver en X →",
+        schedule: "Programar",
+        postNow: "Publicar ahora",
+        posting: "Publicando...",
+        delete: "Eliminar",
+        posted: "Publicado.",
+      }
+    : locale.startsWith("pt")
+    ? {
+        statuses: { draft: "Rascunho", scheduled: "Agendado", publishing: "Publicando", published: "Publicado", failed: "Falhou" },
+        sources: { ai_writer: "AI Writer", inspiration: "Inspiração", manual: "Manual" },
+        chars: "caracteres",
+        scheduled: "Agendado:",
+        published: "Publicado:",
+        viewOnX: "Ver no X →",
+        schedule: "Agendar",
+        postNow: "Publicar agora",
+        posting: "Publicando...",
+        delete: "Excluir",
+        posted: "Publicado.",
+      }
+    : {
+        statuses: { draft: "Draft", scheduled: "Scheduled", publishing: "Publishing", published: "Published", failed: "Failed" },
+        sources: { ai_writer: "AI Writer", inspiration: "Inspiration", manual: "Manual" },
+        chars: "chars",
+        scheduled: "Scheduled:",
+        published: "Published:",
+        viewOnX: "View on X →",
+        schedule: "Schedule",
+        postNow: "Post now",
+        posting: "Posting...",
+        delete: "Delete",
+        posted: "Posted.",
+      };
   const [scheduleResult, scheduleDispatch, schedulePending] = useActionState(schedulePostAction, undefined);
   const [postResult, postNowDispatch, postPending] = useActionState(postNowAction, undefined);
   const [, deleteDispatch, deletePending] = useActionState(deletePostAction, undefined);
 
   const st = STATUS_LABELS[post.status] ?? { label: post.status, color: "#6B7280", bg: "#F3F4F6" };
+  const localizedStatus = copy.statuses[post.status as keyof typeof copy.statuses] ?? st.label;
   const canSchedule = post.status === "draft";
   const canPostNow = post.status === "draft" || post.status === "scheduled" || post.status === "failed";
   const canDelete = post.status !== "publishing" && post.status !== "published";
@@ -49,10 +93,10 @@ function PostCard({ post, projectId }: { post: XScheduledPostDTO; projectId: str
             background: st.bg,
           }}
         >
-          {st.label}
+          {localizedStatus}
         </span>
         <span style={{ fontSize: 11, color: "#7C7C83", marginLeft: "auto" }}>
-          {SOURCE_LABELS[post.source] ?? post.source}
+          {copy.sources[post.source as keyof typeof copy.sources] ?? SOURCE_LABELS[post.source] ?? post.source}
         </span>
       </div>
 
@@ -61,12 +105,12 @@ function PostCard({ post, projectId }: { post: XScheduledPostDTO; projectId: str
       </p>
 
       <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 12, color: "#7C7C83", marginBottom: 14 }}>
-        <span>{post.content.length} chars</span>
+        <span>{post.content.length} {copy.chars}</span>
         {post.scheduled_for && (
-          <span>Scheduled: {formatDateTime(post.scheduled_for)}</span>
+          <span>{copy.scheduled} {formatDateTime(post.scheduled_for)}</span>
         )}
         {post.published_at && (
-          <span>Published: {formatDateTime(post.published_at)}</span>
+          <span>{copy.published} {formatDateTime(post.published_at)}</span>
         )}
         {post.x_tweet_id && (
           <a
@@ -75,7 +119,7 @@ function PostCard({ post, projectId }: { post: XScheduledPostDTO; projectId: str
             rel="noopener noreferrer"
             style={{ color: "#1D4ED8", textDecoration: "none" }}
           >
-            View on X →
+            {copy.viewOnX}
           </a>
         )}
       </div>
@@ -104,8 +148,8 @@ function PostCard({ post, projectId }: { post: XScheduledPostDTO; projectId: str
             className="settings-btn-secondary"
             style={{ fontSize: 12, padding: "6px 14px", whiteSpace: "nowrap" }}
           >
-            {schedulePending ? "..." : "Schedule"}
-          </button>
+              {schedulePending ? "..." : copy.schedule}
+            </button>
           {scheduleResult && !scheduleResult.ok && (
             <span style={{ fontSize: 12, color: "#D93025" }}>{scheduleResult.error}</span>
           )}
@@ -124,7 +168,7 @@ function PostCard({ post, projectId }: { post: XScheduledPostDTO; projectId: str
               className="settings-btn-primary"
               style={{ fontSize: 12, padding: "6px 14px" }}
             >
-              {postPending ? "Posting..." : "Post now"}
+              {postPending ? copy.posting : copy.postNow}
             </button>
           </form>
         )}
@@ -137,7 +181,7 @@ function PostCard({ post, projectId }: { post: XScheduledPostDTO; projectId: str
               disabled={deletePending}
               style={{ fontSize: 12, padding: "6px 14px", borderRadius: 6, border: "1px solid #E5E5E5", background: "none", color: "#7C7C83", cursor: "pointer" }}
             >
-              {deletePending ? "..." : "Delete"}
+              {deletePending ? "..." : copy.delete}
             </button>
           </form>
         )}
@@ -145,7 +189,7 @@ function PostCard({ post, projectId }: { post: XScheduledPostDTO; projectId: str
           <span style={{ fontSize: 12, color: "#D93025", alignSelf: "center" }}>{postResult.error}</span>
         )}
         {postResult?.ok && (
-          <span style={{ fontSize: 12, color: "#2D6A3F", alignSelf: "center" }}>Posted.</span>
+          <span style={{ fontSize: 12, color: "#2D6A3F", alignSelf: "center" }}>{copy.posted}</span>
         )}
       </div>
     </div>
@@ -153,13 +197,31 @@ function PostCard({ post, projectId }: { post: XScheduledPostDTO; projectId: str
 }
 
 export function QueueList({ posts, projectId }: { posts: XScheduledPostDTO[]; projectId: string }) {
+  const locale = useLocale();
+  const copy = locale.startsWith("es")
+    ? {
+        empty: "La cola está vacía",
+        body: "Creá un post desde Content Studio y guardalo en la cola o programalo para un horario específico.",
+        open: "Abrir Content Studio →",
+      }
+    : locale.startsWith("pt")
+    ? {
+        empty: "A fila está vazia",
+        body: "Crie um post no Content Studio e salve na fila ou agende para um horário específico.",
+        open: "Abrir Content Studio →",
+      }
+    : {
+        empty: "Queue is empty",
+        body: "Create a post from Content Studio and save it to queue or schedule it for a specific time.",
+        open: "Open Content Studio →",
+      };
   if (posts.length === 0) {
     return (
       <div style={{ padding: "48px 0", textAlign: "center" }}>
         <p style={{ fontSize: 32, marginBottom: 16 }}>📅</p>
-        <p style={{ fontSize: 16, fontWeight: 700, color: "#1A1A1B", marginBottom: 8 }}>Queue is empty</p>
+        <p style={{ fontSize: 16, fontWeight: 700, color: "#1A1A1B", marginBottom: 8 }}>{copy.empty}</p>
         <p style={{ fontSize: 14, color: "#7C7C83", maxWidth: 400, margin: "0 auto 20px" }}>
-          Create a post from Content Studio and save it to queue or schedule it for a specific time.
+          {copy.body}
         </p>
         <a
           href="/x/studio"
@@ -174,7 +236,7 @@ export function QueueList({ posts, projectId }: { posts: XScheduledPostDTO[]; pr
             textDecoration: "none",
           }}
         >
-          Open Content Studio →
+          {copy.open}
         </a>
       </div>
     );

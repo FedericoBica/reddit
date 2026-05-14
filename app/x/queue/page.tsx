@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+import { getLocale } from "next-intl/server";
 import { DashboardShell } from "@/app/components/dashboard-shell";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
@@ -27,6 +28,27 @@ export default async function XQueuePage({ searchParams }: { searchParams?: Prom
   const projectState = await resolveCurrentProject(params?.projectId);
   if (projectState.status === "missing") redirect("/bootstrap");
   const { currentProject } = projectState;
+  const locale = await getLocale();
+  const copy = locale.startsWith("es")
+    ? {
+        kicker: "X · Mi cola",
+        title: "Cola de posts",
+        description: "Programá posts para publicarlos automáticamente el día y la hora que elijas.",
+        newPost: "+ Nuevo post",
+      }
+    : locale.startsWith("pt")
+    ? {
+        kicker: "X · Minha fila",
+        title: "Fila de posts",
+        description: "Agende posts para publicar automaticamente no dia e horário que você escolher.",
+        newPost: "+ Novo post",
+      }
+    : {
+        kicker: "X · My Queue",
+        title: "Posts Queue",
+        description: "Schedule posts to publish automatically at the day and time you choose.",
+        newPost: "+ New post",
+      };
 
   const posts = await listScheduledPosts(currentProject.id);
 
@@ -35,9 +57,9 @@ export default async function XQueuePage({ searchParams }: { searchParams?: Prom
       <div className="app-page">
         <header className="page-header">
           <div>
-            <p className="page-kicker">X · My Queue</p>
-            <h1 className="page-title">Posts Queue</h1>
-            <p className="page-copy">Schedule posts to publish automatically at the day and time you choose.</p>
+            <p className="page-kicker">{copy.kicker}</p>
+            <h1 className="page-title">{copy.title}</h1>
+            <p className="page-copy">{copy.description}</p>
           </div>
           <div style={{ display: "flex", gap: 10 }}>
             <a
@@ -55,7 +77,7 @@ export default async function XQueuePage({ searchParams }: { searchParams?: Prom
                 textDecoration: "none",
               }}
             >
-              + New post
+              {copy.newPost}
             </a>
           </div>
         </header>

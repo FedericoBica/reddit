@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useState, useTransition } from "react";
+import { useLocale } from "next-intl";
 import {
   generateInspirationAction,
   dismissInspirationAction,
@@ -33,6 +34,39 @@ function InspirationCard({
   post: XScheduledPostDTO;
   projectId: string;
 }) {
+  const locale = useLocale();
+  const copy = locale.startsWith("es")
+    ? {
+        dismiss: "Descartar",
+        hook: "Hook:",
+        saving: "Guardando...",
+        saved: "Guardado ✓",
+        saveToQueue: "Guardar en cola",
+        posting: "Publicando...",
+        postNow: "Publicar ahora",
+        postLabel: "Post",
+      }
+    : locale.startsWith("pt")
+    ? {
+        dismiss: "Dispensar",
+        hook: "Gancho:",
+        saving: "Salvando...",
+        saved: "Salvo ✓",
+        saveToQueue: "Salvar na fila",
+        posting: "Publicando...",
+        postNow: "Publicar agora",
+        postLabel: "Post",
+      }
+    : {
+        dismiss: "Dismiss",
+        hook: "Hook:",
+        saving: "Saving...",
+        saved: "Saved ✓",
+        saveToQueue: "Save to Queue",
+        posting: "Posting...",
+        postNow: "Post Now",
+        postLabel: "Post",
+      };
   const [content, setContent] = useState(post.content);
   const [isDirty, setIsDirty] = useState(false);
   const [postResult, postDispatch, postPending] = useActionState(postNowAction, undefined);
@@ -42,7 +76,7 @@ function InspirationCard({
   const charCount = content.length;
   const overLimit = charCount > CHAR_LIMIT;
   const colors = CATEGORY_COLORS[post.category ?? ""] ?? { color: "#6B7280", bg: "#F3F4F6" };
-  const categoryLabel = CATEGORY_LABELS[post.category ?? ""] ?? post.category ?? "Post";
+  const categoryLabel = CATEGORY_LABELS[post.category ?? ""] ?? post.category ?? copy.postLabel;
 
   function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setContent(e.target.value);
@@ -105,7 +139,7 @@ function InspirationCard({
               lineHeight: 1,
               padding: "0 2px",
             }}
-            title="Dismiss"
+            title={copy.dismiss}
           >
             ×
           </button>
@@ -144,7 +178,7 @@ function InspirationCard({
             lineHeight: 1.5,
           }}
         >
-          <strong style={{ color: "#6B7280" }}>Hook:</strong> {post.hook_explanation}
+          <strong style={{ color: "#6B7280" }}>{copy.hook}</strong> {post.hook_explanation}
         </p>
       )}
 
@@ -185,7 +219,7 @@ function InspirationCard({
               className="settings-btn-secondary"
               style={{ fontSize: 12, padding: "6px 14px" }}
             >
-              {savePending ? "Saving..." : isSaved ? "Saved ✓" : "Save to Queue"}
+              {savePending ? copy.saving : isSaved ? copy.saved : copy.saveToQueue}
             </button>
           </form>
 
@@ -200,7 +234,7 @@ function InspirationCard({
               className="settings-btn-primary"
               style={{ fontSize: 12, padding: "6px 14px" }}
             >
-              {postPending ? "Posting..." : "Post Now"}
+              {postPending ? copy.posting : copy.postNow}
             </button>
           </form>
         </div>

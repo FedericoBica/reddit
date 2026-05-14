@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { BrandLink } from "@/app/components/logo";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -17,9 +17,10 @@ export const metadata: Metadata = {
 
 export default async function BootstrapPage() {
   await requireUser("/bootstrap");
-  const [projects, t] = await Promise.all([
+  const [projects, t, locale] = await Promise.all([
     listProjectsForCurrentUser(),
     getTranslations("bootstrap"),
+    getLocale(),
   ]);
 
   if (projects.length > 0) {
@@ -31,6 +32,29 @@ export default async function BootstrapPage() {
   }
 
   const steps = t.raw("steps") as string[];
+  const copy = locale.startsWith("es")
+    ? {
+        website: "Sitio web",
+        websitePlaceholder: "https://tuproducto.com",
+        valueProposition: "Propuesta de valor",
+        region: "Región",
+        language: "Idioma",
+      }
+    : locale.startsWith("pt")
+    ? {
+        website: "Site",
+        websitePlaceholder: "https://seuproduto.com",
+        valueProposition: "Proposta de valor",
+        region: "Região",
+        language: "Idioma",
+      }
+    : {
+        website: "Website",
+        websitePlaceholder: "https://yourproduct.com",
+        valueProposition: "Value proposition",
+        region: "Region",
+        language: "Language",
+      };
 
   return (
     <main className="auth-shell">
@@ -95,18 +119,18 @@ export default async function BootstrapPage() {
             </label>
 
             <label className="field-group">
-              <span className="field-label">Website</span>
+              <span className="field-label">{copy.website}</span>
               <Input
                 className="h-11 rounded-[8px] bg-white px-3 text-sm"
                 name="websiteUrl"
                 type="url"
-                placeholder="https://yourproduct.com"
+                placeholder={copy.websitePlaceholder}
               />
               <span className="field-hint">{t("form.websiteHint")}</span>
             </label>
 
             <label className="field-group">
-              <span className="field-label">Value proposition</span>
+              <span className="field-label">{copy.valueProposition}</span>
               <Textarea
                 className="min-h-[112px] rounded-[8px] bg-white px-3 py-3 text-sm"
                 name="valueProposition"
@@ -117,11 +141,11 @@ export default async function BootstrapPage() {
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <label className="field-group">
-                <span className="field-label">Region</span>
+                <span className="field-label">{copy.region}</span>
                 <Input className="h-11 rounded-[8px] bg-white px-3 text-sm" name="region" placeholder={t("form.regionPlaceholder")} />
               </label>
               <label className="field-group">
-                <span className="field-label">Language</span>
+                <span className="field-label">{copy.language}</span>
                 <select className="select" name="primaryLanguage" defaultValue="en">
                   <option value="en">English</option>
                   <option value="es">Español</option>

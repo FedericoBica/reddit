@@ -17,11 +17,12 @@ export type CompanyAnalysis = z.infer<typeof companyAnalysisSchema>;
 
 export async function analyzeCompanyWithAI(
   website: ValidatedWebsite,
+  locale: string = "en",
 ): Promise<CompanyAnalysis> {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
-    return fallbackAnalysis(website);
+    return fallbackAnalysis(website, locale);
   }
 
   const websiteText = await fetchWebsiteText(website.url);
@@ -58,7 +59,7 @@ export async function analyzeCompanyWithAI(
           "You analyze a company website for a Reddit lead monitoring onboarding flow.",
           "Infer from the website text or, if unavailable, from the URL/hostname alone.",
           "Do not invent specific customers, features, numbers, or claims you cannot infer.",
-          "Write the description in Spanish (2-4 sentences), but keep product/category names as-is.",
+          `Write the description in ${descriptionLanguage(locale)} (2-4 sentences), but keep product/category names as-is.`,
           "Describe: what the company does, who it helps, core use cases, and the buyer pains to watch for on Reddit.",
         ].join(" "),
         input: contextLines.join("\n"),
@@ -76,10 +77,10 @@ export async function analyzeCompanyWithAI(
     // AI call failed — fall through to fallback
   }
 
-  return fallbackAnalysis(website);
+  return fallbackAnalysis(website, locale);
 }
 
-function fallbackAnalysis(website: ValidatedWebsite): CompanyAnalysis {
+function fallbackAnalysis(website: ValidatedWebsite, locale: string = "en"): CompanyAnalysis {
   const name = website.hostname
     .replace(/\.[a-z]{2,}$/i, "")
     .split(/[.-]/)
@@ -87,10 +88,21 @@ function fallbackAnalysis(website: ValidatedWebsite): CompanyAnalysis {
     .map((p) => p.charAt(0).toUpperCase() + p.slice(1))
     .join(" ");
 
-  return {
-    companyName: name || website.hostname,
-    description: `${name || website.hostname} es una empresa digital que ayuda a sus clientes a resolver un problema específico con su producto o servicio. Prowlit buscará en Reddit conversaciones con intención de compra, pedidos de recomendaciones y comparaciones relevantes para este negocio.`,
-  };
+  const displayName = name || website.hostname;
+  const description =
+    locale.startsWith("es")
+      ? `${displayName} es una empresa digital que ayuda a sus clientes a resolver un problema específico con su producto o servicio. Prowlit buscará en Reddit conversaciones con intención de compra, pedidos de recomendaciones y comparaciones relevantes para este negocio.`
+      : locale.startsWith("pt")
+      ? `${displayName} é uma empresa digital que ajuda seus clientes a resolver um problema específico com seu produto ou serviço. O Prowlit buscará no Reddit conversas com intenção de compra, pedidos de recomendações e comparações relevantes para este negócio.`
+      : `${displayName} is a digital company that helps its customers solve a specific problem with its product or service. Prowlit will search Reddit for purchase-intent conversations, recommendation requests, and comparisons relevant to this business.`;
+
+  return { companyName: displayName, description };
+}
+
+function descriptionLanguage(locale: string): string {
+  if (locale.startsWith("es")) return "Spanish";
+  if (locale.startsWith("pt")) return "Portuguese";
+  return "English";
 }
 
 /** Returns extracted text, or empty string if the site is unreachable / JS-only. */

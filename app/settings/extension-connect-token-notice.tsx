@@ -1,9 +1,27 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLocale } from "next-intl";
+
+const COPY = {
+  en: {
+    title: "Connect token generated — copy it now, it won't be shown again.",
+    description: "Expires in 15 minutes. Paste it in the Chrome Extension to connect.",
+  },
+  es: {
+    title: "Token de conexión generado: copialo ahora, no se volverá a mostrar.",
+    description: "Expira en 15 minutos. Pegalo en la extensión de Chrome para conectar.",
+  },
+  pt: {
+    title: "Token de conexão gerado: copie agora, ele não será exibido novamente.",
+    description: "Expira em 15 minutos. Cole na extensão do Chrome para conectar.",
+  },
+} as const;
 
 export function ExtensionConnectTokenNotice() {
   const [connectToken, setConnectToken] = useState<string | null>(null);
+  const locale = useLocale();
+  const copy = COPY[(locale.startsWith("es") ? "es" : locale.startsWith("pt") ? "pt" : "en") as keyof typeof COPY];
 
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
@@ -33,10 +51,10 @@ export function ExtensionConnectTokenNotice() {
       padding: "16px 18px",
     }}>
       <p style={{ fontSize: 12, fontWeight: 700, color: "#46A758", marginBottom: 6 }}>
-        Connect token generated — copy it now, it won&apos;t be shown again.
+        {copy.title}
       </p>
       <p style={{ fontSize: 11, color: "#7C7C83", marginBottom: 10 }}>
-        Expires in 15 minutes. Paste it in the Chrome Extension to connect.
+        {copy.description}
       </p>
       <code style={{
         display: "block",

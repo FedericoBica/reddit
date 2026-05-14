@@ -198,6 +198,7 @@ function buildUserPrompt(project: ProjectDTO, competitors: CompetitorContext[]):
   lines.push(`Website: ${project.website_url ?? "not provided"}`);
   lines.push(`Region: ${project.region ?? "Global"}`);
   lines.push(`Primary Language: ${project.primary_language}`);
+  lines.push(`IMPORTANT: Generate all keyword terms and rationale text in ${project.primary_language === "es" ? "Spanish" : project.primary_language === "pt" ? "Portuguese" : "English"}.`);
 
   if (project.value_proposition) {
     lines.push(`\nCompany Description (AI-analyzed from their website):\n${"─".repeat(40)}`);
