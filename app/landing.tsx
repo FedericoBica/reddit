@@ -654,7 +654,7 @@ function Comparison({ t }: { t: Translations }) {
             </div>
           </div>
           <div className="comparison-card prowl">
-            <h3>{tc.prowlTitle} <span>Prowlit</span></h3>
+            <h3>{tc.prowlTitle}</h3>
             <ul>
               {prowl.map(([title, desc]) => (
                 <li key={title}>
