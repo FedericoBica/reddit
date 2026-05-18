@@ -1078,16 +1078,14 @@ function MentionControls({
           </details>
         )}
 
-        {/* Sort pill — right-aligned, neutral */}
-        <Link href={sortToggleHref} className="filter-pill mc-sort-pill">
-          {selectedSort === "recent" ? copy.sortByRecent : copy.sortByActivity}
-          <Chevron />
-        </Link>
-
       </div>
 
       <div className="feed-col-meta">
         <span>{totalCount} {copy.postsFound}</span>
+        <Link href={sortToggleHref} className="filter-pill" style={{ fontSize: 11 }}>
+          {selectedSort === "recent" ? copy.sortByRecent : copy.sortByActivity}
+          <Chevron />
+        </Link>
       </div>
     </div>
   );
