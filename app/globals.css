@@ -2763,7 +2763,10 @@ textarea:focus-visible {
 
 /* ── Mention controls redesign ─────────────────────────────── */
 .mention-controls { display: grid; gap: 8px; }
-.mc-pills-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.mc-pills-row { display: flex; align-items: center; gap: 5px; flex-wrap: nowrap; }
+.mc-pills-row .filter-pill { min-height: 24px; padding: 0 8px; font-size: 11px; flex: 1 1 0; min-width: 0; overflow: hidden; white-space: nowrap; }
+.mc-pills-row .filter-pill .mc-pill-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.mc-sort-pill { flex-shrink: 0 !important; flex-grow: 0 !important; flex-basis: auto !important; margin-left: auto; }
 .mc-ctrl-details { position: relative; }
 .mc-ctrl-details[open] > .filter-pill { border-color: #1A1A1B; background: #F6F7F8; }
 .mc-ctrl-summary { list-style: none; cursor: pointer; user-select: none; }

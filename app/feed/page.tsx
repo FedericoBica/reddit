@@ -1021,7 +1021,7 @@ function MentionControls({
         {/* Sentiment filter pill */}
         <details className="mc-ctrl-details">
           <summary className={`mc-ctrl-summary filter-pill${selectedSentiment !== "all" ? " filter-pill-active" : ""}`}>
-            {selectedSentiment === "all" ? copy.sentiment : getSentimentConfig(copy)[selectedSentiment].label}
+            <span className="mc-pill-text">{selectedSentiment === "all" ? copy.sentiment : getSentimentConfig(copy)[selectedSentiment].label}</span>
             <Chevron />
           </summary>
           <div className="mc-ctrl-dropdown">
@@ -1045,14 +1045,14 @@ function MentionControls({
 
         {/* My Company toggle pill */}
         <Link href={companyHref} className={`filter-pill${isCompanySelected ? " filter-pill-active" : ""}`}>
-          {copy.myCompany}
+          <span className="mc-pill-text">{copy.myCompany}</span>
         </Link>
 
         {/* Competitor dropdown pill */}
         {competitors.length > 0 && (
           <details className="mc-ctrl-details">
             <summary className={`mc-ctrl-summary filter-pill${selectedTarget !== "all" && !isCompanySelected ? " filter-pill-active" : ""}`}>
-              {dropdownSelectedLabel}
+              <span className="mc-pill-text">{dropdownSelectedLabel}</span>
               <Chevron />
             </summary>
             <div className="mc-ctrl-dropdown">
@@ -1078,14 +1078,16 @@ function MentionControls({
           </details>
         )}
 
+        {/* Sort pill — right-aligned, fixed width */}
+        <Link href={sortToggleHref} className="filter-pill mc-sort-pill">
+          <span className="mc-pill-text">{selectedSort === "recent" ? copy.sortByRecent : copy.sortByActivity}</span>
+          <Chevron />
+        </Link>
+
       </div>
 
       <div className="feed-col-meta">
         <span>{totalCount} {copy.postsFound}</span>
-        <Link href={sortToggleHref} className="filter-pill" style={{ fontSize: 11 }}>
-          {selectedSort === "recent" ? copy.sortByRecent : copy.sortByActivity}
-          <Chevron />
-        </Link>
       </div>
     </div>
   );
