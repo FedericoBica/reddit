@@ -1462,7 +1462,7 @@ textarea:focus-visible {
 
 /* ── Sidebar ── */
 .ds-sidebar {
-  width: 240px;
+  width: 238px;
   background: var(--ds-paper);
   border-right: 1px solid var(--ds-line-2);
   display: flex;
@@ -2160,7 +2160,7 @@ textarea:focus-visible {
 .searchbox-body {
   min-height: 0;
   display: grid;
-  grid-template-columns: 400px minmax(0, 1fr);
+  grid-template-columns: 402px minmax(0, 1fr);
 }
 
 .opportunity-column {
@@ -2191,7 +2191,7 @@ textarea:focus-visible {
 
 /* ── Feed column header (count + filters) ── */
 .feed-col-header {
-  padding: 10px 14px 10px;
+  padding: 10px 16px 10px;
   border-bottom: 1px solid #E8E8EC;
   background: #FFFFFF;
 }
@@ -2204,6 +2204,7 @@ textarea:focus-visible {
   font-size: 11px;
   font-weight: 600;
   color: #9B9BA2;
+  margin-top: 8px;
 }
 
 .opportunity-list {
@@ -2762,27 +2763,18 @@ textarea:focus-visible {
 .mc-summary { font-size: 11px; color: #6B7280; line-height: 1.5; margin: 0; padding: 7px 14px 10px 16px; background: #FAFAFA; border-top: 1px solid #F0F0F3; }
 
 /* ── Mention controls redesign ─────────────────────────────── */
-.mention-controls { display: grid; gap: 8px; margin-top: 10px; }
-.mc-ctrl-row1 { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.mc-ctrl-sentiment { flex: 1; min-width: 0; }
-.mc-ctrl-sent-label { font-size: 11px; color: #1A1A1B; font-weight: 600; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mc-ctrl-sent-bar { height: 4px; border-radius: 999px; background: #E5E7EB; overflow: hidden; }
-.mc-ctrl-sent-fill { height: 100%; border-radius: 999px; transition: width 0.4s ease; }
-.mc-ctrl-target { display: flex; align-items: center; gap: 7px; flex-shrink: 0; padding-top: 2px; }
-.mc-ctrl-my-company { display: flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #6B7280; white-space: nowrap; text-decoration: none; cursor: pointer; }
-.mc-ctrl-my-company-active { color: #FF4500; }
-.mc-ctrl-company-icon { width: 16px; height: 16px; border-radius: 4px; background: #FF4500; flex-shrink: 0; display: grid; place-items: center; }
+.mention-controls { display: grid; }
+.mc-pills-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .mc-ctrl-details { position: relative; }
-.mc-ctrl-details[open] .mc-ctrl-summary { border-color: #1A1A1B; }
-.mc-ctrl-summary { display: inline-flex; align-items: center; gap: 5px; padding: 5px 8px 5px 10px; border-radius: 7px; border: 1px solid #E5E7EB; background: #FFFFFF; font-size: 12px; font-weight: 700; color: #1A1A1B; cursor: pointer; list-style: none; user-select: none; white-space: nowrap; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.mc-ctrl-details[open] > .filter-pill { border-color: #1A1A1B; background: #F6F7F8; }
+.mc-ctrl-summary { list-style: none; cursor: pointer; user-select: none; }
 .mc-ctrl-summary::-webkit-details-marker { display: none; }
-.mc-ctrl-dropdown { position: absolute; top: calc(100% + 6px); right: 0; z-index: 50; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); min-width: 160px; padding: 5px; }
+.mc-ctrl-dropdown { position: absolute; top: calc(100% + 6px); left: 0; z-index: 50; background: #FFFFFF; border: 1px solid #E5E7EB; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); min-width: 160px; padding: 5px; }
 .mc-ctrl-option { display: flex; align-items: center; gap: 9px; padding: 8px 10px; font-size: 12px; font-weight: 600; color: #1A1A1B; text-decoration: none; border-radius: 6px; }
 .mc-ctrl-option:hover { background: #F6F7F8; }
 .mc-ctrl-option-active { background: #FFF3EC; color: #FF4500; font-weight: 700; }
 .mc-ctrl-option-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-.mc-ctrl-row2 { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid #F0F0F3; padding-top: 8px; margin-top: 0; }
-.mc-ctrl-count { font-size: 11px; font-weight: 700; color: #1A1A1B; }
+.mc-sort-pill { margin-left: auto; }
 
 .sidebar-link {
   display: flex;
@@ -2970,8 +2962,6 @@ textarea:focus-visible {
 .empty-state {
   padding: 40px 20px;
   text-align: center;
-  border: 1px solid #DAE0E6;
-  border-radius: 6px;
   background: #FFFFFF;
 }
 

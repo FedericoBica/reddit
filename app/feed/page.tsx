@@ -61,7 +61,7 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     headerMentions: isEs ? "Menciones" : isPt ? "Menções" : "Mentions",
     headerX: isEs ? "Leads de X" : isPt ? "Leads de X" : "X Leads",
     descOpportunities: isEs ? "Posts de Reddit donde podrías sumar valor y responder." : isPt ? "Posts do Reddit onde você pode agregar valor e responder." : "Reddit posts where you can add value and reply.",
-    descMentions: isEs ? "Conversaciones sobre tu marca y tus competidores, ordenadas para triage." : isPt ? "Conversas sobre sua marca e seus concorrentes, ordenadas para triagem." : "Conversations about your brand and competitors, ordered for triage.",
+    descMentions: isEs ? "Posts de Reddit donde se menciona tu empresa o competidores. Descubrí qué piensan las personas sobre tu producto, seguí las conversaciones y respondé cuando tenga sentido." : isPt ? "Posts do Reddit que mencionam sua empresa ou concorrentes. Descubra o que as pessoas pensam sobre seu produto, acompanhe as conversas e responda quando fizer sentido." : "Reddit posts mentioning your company or competitors. Find out what people think about your product. Keep track of mentions, and respond to them.",
     descX: isEs ? "Posts de X clasificados por intención para outreach manual." : isPt ? "Posts do X classificados por intenção para outreach manual." : "X posts classified by intent for manual outreach.",
     postsFound: isEs ? "posts encontrados" : isPt ? "posts encontrados" : "posts found",
     backToList: isEs ? "Volver a la lista" : isPt ? "Voltar para a lista" : "Back to list",
@@ -104,8 +104,8 @@ export default async function FeedPage({ searchParams }: FeedPageProps) {
     sortedBy: isEs ? "ordenado por" : isPt ? "ordenado por" : "sorted by",
     date: isEs ? "fecha" : isPt ? "data" : "date",
     activity: isEs ? "actividad" : isPt ? "atividade" : "activity",
-    sortByActivity: isEs ? "Ordenar por actividad" : isPt ? "Ordenar por atividade" : "Sort by Activity",
-    sortByRecent: isEs ? "Ordenar por recientes" : isPt ? "Ordenar por recentes" : "Sort by Recent",
+    sortByActivity: isEs ? "Sort: Actividad" : isPt ? "Sort: Atividade" : "Sort: Activity",
+    sortByRecent: isEs ? "Sort: Recientes" : isPt ? "Sort: Recentes" : "Sort: Recent",
     positive: isEs ? "Positivo" : isPt ? "Positivo" : "Positive",
     neutral: isEs ? "Neutral" : isPt ? "Neutro" : "Neutral",
     negative: isEs ? "Negativo" : isPt ? "Negativo" : "Negative",
@@ -1007,39 +1007,53 @@ function MentionControls({
     itemId: selectedItemId,
   });
 
+  const sentimentOptions: Array<{ value: BrandMentionSentiment | "all"; label: string }> = [
+    { value: "all", label: copy.allMentions },
+    { value: "positive", label: copy.positive },
+    { value: "neutral", label: copy.neutral },
+    { value: "negative", label: copy.negative },
+  ];
+
   return (
     <div className="mention-controls">
-      {/* Row 1: Sentiment display | Target dropdown */}
-      <div className="mc-ctrl-row1">
-        <div className="mc-ctrl-sentiment">
-          <div className="mc-ctrl-sent-label">
-            {copy.sentiment}:{" "}
-            <span style={{ color: sentimentColor, fontWeight: 700 }}>{sentimentLabel}</span>
-            {" "}{sentimentEmoji}
-          </div>
-          <div className="mc-ctrl-sent-bar">
-            <div className="mc-ctrl-sent-fill" style={{ width: `${barPct}%`, background: sentimentColor }} />
-          </div>
-        </div>
+      <div className="mc-pills-row">
 
-        <div className="mc-ctrl-target">
-          <Link
-            href={companyHref}
-            className={`mc-ctrl-my-company${isCompanySelected ? " mc-ctrl-my-company-active" : ""}`}
-          >
-            <span className="mc-ctrl-company-icon">
-              <svg width="10" height="10" viewBox="0 0 20 20" fill="white" aria-hidden="true">
-                <path fillRule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4z" clipRule="evenodd" />
-              </svg>
-            </span>
-            {copy.myCompany}
-          </Link>
+        {/* Sentiment filter pill */}
+        <details className="mc-ctrl-details">
+          <summary className={`mc-ctrl-summary filter-pill${selectedSentiment !== "all" ? " filter-pill-active" : ""}`}>
+            {selectedSentiment === "all" ? copy.sentiment : getSentimentConfig(copy)[selectedSentiment].label}
+            <Chevron />
+          </summary>
+          <div className="mc-ctrl-dropdown">
+            {sentimentOptions.map((opt) => {
+              const isActive = selectedSentiment === opt.value;
+              const href = buildMentionHref({
+                projectId,
+                target: selectedTarget === "all" ? undefined : selectedTarget,
+                sentiment: opt.value === "all" ? undefined : opt.value,
+                sort: selectedSort === "relevant" ? undefined : selectedSort,
+                itemId: selectedItemId,
+              });
+              return (
+                <Link key={opt.value} href={href} className={`mc-ctrl-option${isActive ? " mc-ctrl-option-active" : ""}`}>
+                  {opt.label}
+                </Link>
+              );
+            })}
+          </div>
+        </details>
+
+        {/* My Company toggle pill */}
+        <Link href={companyHref} className={`filter-pill${isCompanySelected ? " filter-pill-active" : ""}`}>
+          {copy.myCompany}
+        </Link>
+
+        {/* Competitor dropdown pill */}
+        {competitors.length > 0 && (
           <details className="mc-ctrl-details">
-            <summary className="mc-ctrl-summary">
+            <summary className={`mc-ctrl-summary filter-pill${selectedTarget !== "all" && !isCompanySelected ? " filter-pill-active" : ""}`}>
               {dropdownSelectedLabel}
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" className="mc-ctrl-chevron" aria-hidden="true">
-                <path d="M2.5 4.5l3.5 3.5 3.5-3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
+              <Chevron />
             </summary>
             <div className="mc-ctrl-dropdown">
               {competitorTargets.map((t, i) => {
@@ -1052,16 +1066,9 @@ function MentionControls({
                   itemId: selectedItemId,
                 });
                 return (
-                  <Link
-                    key={t.id}
-                    href={href}
-                    className={`mc-ctrl-option${isActive ? " mc-ctrl-option-active" : ""}`}
-                  >
+                  <Link key={t.id} href={href} className={`mc-ctrl-option${isActive ? " mc-ctrl-option-active" : ""}`}>
                     {t.id !== "all" && (
-                      <span
-                        className="mc-ctrl-option-dot"
-                        style={{ background: COMPETITOR_COLORS[(i - 1) % COMPETITOR_COLORS.length] }}
-                      />
+                      <span className="mc-ctrl-option-dot" style={{ background: COMPETITOR_COLORS[(i - 1) % COMPETITOR_COLORS.length] }} />
                     )}
                     {t.label}
                   </Link>
@@ -1069,18 +1076,18 @@ function MentionControls({
               })}
             </div>
           </details>
-        </div>
+        )}
+
+        {/* Sort pill — right-aligned, neutral */}
+        <Link href={sortToggleHref} className="filter-pill mc-sort-pill">
+          {selectedSort === "recent" ? copy.sortByRecent : copy.sortByActivity}
+          <Chevron />
+        </Link>
+
       </div>
 
-      {/* Row 2: Post count · sorted by | Sort link (matches /dashboard style) */}
       <div className="feed-col-meta">
         <span>{totalCount} {copy.postsFound}</span>
-        <Link
-          href={sortToggleHref}
-          style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none" }}
-        >
-          {selectedSort === "recent" ? copy.sortByActivity : copy.sortByRecent}
-        </Link>
       </div>
     </div>
   );
@@ -1378,6 +1385,14 @@ function CheckIcon() {
   return (
     <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
       <path d="M2.5 7L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function Chevron() {
+  return (
+    <svg width="10" height="10" viewBox="0 0 10 10" fill="none" aria-hidden="true" style={{ marginLeft: 2, opacity: 0.5 }}>
+      <path d="M2 3.5l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
