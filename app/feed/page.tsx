@@ -627,14 +627,15 @@ function DetailPane({
   if (xPost) return <XPostDetail post={xPost} projectId={projectId} copy={copy} />;
 
   return (
-    <section className="detail-pane">
-      <div className="detail-content">
-        <div className="empty-state">
-          <p className="section-title">{copy.noItemsYet}</p>
-          <p className="section-copy" style={{ maxWidth: 480, margin: "10px auto 0" }}>
-            {copy.noItemsBody}
-          </p>
-        </div>
+    <section className="detail-pane" style={{ background: "#fff" }}>
+      <div className="detail-content" style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+        <svg width="96" height="96" viewBox="0 0 96 96" fill="none" aria-hidden="true">
+          <rect x="12" y="28" width="72" height="52" rx="6" stroke="#E2E4E8" strokeWidth="3" fill="#F8F9FA" />
+          <path d="M12 40l36 22 36-22" stroke="#E2E4E8" strokeWidth="3" strokeLinejoin="round" />
+          <rect x="30" y="14" width="36" height="20" rx="4" fill="#fff" stroke="#E2E4E8" strokeWidth="2.5" />
+          <line x1="37" y1="21" x2="59" y2="21" stroke="#D1D5DB" strokeWidth="2" strokeLinecap="round" />
+          <line x1="37" y1="27" x2="52" y2="27" stroke="#D1D5DB" strokeWidth="2" strokeLinecap="round" />
+        </svg>
       </div>
     </section>
   );
@@ -1073,7 +1074,7 @@ function MentionControls({
 
       {/* Row 2: Post count · sorted by | Sort link (matches /dashboard style) */}
       <div className="feed-col-meta">
-        <span>{totalCount} {copy.postsFound} · {copy.sortedBy} {selectedSort === "recent" ? copy.date : copy.activity}</span>
+        <span>{totalCount} {copy.postsFound}</span>
         <Link
           href={sortToggleHref}
           style={{ fontSize: 11, fontWeight: 700, color: "#FF4500", textDecoration: "none" }}
