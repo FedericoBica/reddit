@@ -217,6 +217,23 @@
     "noAccount": "No account?",
     "startFree": "Start free"
   },
+  "forgotPassword": {
+    "kicker": "Recovery",
+    "title": "Reset your password",
+    "subtitle": "Enter your email and we'll send you a link to create a new password.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@company.com",
+    "submit": "Send reset link",
+    "sent": "Check your email — if an account exists with that email, we sent the link.",
+    "backToLogin": "Back to login",
+    "resetTitle": "New password",
+    "resetSubtitle": "Choose a new password for your account.",
+    "newPasswordLabel": "New password",
+    "newPasswordPlaceholder": "At least 8 characters",
+    "resetSubmit": "Save password",
+    "emailNotConfirmed": "Please confirm your email before signing in. Check your inbox.",
+    "rateLimited": "Too many attempts. Wait a moment and try again."
+  },
   "signup": {
     "progress": {
       "ariaLabel": "Signup steps",

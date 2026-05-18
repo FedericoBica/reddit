@@ -217,6 +217,23 @@
     "noAccount": "Sem conta?",
     "startFree": "Comece grátis"
   },
+  "forgotPassword": {
+    "kicker": "Recuperação",
+    "title": "Recupere sua senha",
+    "subtitle": "Digite seu e-mail e enviaremos um link para criar uma nova senha.",
+    "emailLabel": "E-mail",
+    "emailPlaceholder": "voce@empresa.com",
+    "submit": "Enviar link de recuperação",
+    "sent": "Verifique seu e-mail — se existir uma conta com esse e-mail, enviamos o link.",
+    "backToLogin": "Voltar ao login",
+    "resetTitle": "Nova senha",
+    "resetSubtitle": "Escolha uma nova senha para sua conta.",
+    "newPasswordLabel": "Nova senha",
+    "newPasswordPlaceholder": "Pelo menos 8 caracteres",
+    "resetSubmit": "Salvar senha",
+    "emailNotConfirmed": "Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.",
+    "rateLimited": "Muitas tentativas. Aguarde um momento e tente novamente."
+  },
   "signup": {
     "progress": {
       "ariaLabel": "Etapas do cadastro",

@@ -153,21 +153,67 @@ export async function signInWithPassword(formData: FormData) {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
   const next = sanitizeNextPath(String(formData.get("next") ?? "/dashboard"));
+  const locale = String(formData.get("locale") ?? "es");
 
   if (!email || !password) {
-    redirect(`/login?error=${encodeURIComponent("Ingresá tu email y contraseña")}&next=${encodeURIComponent(next)}`);
+    redirect(`/login?error=${encodeURIComponent("Ingresá tu email y contraseña")}&next=${encodeURIComponent(next)}&locale=${locale}`);
   }
 
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    let message = "Email o contraseña incorrectos";
+    const code = (error as { code?: string }).code ?? "";
+    const msg = error.message.toLowerCase();
+    if (code === "email_not_confirmed" || msg.includes("email not confirmed")) {
+      message = "Confirmá tu email antes de ingresar. Revisá tu casilla.";
+    } else if (code === "over_request_rate_limit" || msg.includes("too many") || msg.includes("rate limit")) {
+      message = "Demasiados intentos. Esperá un momento y volvé a intentarlo.";
+    }
     redirect(
-      `/login?error=${encodeURIComponent("Email o contraseña incorrectos")}&next=${encodeURIComponent(next)}`,
+      `/login?error=${encodeURIComponent(message)}&next=${encodeURIComponent(next)}&locale=${locale}`,
     );
   }
 
   redirect(await resolvePostAuthPath(next));
+}
+
+export async function requestPasswordReset(formData: FormData) {
+  const email = String(formData.get("email") ?? "").trim().toLowerCase();
+  const locale = String(formData.get("locale") ?? "es");
+
+  if (!email) {
+    redirect(`/forgot-password?error=${encodeURIComponent("Ingresá tu email")}&locale=${locale}`);
+  }
+
+  const headerStore = await headers();
+  const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ?? headerStore.get("origin") ?? "http://localhost:3000";
+  const supabase = await createSupabaseServerClient();
+
+  // Always show success to prevent user enumeration
+  await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${origin}/auth/callback?next=/auth/reset-password`,
+  });
+
+  redirect(`/forgot-password?sent=1&locale=${locale}`);
+}
+
+export async function updatePassword(formData: FormData) {
+  const password = String(formData.get("password") ?? "");
+
+  if (!password || password.length < 8) {
+    redirect(`/auth/reset-password?error=${encodeURIComponent("La contraseña debe tener al menos 8 caracteres")}`);
+  }
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase.auth.updateUser({ password });
+
+  if (error) {
+    redirect(`/auth/reset-password?error=${encodeURIComponent("No pudimos actualizar la contraseña. El link puede haber expirado.")}`);
+  }
+
+  redirect("/dashboard");
 }
 
 export async function signOut() {

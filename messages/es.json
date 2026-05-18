@@ -217,6 +217,23 @@
     "noAccount": "¿Sin cuenta?",
     "startFree": "Empezá gratis"
   },
+  "forgotPassword": {
+    "kicker": "Recuperación",
+    "title": "Recuperá tu contraseña",
+    "subtitle": "Ingresá tu email y te enviamos un link para crear una nueva contraseña.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "vos@empresa.com",
+    "submit": "Enviar link de recuperación",
+    "sent": "Revisá tu email — si existe una cuenta con ese email, te enviamos el link ahora.",
+    "backToLogin": "Volver al login",
+    "resetTitle": "Nueva contraseña",
+    "resetSubtitle": "Elegí una contraseña nueva para tu cuenta.",
+    "newPasswordLabel": "Nueva contraseña",
+    "newPasswordPlaceholder": "Al menos 8 caracteres",
+    "resetSubmit": "Guardar contraseña",
+    "emailNotConfirmed": "Confirmá tu email antes de ingresar. Revisá tu casilla.",
+    "rateLimited": "Demasiados intentos. Esperá un momento y volvé a intentarlo."
+  },
   "signup": {
     "progress": {
       "ariaLabel": "Pasos del registro",

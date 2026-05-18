@@ -4,7 +4,7 @@ import { listProjectsForCurrentUser } from "@/db/queries/projects";
 import { isCurrentUserAdmin } from "@/modules/auth/admin";
 
 export async function resolvePostAuthPath(next: string) {
-  if (next.startsWith("/signup")) {
+  if (next.startsWith("/signup") || next.startsWith("/auth/")) {
     return next;
   }
 

@@ -45,7 +45,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
     noAccount: string;
     startFree: string;
   };
-  const authHref = `/login?locale=${locale}`;
+  const forgotHref = `/forgot-password?locale=${locale}`;
   const signupHref = `/signup?locale=${locale}`;
 
   if (user) redirect(await resolvePostAuthPath(next));
@@ -93,6 +93,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
         {/* Email + password */}
         <form action={signInWithPassword} style={{ display: "grid", gap: 12 }}>
           <input type="hidden" name="next" value={next} />
+          <input type="hidden" name="locale" value={locale} />
 
           <div className="login-field">
             <label className="login-field-label" htmlFor="email">
@@ -117,7 +118,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 {auth.passwordLabel}
               </label>
               <a
-                href={authHref}
+                href={forgotHref}
                 style={{
                   fontSize: 12.5,
                   color: "var(--li-ink-3)",
