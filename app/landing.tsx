@@ -1291,6 +1291,7 @@ function Footer({ t, locale }: { t: Translations; locale: Locale }) {
             <h5>{tf.legalTitle}</h5>
             <Link href="/terms">Terms</Link>
             <Link href="/privacy">Privacy</Link>
+            <Link href="/refunds">Refunds</Link>
           </div>
         </div>
         <div className="foot-bottom">
