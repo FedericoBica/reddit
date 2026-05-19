@@ -58,7 +58,7 @@ export default function TermsPage() {
             <ul style={S.ul}>
               <li>Use Prowlit to send spam, unsolicited messages, or harass Reddit or X users.</li>
               <li>Violate Reddit's User Agreement, X's Terms of Service, or any platform's content policies when engaging with leads or mentions.</li>
-<li>Attempt to reverse-engineer, scrape, or extract data from Prowlit's infrastructure.</li>
+              <li>Attempt to reverse-engineer, scrape, or extract data from Prowlit's infrastructure.</li>
               <li>Use the service for any unlawful purpose or in violation of applicable regulations.</li>
               <li>Attempt to circumvent account limits or billing restrictions.</li>
             </ul>

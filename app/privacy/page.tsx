@@ -66,7 +66,7 @@ export default function PrivacyPage() {
                 <strong>Generated content</strong> — AI-drafted reply suggestions created on your
                 behalf, stored per lead so you can edit and send them yourself.
               </li>
-<li>
+              <li>
                 <strong>Usage data</strong> — product activity (e.g. which leads you marked as
                 replied) to maintain state across sessions.
               </li>
