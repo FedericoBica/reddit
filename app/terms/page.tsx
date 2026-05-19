@@ -35,10 +35,10 @@ export default function TermsPage() {
           <div>
             <h2 style={S.h2}>What Prowlit provides</h2>
             <p>
-              Prowlit monitors Reddit for posts and comments matching your configured keywords
-              and brand terms, classifies them with AI, and helps you draft replies. The service
-              surfaces relevant conversations — you decide whether and how to engage with them.
-              Prowlit never posts to Reddit on your behalf automatically.
+              Prowlit monitors Reddit and X (Twitter) for posts and comments matching your
+              configured keywords and brand terms, classifies them with AI, and helps you draft
+              replies. The service surfaces relevant conversations — you decide whether and how to
+              engage with them. Prowlit never posts to Reddit or X on your behalf automatically.
             </p>
           </div>
 
@@ -56,9 +56,9 @@ export default function TermsPage() {
             <h2 style={S.h2}>Acceptable use</h2>
             <p>You agree not to:</p>
             <ul style={S.ul}>
-              <li>Use Prowlit to send spam, unsolicited messages, or harass Reddit users.</li>
-              <li>Violate Reddit's User Agreement or Content Policy when engaging with leads or mentions.</li>
-              <li>Attempt to reverse-engineer, scrape, or extract data from Prowlit's infrastructure.</li>
+              <li>Use Prowlit to send spam, unsolicited messages, or harass Reddit or X users.</li>
+              <li>Violate Reddit's User Agreement, X's Terms of Service, or any platform's content policies when engaging with leads or mentions.</li>
+<li>Attempt to reverse-engineer, scrape, or extract data from Prowlit's infrastructure.</li>
               <li>Use the service for any unlawful purpose or in violation of applicable regulations.</li>
               <li>Attempt to circumvent account limits or billing restrictions.</li>
             </ul>
@@ -75,31 +75,34 @@ export default function TermsPage() {
           </div>
 
           <div>
-            <h2 style={S.h2}>Reddit content</h2>
+            <h2 style={S.h2}>Third-party platform content</h2>
             <p>
-              Reddit posts and comments surfaced in the product are publicly available content
-              owned by their respective authors and subject to Reddit's terms. Prowlit does not
-              claim ownership of this content and displays it for your informational use only.
+              Reddit and X posts and comments surfaced in the product are publicly available
+              content owned by their respective authors and subject to the terms of their
+              originating platforms. Prowlit does not claim ownership of this content and displays
+              it for your informational use only. When you connect your X account via OAuth, you
+              authorize Prowlit to read and write tweets on your behalf solely as directed by you.
             </p>
           </div>
 
           <div>
             <h2 style={S.h2}>Subscription and billing</h2>
             <p>
-              Access to paid features requires a subscription. Subscriptions are billed as described
-              at sign-up. You may cancel at any time; cancellation takes effect at the end of your
-              current billing period. We reserve the right to change pricing with reasonable advance
-              notice.
+              Access to paid features requires a subscription. Subscriptions are billed monthly as
+              described at sign-up. You may cancel at any time; cancellation takes effect at the
+              end of your current billing period. We reserve the right to change pricing with
+              reasonable advance notice. Refunds are governed by our{" "}
+              <a href="/refunds" style={{ color: "#E07000" }}>Refund Policy</a>.
             </p>
           </div>
 
           <div>
             <h2 style={S.h2}>Intellectual property</h2>
             <p>
-              Prowlit and its underlying technology are owned by Prowlit. You retain ownership
-              of any content you create (project configurations, custom reply drafts). By using the
-              service, you grant Prowlit a limited license to process your configuration data
-              solely to operate the service.
+              The Prowlit platform and its underlying technology are owned by their respective
+              creators. You retain ownership of any content you create (project configurations,
+              custom reply drafts). By using the service, you grant Prowlit a limited license to
+              process your configuration data solely to operate the service.
             </p>
           </div>
 

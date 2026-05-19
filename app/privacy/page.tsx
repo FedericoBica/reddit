@@ -27,10 +27,11 @@ export default function PrivacyPage() {
           <div>
             <h2 style={S.h2}>What Prowlit is</h2>
             <p>
-              Prowlit is a SaaS platform that monitors Reddit for buyer-intent posts and brand
-              mentions, classifies them with AI, and helps you draft human-like replies. We process
-              publicly available Reddit content on your behalf — we do not post to Reddit
-              automatically.
+              Prowlit is a SaaS platform that monitors Reddit and X (Twitter) for buyer-intent
+              posts and brand mentions, classifies them with AI, and helps you draft human-like
+              replies. It also surfaces Reddit content that ranks in Google search results for
+              your brand terms. We process publicly available content on your behalf — we never
+              post to any platform automatically.
             </p>
           </div>
 
@@ -44,7 +45,7 @@ export default function PrivacyPage() {
               </li>
               <li>
                 <strong>Project configuration</strong> — company name, website, keywords,
-                subreddits, and competitors you configure inside the product.
+                subreddits, competitors, and X keywords you configure inside the product.
               </li>
               <li>
                 <strong>Reddit content</strong> — publicly available Reddit posts and comments
@@ -52,16 +53,22 @@ export default function PrivacyPage() {
                 and mention inboxes.
               </li>
               <li>
+                <strong>X (Twitter) content</strong> — publicly available tweets and mentions
+                matching your keywords, fetched via the X API. If you connect your X account via
+                OAuth, we also store your access and refresh tokens to enable reading your timeline
+                and posting replies on your behalf when you explicitly request it.
+              </li>
+              <li>
+                <strong>Google search data</strong> — search result snippets from Google (via
+                SerpAPI) used to surface Reddit content that ranks for your brand terms.
+              </li>
+              <li>
                 <strong>Generated content</strong> — AI-drafted reply suggestions created on your
                 behalf, stored per lead so you can edit and send them yourself.
               </li>
-              <li>
+<li>
                 <strong>Usage data</strong> — product activity (e.g. which leads you marked as
                 replied) to maintain state across sessions.
-              </li>
-              <li>
-                <strong>Chrome extension data</strong> — session tokens, campaign state, and message
-                sync metadata when you use the optional browser extension.
               </li>
             </ul>
           </div>
@@ -70,7 +77,7 @@ export default function PrivacyPage() {
             <h2 style={S.h2}>How we use your information</h2>
             <ul style={S.ul}>
               <li>Authenticate your account and maintain your session.</li>
-              <li>Scrape and classify Reddit content according to your project settings.</li>
+              <li>Monitor Reddit, X, and Google for content matching your project settings.</li>
               <li>Generate AI reply suggestions when you request them.</li>
               <li>Send email notifications about new leads or mentions (if enabled).</li>
               <li>Operate and improve the service.</li>
@@ -90,16 +97,28 @@ export default function PrivacyPage() {
                 <strong>Supabase</strong> — database, authentication, and file storage.
               </li>
               <li>
-                <strong>OpenAI</strong> — AI classification of Reddit posts and generation of reply
-                drafts. Reddit content and your project context are sent to OpenAI for this purpose.
+                <strong>OpenAI</strong> — AI classification of posts and generation of reply drafts.
+                Content and your project context are sent to OpenAI for this purpose.
               </li>
               <li>
-                <strong>Apify / Reddit API</strong> — fetching publicly available Reddit posts and
+                <strong>Reddit API / Apify</strong> — fetching publicly available Reddit posts and
                 comments.
+              </li>
+              <li>
+                <strong>X (Twitter) API</strong> — fetching tweets and posting replies when you
+                connect your X account.
+              </li>
+              <li>
+                <strong>SerpAPI</strong> — querying Google search results to surface Reddit content
+                ranking for your brand terms.
               </li>
               <li>
                 <strong>Inngest</strong> — background job orchestration (scheduling scrapes, sending
                 notifications).
+              </li>
+              <li>
+                <strong>Resend</strong> — transactional email delivery for account and notification
+                emails.
               </li>
             </ul>
             <p style={{ marginTop: 12 }}>
