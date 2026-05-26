@@ -1,15 +1,15 @@
 import { NextResponse } from "next/server";
-import { syncLemonSqueezyBillingWebhook } from "@/modules/billing/lemon-squeezy-sync";
-import { verifyLemonSqueezyWebhookSignature } from "@/modules/billing/lemon-squeezy";
+import { syncPaddleBillingWebhook } from "@/modules/billing/paddle-sync";
+import { verifyPaddleWebhookSignature } from "@/modules/billing/paddle";
 
 export async function POST(request: Request) {
   const rawBody = await request.text();
-  const signature = request.headers.get("x-signature");
+  const signature = request.headers.get("paddle-signature");
 
-  if (!verifyLemonSqueezyWebhookSignature(rawBody, signature)) {
+  if (!verifyPaddleWebhookSignature(rawBody, signature)) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
-  const result = await syncLemonSqueezyBillingWebhook(rawBody);
+  const result = await syncPaddleBillingWebhook(rawBody);
   return NextResponse.json({ ok: true, ...result });
 }

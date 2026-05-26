@@ -68,7 +68,8 @@
     "viewOnReddit": "View on Reddit",
     "snooze": "Snooze",
     "unsnooze": "Unsnooze",
-    "postedBy": "by"
+    "postedBy": "by",
+    "retryGeneration": "Retry generation"
   },
   "calendar": {
     "kicker": "Posting Calendar",
@@ -428,7 +429,8 @@
     "emptyScanningTitle": "Scanning Reddit now…",
     "emptyScanningText": "We're finding posts with buyer intent for your keywords. Results appear in a few minutes — refresh shortly.",
     "emptyTitle": "No results yet",
-    "emptyText": "Searchbox finds Reddit posts ranking on Google for your keywords. It refreshes every 2 weeks."
+    "emptyText": "Searchbox finds Reddit posts ranking on Google for your keywords. It refreshes every 2 weeks.",
+    "retryGeneration": "Retry generation"
   },
   "replyEditor": {
     "replyDraft": "Reply draft",
@@ -489,5 +491,17 @@
       "error": "Error",
       "noLogs": "No scraping logs yet."
     }
+  },
+  "mentions": {
+    "generating": "Generating…",
+    "retryGeneration": "Retry generation",
+    "regenerate": "⥁ Regenerate",
+    "generateSuggestions": "✦ Generate Reply Suggestions"
+  },
+  "errors": {
+    "limit": "You've reached your monthly AI reply limit. Upgrade your plan or wait until next month.",
+    "configuration": "AI reply generation is temporarily unavailable. Please try again later.",
+    "temporary": "We couldn't generate replies right now. Please try again.",
+    "mentionNotFound": "Could not load the selected mention."
   }
 }

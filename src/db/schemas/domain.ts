@@ -244,6 +244,7 @@ export type ProjectDTO = Pick<
   | "scrape_fail_count"
   | "scrape_backoff_until"
   | "last_scrape_error"
+  | "notify_email"
   | "telegram_chat_id"
   | "created_at"
   | "updated_at"

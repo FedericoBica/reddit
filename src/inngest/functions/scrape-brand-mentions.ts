@@ -33,6 +33,7 @@ export const scrapeBrandMentions = inngest.createFunction(
       const resolved = await Promise.all(
         projects.map(async (project) => {
             const plan = await getBillingPlanForUser(project.owner_id);
+            if (!plan) return null;
             const intervalMs = plan.scrapeIntervalHours * 60 * 60 * 1000;
             const lastMs = project.last_mentions_scraped_at
               ? new Date(project.last_mentions_scraped_at).getTime()

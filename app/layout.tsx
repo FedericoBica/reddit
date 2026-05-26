@@ -3,6 +3,7 @@ import { Outfit, Instrument_Serif, Geist, Geist_Mono, IBM_Plex_Sans, IBM_Plex_Mo
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { AgentationDev } from "./components/agentation-dev";
+import { PaddleProvider } from "@/components/paddle/paddle-provider";
 import "./globals.css";
 
 const outfit = Outfit({
@@ -93,7 +94,9 @@ export default async function RootLayout({
     <html lang={locale} className={`${outfit.variable} ${instrumentSerif.variable} ${geist.variable} ${geistMono.variable} ${ibmPlexSans.variable} ${ibmPlexMono.variable} ${ibmPlexSerif.variable} font-sans`}>
       <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
-          {children}
+          <PaddleProvider>
+            {children}
+          </PaddleProvider>
           <AgentationDev />
         </NextIntlClientProvider>
       </body>

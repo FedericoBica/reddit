@@ -1074,9 +1074,9 @@ function HowItWorks({ t }: { t: Translations }) {
 }
 
 const X_ADDON = [
-  { monthly: 10, yearly: 8,  keywords: 5 },
-  { monthly: 15, yearly: 12, keywords: 7 },
-  { monthly: 20, yearly: 16, keywords: 12 },
+  { monthly: 10, yearlyTotal: 100,  keywords: 5 },
+  { monthly: 15, yearlyTotal: 150, keywords: 7 },
+  { monthly: 20, yearlyTotal: 200, keywords: 12 },
 ];
 
 function Pricing({ t }: { t: Translations }) {
@@ -1087,21 +1087,21 @@ function Pricing({ t }: { t: Translations }) {
   const tiers = [
     {
       name: tp.tier1Name,
-      monthly: 19, yearly: 15,
+      monthly: 19, yearlyTotal: 190,
       desc: tp.tier1Desc,
       features: [tp.tier1F1, tp.tier1F2, tp.tier1F3, tp.tier1F4, tp.tier1F5, tp.tier1F6, tp.tier1F7, tp.tier1F8],
       noXAddon: true,
     },
     {
       name: tp.tier2Name,
-      monthly: 39, yearly: 31,
+      monthly: 39, yearlyTotal: 390,
       desc: tp.tier2Desc,
       featured: true,
       features: [tp.tier2F1, tp.tier2F2, tp.tier2F3, tp.tier2F4, tp.tier2F5, tp.tier2F6, tp.tier2F7, tp.tier2F8, tp.tier2F9],
     },
     {
       name: tp.tier3Name,
-      monthly: 79, yearly: 63,
+      monthly: 79, yearlyTotal: 790,
       desc: tp.tier3Desc,
       features: [tp.tier3F1, tp.tier3F2, tp.tier3F3, tp.tier3F4, tp.tier3F5, tp.tier3F6, tp.tier3F7, tp.tier3F8, tp.tier3F9],
     },
@@ -1129,8 +1129,11 @@ function Pricing({ t }: { t: Translations }) {
         <div className="pricing">
           {tiers.map((tier, i) => {
             const addon = X_ADDON[i];
-            const addonPrice = yearly ? addon.yearly : addon.monthly;
-            const totalPrice = (yearly ? tier.yearly : tier.monthly) + (xEnabled[i] ? addonPrice : 0);
+            const addonPrice = yearly ? addon.yearlyTotal : addon.monthly;
+            const basePrice = yearly ? tier.yearlyTotal : tier.monthly;
+            const totalPrice = basePrice + (xEnabled[i] ? addonPrice : 0);
+            const periodLabel = yearly ? tp.perYear : tp.perMonth;
+            const addonPeriodLabel = yearly ? tp.perYear : "/mo";
             return (
               <div key={tier.name} className={`price ${tier.featured ? "featured" : ""}`}>
                 {tier.featured ? <span className="recommend">{tp.recommended}</span> : null}
@@ -1150,7 +1153,7 @@ function Pricing({ t }: { t: Translations }) {
                           </svg>
                           Add X (Twitter) monitoring
                         </span>
-                        <span className="price-x-price">+${addonPrice}/mo</span>
+                        <span className="price-x-price">+${addonPrice}{addonPeriodLabel}</span>
                       </div>
                     </button>
                     {xEnabled[i] && (
@@ -1166,7 +1169,7 @@ function Pricing({ t }: { t: Translations }) {
                 <span className="price-name">{tier.name}</span>
                 <div className="price-num">
                   ${totalPrice}
-                  <small> {tp.perMonth}</small>
+                  <small> {periodLabel}</small>
                   {xEnabled[i] && <span className="price-x-badge">+ X</span>}
                 </div>
                 <div className="price-desc">{tier.desc}</div>

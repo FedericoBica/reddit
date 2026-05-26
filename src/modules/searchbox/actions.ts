@@ -9,6 +9,7 @@ import { failLeadReplyGeneration, requestLeadReplyGeneration } from "@/db/mutati
 import { searchboxResultStatusSchema } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { assertAiReplyGenerationAvailable, recordAiReplyGeneration } from "@/modules/billing/reply-generation";
+import { executeLeadReplyGenerationFlow } from "@/modules/replies/lead-reply-generation-flow";
 
 export async function generateSearchboxReplyFromForm(formData: FormData) {
   const user = await requireUser("/dashboard");
@@ -25,23 +26,24 @@ export async function generateSearchboxReplyFromForm(formData: FormData) {
     leadId = await createLeadFromSearchboxResult(result);
   }
 
-  try {
-    await assertAiReplyGenerationAvailable(user.id);
-  } catch (error) {
-    await failLeadReplyGeneration(projectId, leadId, error instanceof Error ? error.message : "AI reply limit reached.");
-    revalidatePath("/dashboard");
-    return;
-  }
-
-  const queued = await requestLeadReplyGeneration({ projectId, leadId });
-
-  if (queued) {
-    await recordAiReplyGeneration(projectId, user.id, "lead");
-    await inngest.send({
-      name: "leads/replies.requested",
-      data: { projectId, leadId, userId: user.id },
-    });
-  }
+  await executeLeadReplyGenerationFlow({
+    assertAvailable: async () => {
+      await assertAiReplyGenerationAvailable(user.id);
+    },
+    dispatchGeneration: async () => {
+      await inngest.send({
+        name: "leads/replies.requested",
+        data: { projectId, leadId, userId: user.id },
+      });
+    },
+    failGeneration: async (message) => {
+      await failLeadReplyGeneration(projectId, leadId, message);
+    },
+    recordUsage: async () => {
+      await recordAiReplyGeneration(projectId, user.id, "lead");
+    },
+    requestGeneration: async () => requestLeadReplyGeneration({ projectId, leadId }),
+  });
 
   revalidatePath("/dashboard");
 }

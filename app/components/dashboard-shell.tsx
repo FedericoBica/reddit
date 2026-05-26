@@ -99,7 +99,7 @@ async function DashboardShellContent({
         <RefreshCountdowns
           lastOpportunitiesAt={currentProject.last_scraped_at}
           lastMentionsAt={currentProject.last_mentions_scraped_at}
-          cycleHours={billingPlan.scrapeIntervalHours}
+          cycleHours={billingPlan?.scrapeIntervalHours ?? 168}
           opportunitiesBackoffUntil={currentProject.scrape_backoff_until}
         />
 
@@ -107,7 +107,7 @@ async function DashboardShellContent({
           <SidebarProfile
             email={user.email ?? ""}
             isAdmin={isAdmin}
-            planLabel={planDisplayName(billingPlan.plan)}
+            planLabel={billingPlan ? planDisplayName(billingPlan.plan) : "No Plan"}
             onSignOut={signOut}
             signOutLabel={tNav("signOut")}
             settingsLabel={tNav("settings")}

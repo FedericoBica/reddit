@@ -27,10 +27,11 @@ type GeneratedSubredditSuggestion = {
   rationale: string | null;
 };
 
-function withTelegramChatId(project: Omit<ProjectDTO, "telegram_chat_id">): ProjectDTO {
+function withDefaults(project: Omit<ProjectDTO, "telegram_chat_id" | "notify_email">): ProjectDTO {
   return {
     ...project,
     telegram_chat_id: null,
+    notify_email: true,
   };
 }
 
@@ -110,7 +111,7 @@ export async function updateProject(
     throw new Error(`Failed to update project: ${error.message}`);
   }
 
-  return withTelegramChatId(data);
+  return withDefaults(data);
 }
 
 export async function deleteProject(projectId: string): Promise<void> {
@@ -150,7 +151,7 @@ export async function setProjectOnboardingStatus(
     throw new Error(`Failed to update project onboarding status: ${error.message}`);
   }
 
-  return withTelegramChatId(data);
+  return withDefaults(data);
 }
 
 export async function claimProjectSuggestionGeneration(
@@ -176,7 +177,7 @@ export async function claimProjectSuggestionGeneration(
   }
 
   if (freshClaim) {
-    return withTelegramChatId(freshClaim);
+    return withDefaults(freshClaim);
   }
 
   const { data: staleClaim, error: staleClaimError } = await supabase
@@ -197,7 +198,7 @@ export async function claimProjectSuggestionGeneration(
     );
   }
 
-  return staleClaim ? withTelegramChatId(staleClaim) : null;
+  return staleClaim ? withDefaults(staleClaim) : null;
 }
 
 export async function replaceProjectSuggestions(input: {
@@ -342,6 +343,7 @@ function toProjectDTO(project: ProjectDTO): ProjectDTO {
     scrape_fail_count: project.scrape_fail_count,
     scrape_backoff_until: project.scrape_backoff_until,
     last_scrape_error: project.last_scrape_error,
+    notify_email: project.notify_email,
     telegram_chat_id: project.telegram_chat_id,
     created_at: project.created_at,
     updated_at: project.updated_at,

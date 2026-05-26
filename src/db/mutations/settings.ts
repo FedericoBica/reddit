@@ -10,7 +10,7 @@ export async function addKeyword(
   type: Enums<"keyword_type"> = "custom",
 ): Promise<void> {
   const parsedProjectId = projectIdSchema.parse(projectId);
-  const normalized = term.trim().replace(/\s+/g, " ");
+  const normalized = term.trim().toLowerCase().replace(/\s+/g, " ");
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase
@@ -27,7 +27,7 @@ export async function addKeyword(
 
 export async function updateKeyword(projectId: string, keywordId: string, term: string): Promise<void> {
   const parsedProjectId = projectIdSchema.parse(projectId);
-  const normalized = term.trim().replace(/\s+/g, " ");
+  const normalized = term.trim().toLowerCase().replace(/\s+/g, " ");
   const supabase = await createSupabaseServerClient();
 
   const { error } = await supabase

@@ -3,11 +3,13 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
+import { getTranslations } from "next-intl/server";
 import { requireUser } from "@/modules/auth/server";
 import { assertAiReplyGenerationAvailable, recordAiReplyGeneration } from "@/modules/billing/reply-generation";
 import { updateBrandMentionStatus } from "@/db/mutations/brand-mentions";
 import { getBrandMentionById } from "@/db/queries/brand-mentions";
 import { getProjectById } from "@/db/queries/projects";
+import { toReplyGenerationUiError } from "@/modules/replies/error-messages";
 
 export async function updateMentionStatusFromForm(formData: FormData) {
   await requireUser("/feed");
@@ -24,6 +26,7 @@ export async function updateMentionStatusFromForm(formData: FormData) {
 
 export type MentionReplyState = {
   error: string | null;
+  canRetry: boolean;
   replies: string[];
   usageLabel: string | null;
 };
@@ -43,6 +46,7 @@ export async function generateMentionRepliesAction(
   formData: FormData,
 ): Promise<MentionReplyState> {
   const user = await requireUser("/mentions");
+  const tErrors = await getTranslations("errors");
   const projectId = String(formData.get("projectId") ?? "");
   const mentionId = String(formData.get("mentionId") ?? "");
   const replyLength = String(formData.get("replyLength") ?? "medium");
@@ -56,7 +60,8 @@ export async function generateMentionRepliesAction(
 
     if (!project || !mention) {
       return {
-        error: "Could not load the selected mention.",
+        error: tErrors("mentionNotFound"),
+        canRetry: false,
         replies: [],
         usageLabel: null,
       };
@@ -65,7 +70,8 @@ export async function generateMentionRepliesAction(
     const apiKey = process.env.ANTHROPIC_API_KEY;
     if (!apiKey) {
       return {
-        error: "ANTHROPIC_API_KEY is not configured.",
+        error: tErrors("configuration"),
+        canRetry: false,
         replies: [],
         usageLabel: null,
       };
@@ -122,12 +128,15 @@ export async function generateMentionRepliesAction(
 
     return {
       error: null,
+      canRetry: true,
       replies,
       usageLabel,
     };
   } catch (error) {
+    const uiError = toReplyGenerationUiError(error);
     return {
-      error: error instanceof Error ? error.message : "Failed to generate replies.",
+      error: tErrors(uiError.kind),
+      canRetry: uiError.canRetry,
       replies: [],
       usageLabel: null,
     };

@@ -68,7 +68,8 @@
     "viewOnReddit": "Ver en Reddit",
     "snooze": "Posponer",
     "unsnooze": "Quitar posposición",
-    "postedBy": "por"
+    "postedBy": "por",
+    "retryGeneration": "Reintentar generación"
   },
   "calendar": {
     "kicker": "Calendario de posts",
@@ -428,7 +429,8 @@
     "emptyScanningTitle": "Escaneando Reddit ahora…",
     "emptyScanningText": "Estamos encontrando posts con intención de compra para tus keywords. Los resultados aparecen en unos minutos; refrescá en breve.",
     "emptyTitle": "Todavía no hay resultados",
-    "emptyText": "Searchbox encuentra posts de Reddit posicionados en Google para tus keywords. Se refresca cada 2 semanas."
+    "emptyText": "Searchbox encuentra posts de Reddit posicionados en Google para tus keywords. Se refresca cada 2 semanas.",
+    "retryGeneration": "Reintentar generación"
   },
   "replyEditor": {
     "replyDraft": "Borrador de respuesta",
@@ -489,5 +491,17 @@
       "error": "Error",
       "noLogs": "No hay logs de scraping todavía."
     }
+  },
+  "mentions": {
+    "generating": "Generando…",
+    "retryGeneration": "Reintentar generación",
+    "regenerate": "⥁ Regenerar",
+    "generateSuggestions": "✦ Generar sugerencias de respuesta"
+  },
+  "errors": {
+    "limit": "Alcanzaste el límite mensual de respuestas IA. Mejorá tu plan o esperá al próximo mes.",
+    "configuration": "La generación de respuestas IA no está disponible temporalmente. Por favor, intentá de nuevo más tarde.",
+    "temporary": "No pudimos generar respuestas en este momento. Por favor, intentá de nuevo.",
+    "mentionNotFound": "No se pudo cargar la mención seleccionada."
   }
 }

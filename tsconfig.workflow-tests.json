@@ -1,0 +1,32 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".test-dist/workflows",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "rootDir": ".",
+    "incremental": false
+  },
+  "include": [
+    "src/db/mutations/api-usage.ts",
+    "src/lib/date-format.ts",
+    "src/lib/env.ts",
+    "src/modules/billing/billing-checkout.ts",
+    "src/modules/billing/billing-checkout.test.ts",
+    "src/modules/billing/current.ts",
+    "src/modules/billing/limits.ts",
+    "src/modules/billing/paddle.ts",
+    "src/modules/billing/paddle-webhook.test.ts",
+    "src/modules/billing/reply-generation.ts",
+    "src/modules/billing/subscription-ownership.ts",
+    "src/modules/billing/subscription-plan-resolver.ts",
+    "src/modules/billing/subscription-plan-resolver.test.ts",
+    "src/modules/onboarding/signup-plan-checkout.ts",
+    "src/modules/onboarding/signup-plan-checkout.test.ts",
+    "src/modules/replies/error-messages.ts",
+    "src/modules/replies/lead-reply-generation-flow.ts",
+    "src/modules/replies/lead-reply-generation-flow.test.ts"
+  ],
+  "exclude": []
+}

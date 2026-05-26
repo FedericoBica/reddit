@@ -79,6 +79,7 @@ export async function completeProjectOnboarding(formData: FormData) {
   }
 
   const plan = await getCurrentBillingPlan();
+  if (!plan) redirect("/signup/plan");
   const maxKeywords = plan.maxKeywords ?? Infinity;
 
   const customKeywords = splitLines(formData.get("customKeywords")).slice(0, maxKeywords);

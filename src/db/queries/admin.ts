@@ -6,7 +6,7 @@ export type AdminUser = {
   id: string;
   email: string;
   full_name: string | null;
-  billing_plan: string;
+  billing_plan: string | null;
   is_admin: boolean;
   created_at: string;
   projects_count: number;

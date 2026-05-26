@@ -34,6 +34,7 @@ export async function runGlobalScrape(options: RunGlobalScrapeOptions = {}) {
     await Promise.all(
       candidates.map(async (target) => {
         const plan = await getBillingPlanForUser(target.project.owner_id);
+        if (!plan) return null;
         const intervalMs = plan.scrapeIntervalHours * 60 * 60 * 1000;
         const lastScraped = target.project.last_scraped_at
           ? new Date(target.project.last_scraped_at).getTime()

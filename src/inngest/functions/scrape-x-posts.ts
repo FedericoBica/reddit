@@ -74,6 +74,7 @@ export const scrapeXPosts = inngest.createFunction(
 
         // Compute remaining daily allowance to avoid exceeding the cap inside the loop
         const plan = await getBillingPlanForUser(project.owner_id);
+        if (!plan) return { saved: 0, skipped: tweets.length };
         let remaining = Infinity;
         if (plan.maxXPostsPerDay) {
           const startOfDay = new Date();

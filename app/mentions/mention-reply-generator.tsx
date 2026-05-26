@@ -1,12 +1,14 @@
 "use client";
 
 import { useActionState, useMemo, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import { CopyButton } from "@/app/components/copy-button";
 import type { MentionReplyState } from "@/modules/mentions/actions";
 import { generateMentionRepliesAction } from "@/modules/mentions/actions";
 
 const initialState: MentionReplyState = {
   error: null,
+  canRetry: true,
   replies: [],
   usageLabel: null,
 };
@@ -30,6 +32,7 @@ export function MentionReplyGenerator({
   mentionId: string;
   permalink: string;
 }) {
+  const t = useTranslations("mentions");
   const [state, formAction, pending] = useActionState(generateMentionRepliesAction, initialState);
   const [activeIndex, setActiveIndex] = useState(0);
   const [replyLength, setReplyLength] = useState<ReplyLength>("medium");
@@ -140,9 +143,15 @@ export function MentionReplyGenerator({
             <button
               type="submit"
               className={`composer-btn${replies.length === 0 ? " composer-btn-accent" : ""}`}
-              disabled={pending}
+              disabled={pending || (!!state.error && !state.canRetry)}
             >
-              {pending ? "Generating…" : replies.length > 0 ? "⥁ Regenerate" : "✦ Generate Reply Suggestions"}
+              {pending
+                ? t("generating")
+                : state.error && state.canRetry
+                  ? t("retryGeneration")
+                  : replies.length > 0
+                    ? t("regenerate")
+                    : t("generateSuggestions")}
             </button>
           </form>
           <CopyButton text={activeReply || " "} permalink={permalink} />

@@ -167,9 +167,9 @@ export default function BrandMentionsPage() {
             <div>
               <span className="eyebrow">Get started today</span>
               <h2 className="h-section">Start protecting your<br /><em>brand reputation</em></h2>
-              <p className="sub">Monitor every Reddit mention with sentiment analysis. Free to try, no credit card needed.</p>
+              <p className="sub">Monitor every Reddit mention with sentiment analysis. No contracts, cancel anytime.</p>
               <div className="cta-row">
-                <Link className="btn primary lg" href="/signup">Start Free Trial</Link>
+                <Link className="btn primary lg" href="/signup">Get started</Link>
                 <Link className="btn lg" href="/login">Sign in</Link>
               </div>
             </div>

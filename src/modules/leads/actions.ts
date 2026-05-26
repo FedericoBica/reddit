@@ -12,6 +12,7 @@ import { recordAiReplyGeneration, assertAiReplyGenerationAvailable } from "@/mod
 import { snoozeLead, unsnoozeLead, updateLeadStatus } from "@/db/mutations/leads";
 import { leadStatusSchema } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
+import { executeLeadReplyGenerationFlow } from "@/modules/replies/lead-reply-generation-flow";
 
 export async function updateLeadStatusFromForm(formData: FormData) {
   await requireUser("/dashboard");
@@ -50,39 +51,37 @@ export async function generateLeadRepliesFromForm(formData: FormData) {
   const leadId = String(formData.get("leadId") ?? "");
   const returnTo = String(formData.get("returnTo") ?? `/leads/${leadId}?projectId=${projectId}`);
 
-  try {
-    await assertAiReplyGenerationAvailable(user.id);
-  } catch (error) {
-    await failLeadReplyGeneration(projectId, leadId, error instanceof Error ? error.message : "AI reply limit reached.");
+  const outcome = await executeLeadReplyGenerationFlow({
+    assertAvailable: async () => {
+      await assertAiReplyGenerationAvailable(user.id);
+    },
+    dispatchGeneration: async () => {
+      await inngest.send({
+        name: "leads/replies.requested",
+        data: {
+          projectId,
+          leadId,
+          userId: user.id,
+        },
+      });
+    },
+    failGeneration: async (message) => {
+      await failLeadReplyGeneration(projectId, leadId, message);
+    },
+    recordUsage: async () => {
+      await recordAiReplyGeneration(projectId, user.id, "lead");
+    },
+    requestGeneration: async () =>
+      requestLeadReplyGeneration({
+        projectId,
+        leadId,
+      }),
+  });
+
+  if (outcome.status === "limit_reached" || outcome.status === "dispatch_failed" || outcome.status === "not_queued") {
     revalidatePath("/feed");
     revalidatePath(`/leads/${leadId}`);
     redirect(returnTo);
-  }
-
-  const queued = await requestLeadReplyGeneration({
-    projectId,
-    leadId,
-  });
-
-  if (!queued) {
-    redirect(returnTo);
-  }
-
-  await recordAiReplyGeneration(projectId, user.id, "lead");
-
-  try {
-    await inngest.send({
-      name: "leads/replies.requested",
-      data: {
-        projectId,
-        leadId,
-        userId: user.id,
-      },
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Unknown Inngest dispatch error";
-    await failLeadReplyGeneration(projectId, leadId, message);
-    throw error;
   }
 
   revalidatePath("/feed");

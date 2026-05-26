@@ -152,9 +152,9 @@ export default function LeadGenerationPage() {
             <div>
               <span className="eyebrow">Get started today</span>
               <h2 className="h-section">Your next customer<br /><em>is already on Reddit</em></h2>
-              <p className="sub">Start finding high-intent leads in under 2 minutes. No credit card required.</p>
+              <p className="sub">Start finding high-intent leads in under 2 minutes. No contracts, cancel anytime.</p>
               <div className="cta-row">
-                <Link className="btn primary lg" href="/signup">Start Free Trial</Link>
+                <Link className="btn primary lg" href="/signup">Get started</Link>
                 <Link className="btn lg" href="/login">Sign in</Link>
               </div>
             </div>

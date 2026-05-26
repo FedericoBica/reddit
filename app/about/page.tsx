@@ -281,7 +281,7 @@ export default function AboutPage() {
               <em style={{ color: "var(--accent)" }}>your customers wrote</em>.
             </h2>
             <p style={{ margin: 0, fontSize: 17, lineHeight: 1.5, color: "oklch(0.85 0.01 80)", maxWidth: 520 }}>
-              7-day free trial. No credit card. Cancel in two clicks.
+              No contracts. Cancel anytime.
             </p>
             <div className="cta-row">
               <Link
@@ -289,7 +289,7 @@ export default function AboutPage() {
                 href="/signup"
                 style={{ background: "var(--accent)", borderColor: "var(--accent)", color: "#fff" }}
               >
-                Start free trial
+                Get started
               </Link>
               <Link
                 className="btn lg"

@@ -19,6 +19,7 @@ import {
   toggleXKeyword,
   updateXKeyword,
 } from "@/db/mutations/x";
+import { listProjectXKeywords } from "@/db/queries/x";
 import { inngest } from "@/inngest/client";
 import { requireUser } from "@/modules/auth/server";
 import { getCurrentBillingPlan } from "@/modules/billing/current";
@@ -64,9 +65,20 @@ export async function addKeywordFromForm(formData: FormData) {
 
   if (!term) return;
 
-  const plan = await getCurrentBillingPlan();
+  const normalized = term.toLowerCase().replace(/\s+/g, " ");
+  const [plan, keywords] = await Promise.all([
+    getCurrentBillingPlan(),
+    listProjectKeywords(projectId),
+  ]);
+
+  const duplicate = keywords.find((k) => k.term.toLowerCase() === normalized);
+  if (duplicate) {
+    throw new Error(`Keyword "${duplicate.term}" already exists.`);
+  }
+
+  if (!plan) throw new Error("No active subscription.");
+
   if (plan.maxKeywords !== null) {
-    const keywords = await listProjectKeywords(projectId);
     const activeCount = keywords.filter(
       (k) => k.is_active && k.type !== "competitor" && k.type !== "searchbox",
     ).length;
@@ -101,6 +113,13 @@ export async function addCompetitorFromForm(formData: FormData) {
 
   if (!term) return;
 
+  const normalized = term.toLowerCase().replace(/\s+/g, " ");
+  const keywords = await listProjectKeywords(projectId);
+  const duplicate = keywords.find((k) => k.term.toLowerCase() === normalized);
+  if (duplicate) {
+    throw new Error(`Keyword "${duplicate.term}" already exists.`);
+  }
+
   await addKeyword(projectId, term, "competitor");
   revalidatePath("/settings");
 }
@@ -114,6 +133,15 @@ export async function updateKeywordFromForm(formData: FormData) {
   const term = String(formData.get("term") ?? "").trim();
 
   if (!term) return;
+
+  const normalized = term.toLowerCase().replace(/\s+/g, " ");
+  const keywords = await listProjectKeywords(projectId);
+  const duplicate = keywords.find(
+    (k) => k.term.toLowerCase() === normalized && k.id !== keywordId,
+  );
+  if (duplicate) {
+    throw new Error(`Keyword "${duplicate.term}" already exists.`);
+  }
 
   await updateKeyword(projectId, keywordId, term);
   revalidatePath("/settings");
@@ -140,6 +168,7 @@ export async function toggleKeywordFromForm(formData: FormData) {
 
   if (isActive) {
     const plan = await getCurrentBillingPlan();
+    if (!plan) throw new Error("No active subscription.");
     if (plan.maxKeywords !== null) {
       const keywords = await listProjectKeywords(projectId);
       const activeCount = keywords.filter(
@@ -211,6 +240,26 @@ export async function saveTelegramChatIdFromForm(formData: FormData): Promise<vo
   revalidatePath("/settings");
 }
 
+export async function saveNotificationPrefsFromForm(formData: FormData) {
+  await requireUser("/settings");
+
+  const projectId = String(formData.get("projectId") ?? "").trim();
+  if (!projectId) return;
+  await requireProjectAccess(projectId, "/settings");
+
+  const notifyEmail = formData.get("notifyEmail") === "true";
+
+  const supabase = await createSupabaseServerClient();
+  const { error } = await supabase
+    .from("projects")
+    .update({ notify_email: notifyEmail })
+    .eq("id", projectId);
+
+  if (error) throw new Error(`Failed to save notification preferences: ${error.message}`);
+
+  revalidatePath("/settings");
+}
+
 export async function addXKeywordFromForm(formData: FormData) {
   await requireUser("/settings");
 
@@ -219,6 +268,16 @@ export async function addXKeywordFromForm(formData: FormData) {
   const query = String(formData.get("query") ?? "").trim();
 
   if (!query) return;
+
+  const plan = await getCurrentBillingPlan();
+  if (!plan) throw new Error("No active subscription.");
+  if (plan.maxXKeywords !== null) {
+    const xKeywords = await listProjectXKeywords(projectId);
+    const activeCount = xKeywords.filter((k) => k.is_active).length;
+    if (activeCount >= plan.maxXKeywords) {
+      throw new Error(`X keyword limit reached (${plan.maxXKeywords} on ${plan.label} plan).`);
+    }
+  }
 
   await addXKeyword(projectId, query);
   await queueXRulesSync(projectId);

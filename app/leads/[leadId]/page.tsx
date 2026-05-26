@@ -20,6 +20,7 @@ import {
 import { requireUser } from "@/modules/auth/server";
 import { toRedditUrl } from "@/lib/utils";
 import { resolveCurrentProject } from "@/modules/projects/current";
+import { toReplyGenerationUiError } from "@/modules/replies/error-messages";
 
 export const metadata: Metadata = {
   title: "Lead",
@@ -41,6 +42,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
   const projectState = await resolveCurrentProject(query?.projectId);
   const t = await getTranslations("leads");
   const tStatus = await getTranslations("status");
+  const tErrors = await getTranslations("errors");
 
   if (projectState.status === "missing") {
     redirect("/bootstrap");
@@ -65,6 +67,7 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
 
   const newLeadsCount = recentLeads.filter((item) => item.status === "new").length;
   const returnTo = `/leads/${lead.id}?projectId=${currentProject.id}`;
+  const failure = lead.reply_generation_error ? toReplyGenerationUiError(lead.reply_generation_error) : null;
 
   return (
     <DashboardShell
@@ -158,19 +161,21 @@ export default async function LeadPage({ params, searchParams }: LeadPageProps) 
                       <Button
                         className="h-9 rounded-[8px] font-extrabold"
                         type="submit"
-                        disabled={lead.reply_generation_status === "generating"}
+                        disabled={lead.reply_generation_status === "generating" || (!!failure && !failure.canRetry)}
                       >
                         {lead.reply_generation_status === "generating"
                           ? t("generating")
-                          : t("generateReplies")}
+                          : failure?.canRetry
+                            ? t("retryGeneration")
+                            : t("generateReplies")}
                       </Button>
                     </form>
                   </div>
 
-                  {lead.reply_generation_error && (
+                  {failure && (
                     <Card className="mb-3 gap-0 rounded-[8px] border-[#FEE2E2] bg-[#FEF2F2] py-0 text-[#991B1B] shadow-none ring-0">
                       <CardContent className="p-3 text-[13px] leading-5">
-                        {lead.reply_generation_error}
+                        {tErrors(failure.kind)}
                       </CardContent>
                     </Card>
                   )}

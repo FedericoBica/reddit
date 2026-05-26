@@ -67,7 +67,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxGhostwriterThreads: 15,
     maxTeamMembers: 2,
     maxRedditAccounts: 2,
-    xEnabled: false,
+    xEnabled: true,
     integrations: {
       slack: false,
       telegram: true,
@@ -91,7 +91,7 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     maxGhostwriterThreads: null,
     maxTeamMembers: 3,
     maxRedditAccounts: null,
-    xEnabled: false,
+    xEnabled: true,
     integrations: {
       slack: true,
       telegram: true,
@@ -101,6 +101,18 @@ const PROJECT_LIMITS: Record<BillingPlan, ProjectLimit> = {
     battlecards: true,
   },
 };
+
+// X add-on limits per plan — update maxXKeywords and maxXPostsPerDay to match your product.
+const X_ADDON_LIMITS: Record<BillingPlan, { maxXKeywords: number; maxXPostsPerDay: number }> = {
+  startup:      { maxXKeywords: 7,  maxXPostsPerDay: 15 },
+  growth:       { maxXKeywords: 15, maxXPostsPerDay: 30 },
+  professional: { maxXKeywords: 30, maxXPostsPerDay: 50 },
+};
+
+export function applyXAddon(limit: ProjectLimit): ProjectLimit {
+  const addon = X_ADDON_LIMITS[limit.plan];
+  return { ...limit, xEnabled: true, maxXKeywords: addon.maxXKeywords, maxXPostsPerDay: addon.maxXPostsPerDay };
+}
 
 export function getEffectiveProjectLimit(): ProjectLimit {
   return PROJECT_LIMITS.startup;

@@ -13,7 +13,10 @@ import { generateSearchboxReplyFromForm, updateSearchboxStatusFromForm } from "@
 import { requireUser } from "@/modules/auth/server";
 import { isCurrentUserAdmin } from "@/modules/auth/admin";
 import { resolveCurrentProject } from "@/modules/projects/current";
+import { getCurrentBillingPlan } from "@/modules/billing/current";
+import { toReplyGenerationUiError } from "@/modules/replies/error-messages";
 import { toRedditUrl } from "@/lib/utils";
+import { formatDateTime, formatRelativeTime } from "@/lib/date-format";
 import { KeywordsPillCollapsible } from "./keywords-pill-collapsible";
 
 export const metadata: Metadata = { title: "Searchbox" };
@@ -33,6 +36,7 @@ type SearchboxPageProps = {
 export default async function SearchboxPage({ searchParams }: SearchboxPageProps) {
   const t = await getTranslations("searchbox");
   const tStatus = await getTranslations("status");
+  const tErrors = await getTranslations("errors");
   const locale = await getLocale();
   const user = await requireUser("/dashboard");
   const params = await searchParams;
@@ -44,6 +48,9 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
   }
 
   const { currentProject } = projectState;
+
+  const billingPlan = await getCurrentBillingPlan();
+  if (!billingPlan) redirect("/signup/plan");
 
   const sort = params?.sort === "recent" ? "recent" : "relevance";
 
@@ -171,6 +178,7 @@ export default async function SearchboxPage({ searchParams }: SearchboxPageProps
             replyLength={(currentProject.reply_length ?? "medium") as import("@/db/schemas/domain").ReplyLength}
             isNew={isNew}
             t={t}
+            tErrors={tErrors}
             locale={locale}
           />
         </div>
@@ -250,6 +258,7 @@ function ResultDetail({
   replyLength,
   isNew,
   t,
+  tErrors,
   locale,
 }: {
   result: SearchboxResultDTO | null;
@@ -259,6 +268,7 @@ function ResultDetail({
   replyLength: import("@/db/schemas/domain").ReplyLength;
   isNew?: boolean;
   t: Awaited<ReturnType<typeof getTranslations>>;
+  tErrors: Awaited<ReturnType<typeof getTranslations>>;
   locale: string;
 }) {
   if (!result) {
@@ -272,7 +282,7 @@ function ResultDetail({
   }
 
   const isGenerating = lead?.reply_generation_status === "generating";
-  const hasFailed = lead?.reply_generation_error;
+  const failure = lead?.reply_generation_error ? toReplyGenerationUiError(lead.reply_generation_error) : null;
   const returnTo = `/dashboard?projectId=${projectId}&resultId=${result.id}`;
   const redditUrl = toRedditUrl(result.permalink);
 
@@ -346,9 +356,9 @@ function ResultDetail({
 
       {/* Reply section */}
       <div className="lead-comment-box">
-        {hasFailed && (
+        {failure && (
           <div style={{ padding: "10px 12px", borderRadius: 4, background: "#FBE2E5", border: "1px solid #F2B7BD", color: "#EA0027", fontSize: 12, marginBottom: 12 }}>
-            {hasFailed}
+            {tErrors(failure.kind)}
           </div>
         )}
 
@@ -372,8 +382,13 @@ function ResultDetail({
                 <button
                   type="submit"
                   className={`composer-btn${replies.length === 0 ? " composer-btn-accent" : ""}`}
+                  disabled={failure ? !failure.canRetry : false}
                 >
-                  {replies.length > 0 ? t("regenerate") : t("generateSuggestions")}
+                  {failure?.canRetry
+                    ? t("retryGeneration")
+                    : replies.length > 0
+                      ? t("regenerate")
+                      : t("generateSuggestions")}
                 </button>
               </form>
             }
@@ -459,15 +474,5 @@ function CheckIcon() {
   );
 }
 
-function formatDate(date: string, locale: string) {
-  return new Intl.DateTimeFormat(locale, { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(date));
-}
-
-function formatRelative(dateStr: string, locale: string) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.max(0, Math.floor(diff / 60000));
-  if (mins < 60) return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(-mins, "minute");
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(-hours, "hour");
-  return new Intl.RelativeTimeFormat(locale, { numeric: "auto" }).format(-Math.floor(hours / 24), "day");
-}
+const formatDate = formatDateTime;
+const formatRelative = formatRelativeTime;

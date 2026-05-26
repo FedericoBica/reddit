@@ -162,9 +162,9 @@ export default function KeywordTrackingPage() {
             <div>
               <span className="eyebrow">Get started today</span>
               <h2 className="h-section">Set up alerts in<br /><em>under 2 minutes</em></h2>
-              <p className="sub">Track any keyword on Reddit with AI-powered filtering. No credit card required.</p>
+              <p className="sub">Track any keyword on Reddit with AI-powered filtering. No contracts, cancel anytime.</p>
               <div className="cta-row">
-                <Link className="btn primary lg" href="/signup">Start Free Trial</Link>
+                <Link className="btn primary lg" href="/signup">Get started</Link>
                 <Link className="btn lg" href="/login">Sign in</Link>
               </div>
             </div>

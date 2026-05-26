@@ -3074,13 +3074,26 @@ textarea:focus-visible {
     min-height: 100vh;
   }
 
+  /* Single-pane: show list OR detail, never both stacked */
+  .searchbox-body[data-has-selected="true"] .opportunity-column {
+    display: none;
+  }
+
+  .searchbox-body[data-has-selected="false"] .detail-col {
+    display: none;
+  }
+
+  .detail-mobile-back {
+    display: flex;
+  }
+
   .opportunity-column {
     border-right: 0;
     border-bottom: 1px solid #DAE0E6;
   }
 
   .opportunity-list {
-    max-height: 520px;
+    max-height: none;
   }
 
   .auth-story {

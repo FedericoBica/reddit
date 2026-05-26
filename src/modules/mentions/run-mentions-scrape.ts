@@ -53,6 +53,7 @@ export async function runMentionsScrapeWithCompetitors(
   if (!project) return 0;
 
   const plan = await getBillingPlanForUser(project.owner_id);
+  if (!plan) return 0;
   const maxCommentsPerKeyword = plan.maxCommentsPerKeyword;
   const timeWindow = plan.keywordSearchTimeWindow;
 

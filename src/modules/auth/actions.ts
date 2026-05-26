@@ -146,7 +146,7 @@ export async function verifySignUpCode(formData: FormData) {
     );
   }
 
-  redirect("/signup/plan");
+  redirect("/signup/company");
 }
 
 export async function signInWithPassword(formData: FormData) {

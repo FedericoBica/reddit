@@ -484,6 +484,7 @@ export async function getReplyGenerationContext(
     project: {
       ...project,
       telegram_chat_id: null,
+      notify_email: true,
     },
     lead: {
       ...lead,

@@ -88,7 +88,7 @@ type TranslationMap = {
   pricing: {
     eyebrow: string; h2_1: string; h2_em: string; h2_2: string; sub: string;
     monthly: string; yearly: string; saveLabel: string; recommended: string;
-    perMonth: string; ctaBtn: string;
+    perMonth: string; perYear: string; ctaBtn: string;
     tier1Name: string; tier1Desc: string; tier1F1: string; tier1F2: string;
     tier1F3: string; tier1F4: string; tier1F5: string; tier1F6: string;
     tier1F7: string; tier1F8: string;
@@ -364,6 +364,7 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       saveLabel: "Save 20% with yearly billing",
       recommended: "Recommended",
       perMonth: "/month",
+      perYear: "/year",
       ctaBtn: "Get customers from Reddit",
       tier1Name: "Startup",
       tier1Desc: "Start generating leads and revenue from Reddit with our entry-level plan for businesses new to Reddit marketing.",
@@ -674,6 +675,7 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       saveLabel: "Ahorra 20% con facturación anual",
       recommended: "Recomendado",
       perMonth: "/mes",
+      perYear: "/año",
       ctaBtn: "Consigue clientes desde Reddit",
       tier1Name: "Startup",
       tier1Desc: "Para founders que prueban Reddit como canal: 10 keywords, 100 respuestas y 1 asiento.",
@@ -1036,6 +1038,7 @@ const TRANSLATIONS_DATA: Record<Locale, TranslationMap> = {
       saveLabel: "Economize 20% com cobrança anual",
       recommended: "Recomendado",
       perMonth: "/mês",
+      perYear: "/ano",
       ctaBtn: "Consiga clientes pelo Reddit",
       tier1Name: "Startup",
       tier1Desc: "Para founders testando o Reddit como canal: 10 keywords, 100 respostas e 1 assento.",

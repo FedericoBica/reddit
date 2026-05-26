@@ -96,7 +96,7 @@ export const processXPost = inngest.createFunction(
 
     const dailyLimitHit = await step.run("check daily limit", async () => {
       const plan = await getBillingPlanForUser(project.owner_id);
-      if (!plan.maxXPostsPerDay) return false;
+      if (!plan || !plan.maxXPostsPerDay) return false;
 
       const startOfDay = new Date();
       startOfDay.setUTCHours(0, 0, 0, 0);

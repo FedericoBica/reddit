@@ -40,7 +40,7 @@ export const sendScrapeNotifications = inngest.createFunction(
 
     const { data: project } = await supabase
       .from("projects")
-      .select("id, name, owner_id")
+      .select("id, name, owner_id, notify_email")
       .eq("id", projectId)
       .single();
 
@@ -59,8 +59,8 @@ export const sendScrapeNotifications = inngest.createFunction(
 
     const results: { email?: string; telegram?: string } = {};
 
-    // Email — always send if Resend is configured.
-    if (process.env.RESEND_API_KEY) {
+    // Email — send if Resend is configured and user hasn't opted out.
+    if (process.env.RESEND_API_KEY && project.notify_email !== false) {
       try {
         await sendScrapeNotificationEmail({
           to: owner.email,
@@ -68,6 +68,7 @@ export const sendScrapeNotifications = inngest.createFunction(
           type,
           count,
           projectUrl,
+          projectId,
         });
         results.email = "sent";
       } catch (err) {
@@ -80,7 +81,7 @@ export const sendScrapeNotifications = inngest.createFunction(
 
     if (telegramChatId) {
       const plan = await getBillingPlanForUser(project.owner_id);
-      if (plan.integrations.telegram) {
+      if (plan?.integrations.telegram) {
         const noun = type === "leads" ? "opportunities" : type === "searchbox" ? "Google results" : "mentions";
         const msg = `<b>${project.name}</b> — ${count} new ${noun} found.\n\n<a href="${projectUrl}">View in Prowlit</a>`;
         try {

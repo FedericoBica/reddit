@@ -13,6 +13,7 @@ Module._resolveFilename = function resolveFilename(request, parent, isMain, opti
   if (typeof request === "string" && request.startsWith("@/")) {
     const suffix = request.slice(2);
     const candidates = [
+      path.join(repoRoot, ".test-dist", "workflows", "src", suffix),
       path.join(repoRoot, ".test-dist", "outbound-integration", "src", suffix),
       path.join(repoRoot, ".test-dist", "outbound", "src", suffix),
       path.join(repoRoot, "src", suffix),

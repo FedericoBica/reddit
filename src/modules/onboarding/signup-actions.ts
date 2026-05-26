@@ -17,6 +17,7 @@ import {
   listProjectSubredditSuggestions,
 } from "@/db/queries/projects";
 import { createSupabaseServerClient as createClient } from "@/lib/supabase/server";
+import { requireEnv } from "@/lib/env";
 import { requireUser } from "@/modules/auth/server";
 import { setCurrentBillingPlan } from "@/modules/billing/current";
 import { parseBillingPlan, getProjectLimitForPlan, type BillingPlan } from "@/modules/billing/limits";
@@ -61,7 +62,7 @@ export async function signUpWithPassword(formData: FormData) {
     email,
     password,
     options: {
-      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/signup/plan")}`,
+      emailRedirectTo: `${origin}/auth/callback?next=${encodeURIComponent("/signup/company")}`,
     },
   });
 
@@ -79,14 +80,14 @@ export async function signUpWithPassword(formData: FormData) {
     );
   }
 
-  redirect("/signup/plan");
+  redirect("/signup/company");
 }
 
 export async function signUpWithGoogle() {
   const headerStore = await headers();
   const origin = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/+$/, "") ?? headerStore.get("origin") ?? "http://localhost:3000";
   const supabase = await createSupabaseServerClient();
-  const next = "/signup/plan";
+  const next = "/signup/company";
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
@@ -390,18 +391,18 @@ export async function continueToPlan(formData: FormData) {
   redirect(`/signup/plan?projectId=${projectId}`);
 }
 
+// Only called for the startup plan — paid plans open a Paddle.js overlay on the client.
 export async function choosePlanFromSignup(formData: FormData) {
   await requireUser("/signup/plan");
 
-  const plan = parseBillingPlan(String(formData.get("plan") ?? "")) ?? "growth";
+  const plan = parseBillingPlan(String(formData.get("plan") ?? "")) ?? "startup";
   const projectId = String(formData.get("projectId") ?? "").trim();
   if (projectId) {
     await getSignupProjectOrRedirect(projectId, "/signup/company");
   }
+
   await setCurrentBillingPlan(plan as BillingPlan);
 
-  // Enforce keyword limit now that the plan is known.
-  // Auto-onboarding may have saved more keywords than the chosen plan allows.
   if (projectId) {
     const limit = getProjectLimitForPlan(plan as BillingPlan);
     if (limit.maxKeywords !== null) {
@@ -419,7 +420,8 @@ export async function choosePlanFromSignup(formData: FormData) {
         await supabase.from("keywords").update({ is_active: false }).in("id", toDeactivate);
       }
     }
-    redirect(`/dashboard?projectId=${projectId}`);
   }
+
+  if (projectId) redirect(`/dashboard?projectId=${projectId}`);
   redirect("/signup/company");
 }

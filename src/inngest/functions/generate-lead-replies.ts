@@ -8,6 +8,7 @@ import {
   getReplyGenerationContext,
 } from "@/modules/leads/reply-generator";
 import type { ReplyStyle } from "@/db/schemas/domain";
+import { toReplyGenerationUiError } from "@/modules/replies/error-messages";
 
 const replyStyles = ["engaging", "direct", "balanced"] satisfies ReplyStyle[];
 
@@ -34,7 +35,7 @@ export const generateLeadReplies = inngest.createFunction(
       const { projectId, leadId } = data;
 
       await step.run("mark reply generation failed", async () =>
-        failLeadReplyGeneration(projectId, leadId, error.message),
+        failLeadReplyGeneration(projectId, leadId, toReplyGenerationUiError(error).message),
       );
     },
   },

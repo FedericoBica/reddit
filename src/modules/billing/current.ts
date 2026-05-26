@@ -6,6 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import {
   getEffectiveProjectLimit,
   getProjectLimitForPlan,
+  applyXAddon,
   parseBillingPlan,
   type BillingPlan,
   type ProjectLimit,
@@ -23,7 +24,7 @@ export type AiReplyUsage = {
   remaining: number | null;
 };
 
-export async function getCurrentBillingPlan(): Promise<ProjectLimit> {
+export async function getCurrentBillingPlan(): Promise<ProjectLimit | null> {
   try {
     const supabase = await createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -31,20 +32,26 @@ export async function getCurrentBillingPlan(): Promise<ProjectLimit> {
     if (user) {
       const { data } = await supabase
         .from("users")
-        .select("billing_plan")
+        .select("billing_plan, x_addon_enabled")
         .eq("id", user.id)
         .single();
 
-      const plan = parseBillingPlan(data?.billing_plan);
-      if (plan) return getProjectLimitForPlan(plan);
+      if (data) {
+        // DB record exists — trust it, do not fall back to cookie.
+        // null billing_plan means the subscription was canceled.
+        const plan = parseBillingPlan(data.billing_plan);
+        if (!plan) return null;
+        const limit = getProjectLimitForPlan(plan);
+        return data.x_addon_enabled ? applyXAddon(limit) : limit;
+      }
     }
   } catch {
-    // fallback to cookie
+    // fallback to cookie only when the DB is unreachable
   }
 
   const cookieStore = await cookies();
   const plan = parseBillingPlan(cookieStore.get(BILLING_PLAN_COOKIE)?.value);
-  return plan ? getProjectLimitForPlan(plan) : getEffectiveProjectLimit();
+  return plan ? getProjectLimitForPlan(plan) : null;
 }
 
 export async function setCurrentBillingPlan(plan: BillingPlan) {
@@ -73,16 +80,18 @@ export async function setCurrentBillingPlan(plan: BillingPlan) {
   }
 }
 
-export async function getBillingPlanForUser(userId: string): Promise<ProjectLimit> {
+export async function getBillingPlanForUser(userId: string): Promise<ProjectLimit | null> {
   const supabase = createSupabaseAdminClient();
   const { data } = await supabase
     .from("users")
-    .select("billing_plan")
+    .select("billing_plan, x_addon_enabled")
     .eq("id", userId)
     .single();
 
   const plan = parseBillingPlan(data?.billing_plan);
-  return plan ? getProjectLimitForPlan(plan) : getEffectiveProjectLimit();
+  if (!plan) return null;
+  const limit = getProjectLimitForPlan(plan);
+  return data?.x_addon_enabled ? applyXAddon(limit) : limit;
 }
 
 export async function getCurrentAiReplyUsage(): Promise<AiReplyUsage> {
@@ -93,12 +102,8 @@ export async function getCurrentAiReplyUsage(): Promise<AiReplyUsage> {
 
   const plan = await getCurrentBillingPlan();
 
-  if (!user) {
-    return {
-      used: 0,
-      limit: plan.maxAiRepliesPerMonth,
-      remaining: plan.maxAiRepliesPerMonth,
-    };
+  if (!user || !plan) {
+    return { used: 0, limit: 0, remaining: 0 };
   }
 
   return getAiReplyUsageForUser(user.id, plan);
@@ -106,9 +111,13 @@ export async function getCurrentAiReplyUsage(): Promise<AiReplyUsage> {
 
 export async function getAiReplyUsageForUser(
   userId: string,
-  plan?: ProjectLimit,
+  plan?: ProjectLimit | null,
 ): Promise<AiReplyUsage> {
   const resolvedPlan = plan ?? await getBillingPlanForUser(userId);
+
+  if (!resolvedPlan) {
+    return { used: 0, limit: 0, remaining: 0 };
+  }
   const supabase = createSupabaseAdminClient();
   const startOfMonth = new Date();
   startOfMonth.setUTCDate(1);

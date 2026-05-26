@@ -12,6 +12,10 @@ import { listProjectLeads } from "@/db/queries/leads";
 import type { LeadDTO, LeadReplyDTO } from "@/db/schemas/domain";
 import { requireUser } from "@/modules/auth/server";
 import { resolveCurrentProject } from "@/modules/projects/current";
+import {
+  formatDateWithCopy as formatDate,
+  formatRelativeWithCopy as formatRelative,
+} from "@/lib/date-format";
 import { toRedditUrl } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -572,24 +576,6 @@ function translateStatus(status: LeadDTO["status"], copy: Record<string, string>
     irrelevant: copy.statusIrrelevant,
   };
   return map[status] ?? status;
-}
-
-function formatDate(date: string, copy: Record<string, string>) {
-  return new Intl.DateTimeFormat(copy.dateLocale, {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(new Date(date));
-}
-
-function formatRelative(dateStr: string, copy: Record<string, string>) {
-  const diff = Date.now() - new Date(dateStr).getTime();
-  const mins = Math.max(0, Math.floor(diff / 60000));
-  if (mins < 60) return `${mins}${copy.minutesAgo}`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}${copy.hoursAgo}`;
-  return `${Math.floor(hours / 24)}${copy.daysAgo}`;
 }
 
 // ── Icons ─────────────────────────────────────────────────────

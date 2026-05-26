@@ -120,6 +120,9 @@ export default function PrivacyPage() {
                 <strong>Resend</strong> — transactional email delivery for account and notification
                 emails.
               </li>
+              <li>
+                <strong>Paddle</strong> — subscription billing and payment processing.
+              </li>
             </ul>
             <p style={{ marginTop: 12 }}>
               Each sub-processor is bound by its own data processing terms. We do not share your

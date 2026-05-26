@@ -8,7 +8,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://prowlit.com";
 
 export const metadata: Metadata = {
   title: "Prowlit — Find Buyers on Reddit & X",
-  description: "Find people on Reddit and X actively looking for what you sell. Prowlit scores buyer intent and helps you reply authentically before your competitors do. Free trial, no credit card.",
+  description: "Find people on Reddit and X actively looking for what you sell. Prowlit scores buyer intent and helps you reply authentically before your competitors do.",
   alternates: {
     canonical: `${APP_URL}/en`,
     languages: { en: `${APP_URL}/en`, es: `${APP_URL}/es`, pt: `${APP_URL}/pt` },

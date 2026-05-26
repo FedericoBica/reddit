@@ -1,6 +1,8 @@
 import { backfillNewProject } from "./backfill-new-project";
 import { generateLeadReplies } from "./generate-lead-replies";
 import { hourlyScheduler } from "./hourly-scheduler";
+import { alertOrphanedBillingWebhook } from "./alert-orphaned-billing-webhook";
+import { reconcileBilling } from "./reconcile-billing";
 import { searchboxForProject } from "./searchbox-for-project";
 import { searchboxWeeklyScan } from "./searchbox-weekly";
 import { sendLeadPushNotification } from "./send-lead-push-notification";
@@ -14,4 +16,4 @@ import { generateXReply } from "./generate-x-reply";
 import { publishXScheduledPosts } from "./publish-x-scheduled-posts";
 import { scrapeXPosts } from "./scrape-x-posts";
 
-export const functions = [hourlyScheduler, scrapeGlobalProjects, generateLeadReplies, sendLeadPushNotification, sendScrapeNotifications, backfillNewProject, searchboxWeeklyScan, setupNewProject, searchboxForProject, scrapeBrandMentions, processXPost, syncXStreamRules, generateXReply, publishXScheduledPosts, scrapeXPosts];
+export const functions = [hourlyScheduler, scrapeGlobalProjects, generateLeadReplies, sendLeadPushNotification, sendScrapeNotifications, backfillNewProject, searchboxWeeklyScan, setupNewProject, searchboxForProject, scrapeBrandMentions, processXPost, syncXStreamRules, generateXReply, publishXScheduledPosts, scrapeXPosts, alertOrphanedBillingWebhook, reconcileBilling];

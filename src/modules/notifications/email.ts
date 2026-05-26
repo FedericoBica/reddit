@@ -19,11 +19,12 @@ export type ScrapeNotificationEmailInput = {
   type: "leads" | "searchbox" | "mentions";
   count: number;
   projectUrl: string;
+  projectId: string;
 };
 
 export async function sendScrapeNotificationEmail(input: ScrapeNotificationEmailInput): Promise<void> {
   const from = process.env.RESEND_FROM_EMAIL ?? "noreply@prowlit.com";
-  const { to, projectName, type, count, projectUrl } = input;
+  const { to, projectName, type, count, projectUrl, projectId } = input;
 
   const labels: Record<typeof type, { subject: string; noun: string; path: string }> = {
     leads:     { subject: "New opportunities found",    noun: count === 1 ? "opportunity" : "opportunities", path: "/dashboard" },
@@ -33,6 +34,8 @@ export async function sendScrapeNotificationEmail(input: ScrapeNotificationEmail
 
   const { subject, noun, path } = labels[type];
   const url = `${projectUrl}${path}`;
+  const appUrl = projectUrl.split("?")[0];
+  const unsubscribeUrl = `${appUrl}/settings?projectId=${projectId}&tab=notifications`;
 
   const html = `
 <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#1A1A1B">
@@ -44,6 +47,7 @@ export async function sendScrapeNotificationEmail(input: ScrapeNotificationEmail
   </a>
   <p style="margin-top:24px;font-size:11px;color:#B0B0B5">
     You're receiving this because your project is configured to send email notifications.
+    <a href="${unsubscribeUrl}" style="color:#B0B0B5;text-decoration:underline;margin-left:4px">Unsubscribe</a>
   </p>
 </div>`;
 

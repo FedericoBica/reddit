@@ -1071,6 +1071,7 @@ export type Database = {
           secondary_language: string | null
           status: Database["public"]["Enums"]["project_status"]
           suggestions_error: string | null
+          notify_email: boolean
           telegram_chat_id: string | null
           tone: string | null
           updated_at: string
@@ -1086,6 +1087,7 @@ export type Database = {
           last_scraped_at?: string | null
           last_searchbox_at?: string | null
           name: string
+          notify_email?: boolean
           onboarding_completed_at?: string | null
           onboarding_status?: Database["public"]["Enums"]["project_onboarding_status"]
           owner_id: string
@@ -1112,6 +1114,7 @@ export type Database = {
           last_scraped_at?: string | null
           last_searchbox_at?: string | null
           name?: string
+          notify_email?: boolean
           onboarding_completed_at?: string | null
           onboarding_status?: Database["public"]["Enums"]["project_onboarding_status"]
           owner_id?: string
@@ -1356,7 +1359,7 @@ export type Database = {
       users: {
         Row: {
           avatar_url: string | null
-          billing_plan: string
+          billing_plan: string | null
           created_at: string
           dm_cycle_resets_at: string | null
           dm_monthly_used: number
@@ -1364,22 +1367,20 @@ export type Database = {
           full_name: string | null
           id: string
           is_admin: boolean
-          lemonsqueezy_customer_id: string | null
-          lemonsqueezy_order_id: string | null
-          lemonsqueezy_product_id: string | null
-          lemonsqueezy_subscription_ends_at: string | null
-          lemonsqueezy_subscription_id: string | null
-          lemonsqueezy_subscription_item_id: string | null
-          lemonsqueezy_subscription_renews_at: string | null
-          lemonsqueezy_subscription_status: string | null
-          lemonsqueezy_trial_ends_at: string | null
-          lemonsqueezy_variant_id: string | null
+          paddle_customer_id: string | null
+          paddle_price_id: string | null
+          paddle_subscription_ends_at: string | null
+          paddle_subscription_id: string | null
+          paddle_subscription_renews_at: string | null
+          paddle_subscription_status: string | null
+          paddle_trial_ends_at: string | null
+          x_addon_enabled: boolean
           onboarding_status: Database["public"]["Enums"]["onboarding_status"]
           updated_at: string
         }
         Insert: {
           avatar_url?: string | null
-          billing_plan?: string
+          billing_plan?: string | null
           created_at?: string
           dm_cycle_resets_at?: string | null
           dm_monthly_used?: number
@@ -1387,22 +1388,20 @@ export type Database = {
           full_name?: string | null
           id: string
           is_admin?: boolean
-          lemonsqueezy_customer_id?: string | null
-          lemonsqueezy_order_id?: string | null
-          lemonsqueezy_product_id?: string | null
-          lemonsqueezy_subscription_ends_at?: string | null
-          lemonsqueezy_subscription_id?: string | null
-          lemonsqueezy_subscription_item_id?: string | null
-          lemonsqueezy_subscription_renews_at?: string | null
-          lemonsqueezy_subscription_status?: string | null
-          lemonsqueezy_trial_ends_at?: string | null
-          lemonsqueezy_variant_id?: string | null
+          paddle_customer_id?: string | null
+          paddle_price_id?: string | null
+          paddle_subscription_ends_at?: string | null
+          paddle_subscription_id?: string | null
+          paddle_subscription_renews_at?: string | null
+          paddle_subscription_status?: string | null
+          paddle_trial_ends_at?: string | null
+          x_addon_enabled?: boolean
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           updated_at?: string
         }
         Update: {
           avatar_url?: string | null
-          billing_plan?: string
+          billing_plan?: string | null
           created_at?: string
           dm_cycle_resets_at?: string | null
           dm_monthly_used?: number
@@ -1410,16 +1409,14 @@ export type Database = {
           full_name?: string | null
           id?: string
           is_admin?: boolean
-          lemonsqueezy_customer_id?: string | null
-          lemonsqueezy_order_id?: string | null
-          lemonsqueezy_product_id?: string | null
-          lemonsqueezy_subscription_ends_at?: string | null
-          lemonsqueezy_subscription_id?: string | null
-          lemonsqueezy_subscription_item_id?: string | null
-          lemonsqueezy_subscription_renews_at?: string | null
-          lemonsqueezy_subscription_status?: string | null
-          lemonsqueezy_trial_ends_at?: string | null
-          lemonsqueezy_variant_id?: string | null
+          paddle_customer_id?: string | null
+          paddle_price_id?: string | null
+          paddle_subscription_ends_at?: string | null
+          paddle_subscription_id?: string | null
+          paddle_subscription_renews_at?: string | null
+          paddle_subscription_status?: string | null
+          paddle_trial_ends_at?: string | null
+          x_addon_enabled?: boolean
           onboarding_status?: Database["public"]["Enums"]["onboarding_status"]
           updated_at?: string
         }
@@ -1827,6 +1824,7 @@ export type Database = {
           last_scraped_at: string | null
           last_searchbox_at: string | null
           name: string
+          notify_email: boolean
           onboarding_completed_at: string | null
           onboarding_status: Database["public"]["Enums"]["project_onboarding_status"]
           owner_id: string
